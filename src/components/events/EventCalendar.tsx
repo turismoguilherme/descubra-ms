@@ -35,6 +35,7 @@ import { ptBR } from 'date-fns/locale';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import { useLanguage } from '@/hooks/useLanguage';
 import { optimizeEventCardImage } from '@/utils/imageOptimization';
+import { isEventActiveForPublicListing, type EventRowDates } from '@/utils/eventPublicVisibility';
 
 interface EventCalendarProps {
   autoLoad?: boolean;
@@ -295,7 +296,11 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
       console.log('📊 Eventos brutos recebidos da API:', data?.length || 0);
       console.log('📋 Primeiro evento bruto:', data?.[0]);
 
-      const events = mapEvents(data);
+      const activeRaw = (data || []).filter((row: EventRowDates & Record<string, unknown>) =>
+        isEventActiveForPublicListing(row)
+      );
+
+      const events = mapEvents(activeRaw);
 
       // Ordenar: patrocinados primeiro, depois por data
       events.sort((a, b) => {

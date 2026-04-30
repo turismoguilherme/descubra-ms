@@ -106,10 +106,20 @@ export default function EventSubmissionForm() {
     setLoading(true);
 
     // Validações
-    if (!formData.title || !formData.start_date || !formData.location || !formData.category) {
+    if (!formData.title || !formData.start_date || !formData.end_date || !formData.location || !formData.category) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Preencha todos os campos obrigatórios',
+        description: 'Preencha título, datas de início e término, local e categoria.',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (formData.end_date < formData.start_date) {
+      toast({
+        title: 'Datas inválidas',
+        description: 'A data de término não pode ser anterior à data de início.',
         variant: 'destructive',
       });
       setLoading(false);
@@ -133,7 +143,7 @@ export default function EventSubmissionForm() {
           title: formData.title,
           description: formData.description || null,
           start_date: formData.start_date,
-          end_date: formData.end_date || formData.start_date,
+          end_date: formData.end_date,
           location: formData.location,
           category: formData.category,
           company_id: user.id,
@@ -278,13 +288,14 @@ export default function EventSubmissionForm() {
               </div>
 
               <div>
-                <Label htmlFor="end_date">Data de Término</Label>
+                <Label htmlFor="end_date">Data de Término *</Label>
                 <Input
                   id="end_date"
                   type="date"
                   value={formData.end_date}
                   onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                   min={formData.start_date}
+                  required
                 />
               </div>
             </div>

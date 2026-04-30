@@ -1949,6 +1949,7 @@ export type Database = {
           created_at: string | null
           data_fim: string | null
           data_inicio: string | null
+          end_time: string | null
           descricao: string | null
           estado: string | null
           external_id: string
@@ -1967,6 +1968,7 @@ export type Database = {
           return_domain: string | null
           site_oficial: string | null
           sponsor_payment_status: string | null
+          start_time: string | null
           stripe_payment_link_url: string | null
           tags: string[] | null
           tipo_entrada: string | null
@@ -1986,6 +1988,7 @@ export type Database = {
           data_fim?: string | null
           data_inicio?: string | null
           descricao?: string | null
+          end_time?: string | null
           estado?: string | null
           external_id: string
           fonte?: string | null
@@ -2003,6 +2006,7 @@ export type Database = {
           return_domain?: string | null
           site_oficial?: string | null
           sponsor_payment_status?: string | null
+          start_time?: string | null
           stripe_payment_link_url?: string | null
           tags?: string[] | null
           tipo_entrada?: string | null
@@ -2022,6 +2026,7 @@ export type Database = {
           data_fim?: string | null
           data_inicio?: string | null
           descricao?: string | null
+          end_time?: string | null
           estado?: string | null
           external_id?: string
           fonte?: string | null
@@ -2039,6 +2044,7 @@ export type Database = {
           return_domain?: string | null
           site_oficial?: string | null
           sponsor_payment_status?: string | null
+          start_time?: string | null
           stripe_payment_link_url?: string | null
           tags?: string[] | null
           tipo_entrada?: string | null

@@ -992,6 +992,23 @@ export default function EventsManagement() {
 
       setSaving(true);
     try {
+      if (!editStartDateTimeDraft?.trim()) {
+        toast({
+          title: 'Data obrigatória',
+          description: 'Informe a data e hora de início do evento.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      if (!editEndDateTimeDraft?.trim()) {
+        toast({
+          title: 'Data obrigatória',
+          description: 'Informe a data e hora de término do evento.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       let imageUrl = editingEvent.image_url;
       let logoUrl = editingEvent.logo_evento;
 
@@ -1028,7 +1045,7 @@ export default function EventsManagement() {
         titulo: editingEvent.name,
         descricao: editingEvent.description,
         data_inicio: editStartDateTimeDraft || editingEvent.start_date,
-        data_fim: editEndDateTimeDraft || null,
+        data_fim: editEndDateTimeDraft,
         local: editingEvent.location,
         categoria: editingEvent.category,
         organizador: editingEvent.organizador_nome || editingEvent.organizador,

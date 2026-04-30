@@ -4,6 +4,7 @@ import { Calendar, MapPin, Clock, Star, ArrowRight, Loader2 } from "lucide-react
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { optimizeEventCardImage } from "@/utils/imageOptimization";
+import { isEventActiveForPublicListing } from "@/utils/eventPublicVisibility";
 
 interface EventItem {
   id: string;
@@ -31,27 +32,27 @@ const EventosDestaqueSection = () => {
   const loadEvents = async () => {
     setLoading(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
-      
       const { data, error } = await supabase
         .from('events')
-        .select('id, titulo, descricao, data_inicio, data_fim, local, imagem_principal, is_visible, is_sponsored, sponsor_payment_status')
+        .select('id, titulo, descricao, data_inicio, data_fim, start_time, end_time, local, imagem_principal, is_visible, is_sponsored, sponsor_payment_status')
         .eq('is_visible', true)
-        .gte('data_inicio', today)
         .order('data_inicio', { ascending: true })
-        .limit(20);
+        .limit(80);
 
       if (error) {
         console.error("Erro na query de eventos:", error);
         throw error;
       }
 
-      const eventsList: EventItem[] = (data || []).map((event: any) => ({
+      const activeRows = (data || []).filter((event) => isEventActiveForPublicListing(event));
+
+      const eventsList: EventItem[] = activeRows.map((event: any) => ({
         id: event.id,
         name: event.titulo || '',
         description: event.descricao || '',
         start_date: event.data_inicio,
         end_date: event.data_fim || undefined,
+        start_time: event.start_time || undefined,
         location: event.local || '',
         image_url: event.imagem_principal || undefined,
         is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status),

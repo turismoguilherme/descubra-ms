@@ -43,7 +43,7 @@ const eventSchema = z.object({
 
   // Datas
   data_inicio: z.string().min(1, "Data de início é obrigatória"),
-  data_fim: z.string().optional(),
+  data_fim: z.string().min(1, "Data de término é obrigatória"),
   horario_inicio: z.string().min(1, "Horário de início é obrigatório"),
   horario_fim: z.string().min(1, "Horário de término é obrigatório"),
 
@@ -60,7 +60,25 @@ const eventSchema = z.object({
   site_oficial: z.string().url("URL inválida").optional().or(z.literal("")),
   video_promocional: z.string().optional(),
   logo_evento: z.string().optional(),
-}).refine((data) => {
+})
+  .refine(
+    (data) => !data.data_inicio || !data.data_fim || data.data_fim >= data.data_inicio,
+    {
+      message: "Data de término deve ser igual ou posterior à data de início",
+      path: ["data_fim"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (data.data_inicio !== data.data_fim) return true;
+      return (data.horario_fim || '') >= (data.horario_inicio || '');
+    },
+    {
+      message: "No mesmo dia, o horário de término deve ser igual ou posterior ao de início",
+      path: ["horario_fim"],
+    }
+  )
+  .refine((data) => {
   // Se for evento em destaque, vídeo OU logotipo é obrigatório
   if (data.tipo === "destaque") {
     return data.video_promocional || data.logo_evento;
@@ -96,6 +114,7 @@ export const EventSubmissionForm: React.FC = () => {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -189,7 +208,7 @@ export const EventSubmissionForm: React.FC = () => {
         descricao: data.descricao,
         categoria: data.categoria,
         data_inicio: data.data_inicio,
-        data_fim: data.data_fim || data.data_inicio,
+        data_fim: data.data_fim,
         local: `${data.local}, ${data.cidade}`,
         cidade: data.cidade,
         site_oficial: data.site_oficial || null,
@@ -201,6 +220,8 @@ export const EventSubmissionForm: React.FC = () => {
         is_visible: false,
         is_sponsored: data.tipo === "destaque",
         sponsor_payment_status: data.tipo === "destaque" ? "pending" : null,
+        start_time: data.horario_inicio,
+        end_time: data.horario_fim,
       };
 
       if (touristRegionId) {
@@ -470,8 +491,16 @@ export const EventSubmissionForm: React.FC = () => {
               )}
             </div>
             <div>
-              <Label htmlFor="data_fim">Data de Término (opcional)</Label>
-              <Input id="data_fim" type="date" {...register("data_fim")} />
+              <Label htmlFor="data_fim">Data de Término *</Label>
+              <Input
+                id="data_fim"
+                type="date"
+                min={watch("data_inicio") || undefined}
+                {...register("data_fim")}
+              />
+              {errors.data_fim && (
+                <p className="text-red-500 text-sm mt-1">{errors.data_fim.message}</p>
+              )}
             </div>
           </div>
 
