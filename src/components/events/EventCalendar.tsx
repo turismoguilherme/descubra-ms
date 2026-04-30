@@ -35,6 +35,7 @@ import { ptBR } from 'date-fns/locale';
 import { usePersonalization } from '@/hooks/usePersonalization';
 import { useLanguage } from '@/hooks/useLanguage';
 import { optimizeEventCardImage } from '@/utils/imageOptimization';
+import { resolveEventTimes } from '@/utils/eventTimeDisplay';
 import { isEventActiveForPublicListing, type EventRowDates } from '@/utils/eventPublicVisibility';
 
 interface EventCalendarProps {
@@ -217,6 +218,16 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           const isSponsoredRaw = event.is_sponsored;
           const paymentStatus = event.sponsor_payment_status;
           const isSponsoredCalculated = isSponsoredRaw && (paymentStatus === 'paid' || !paymentStatus);
+
+          const ev = event as Record<string, string | undefined>;
+          const { start: resolvedStart, end: resolvedEnd } = resolveEventTimes({
+            start_time: ev.start_time,
+            end_time: ev.end_time,
+            horario_inicio: ev.horario_inicio,
+            horario_fim: ev.horario_fim,
+            data_inicio: eventStartDate,
+            data_fim: eventEndDate,
+          });
           
           const mappedEvent = {
             id: event.id,
@@ -224,8 +235,8 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
             description: eventDescription,
             start_date: eventStartDate,
             end_date: eventEndDate,
-            start_time: event.start_time,
-            end_time: event.end_time,
+            start_time: resolvedStart,
+            end_time: resolvedEnd,
             location: eventLocation,
             image_url: eventImageUrl,
             logo_evento: event.logo_evento,

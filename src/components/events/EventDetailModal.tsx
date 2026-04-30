@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { resolveEventTimes, formatEventTimeRange } from '@/utils/eventTimeDisplay';
 // Removido optimizeModalImage - usando URLs originais diretamente (já otimizadas no upload)
 
 interface EventItem {
@@ -118,6 +119,14 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   getTranslatedLocation = (e) => e.location
 }) => {
   if (!event) return null;
+
+  const { start: resolvedStart, end: resolvedEnd } = resolveEventTimes({
+    start_time: event.start_time,
+    end_time: event.end_time,
+    start_date: event.start_date,
+    end_date: event.end_date,
+  });
+  const timeRangeLabel = formatEventTimeRange(resolvedStart, resolvedEnd);
 
   // Determinar região turística
   const getTouristRegionSlug = (): string => {
@@ -297,13 +306,10 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                 {event.end_date && event.end_date !== event.start_date && (
                   <p className="text-gray-600 text-sm mt-1">até {formatDate(event.end_date)}</p>
                 )}
-                {event.start_time && (
+                {timeRangeLabel && (
                   <div className="flex items-center gap-2 mt-2 text-gray-600">
                     <Clock className="w-4 h-4" />
-                    <span>
-                      {event.start_time}
-                      {event.end_time && ` - ${event.end_time}`}
-                    </span>
+                    <span>{timeRangeLabel}</span>
                   </div>
                 )}
               </div>

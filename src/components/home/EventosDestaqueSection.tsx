@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { optimizeEventCardImage } from "@/utils/imageOptimization";
 import { isEventActiveForPublicListing } from "@/utils/eventPublicVisibility";
+import { resolveEventTimes, formatEventTimeRange } from "@/utils/eventTimeDisplay";
 
 interface EventItem {
   id: string;
@@ -13,6 +14,7 @@ interface EventItem {
   start_date: string;
   end_date?: string;
   start_time?: string;
+  end_time?: string;
   location: string;
   image_url?: string;
   logo_evento?: string;
@@ -46,18 +48,29 @@ const EventosDestaqueSection = () => {
 
       const activeRows = (data || []).filter((event) => isEventActiveForPublicListing(event));
 
-      const eventsList: EventItem[] = activeRows.map((event: any) => ({
+      const eventsList: EventItem[] = activeRows.map((event: any) => {
+        const { start: st, end: et } = resolveEventTimes({
+          start_time: event.start_time,
+          end_time: event.end_time,
+          horario_inicio: event.horario_inicio,
+          horario_fim: event.horario_fim,
+          data_inicio: event.data_inicio,
+          data_fim: event.data_fim,
+        });
+        return {
         id: event.id,
         name: event.titulo || '',
         description: event.descricao || '',
         start_date: event.data_inicio,
         end_date: event.data_fim || undefined,
-        start_time: event.start_time || undefined,
+        start_time: st,
+        end_time: et,
         location: event.local || '',
         image_url: event.imagem_principal || undefined,
         is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status),
         sponsor_payment_status: event.sponsor_payment_status || undefined,
-      }));
+      };
+      });
 
       // Ordenar: patrocinados primeiro, depois por data
       eventsList.sort((a, b) => {
@@ -85,16 +98,6 @@ const EventosDestaqueSection = () => {
       }).replace('.', '');
     } catch {
       return dateString;
-    }
-  };
-
-  const formatTime = (timeString?: string) => {
-    if (!timeString) return '';
-    try {
-      const [hours, minutes] = timeString.split(':');
-      return `${hours}:${minutes}`;
-    } catch {
-      return timeString;
     }
   };
 
@@ -186,10 +189,12 @@ const EventosDestaqueSection = () => {
                       </span>
                     </div>
                     
-                    {event.start_time && (
+                    {(event.start_time || event.end_time) && (
                       <div className="flex items-center gap-2 text-gray-700">
                         <Clock size={16} className="text-ms-cerrado-orange flex-shrink-0" />
-                        <span className="text-sm">{formatTime(event.start_time)}</span>
+                        <span className="text-sm">
+                          {formatEventTimeRange(event.start_time, event.end_time)}
+                        </span>
                       </div>
                     )}
                     
