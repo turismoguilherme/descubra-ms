@@ -298,6 +298,17 @@ const PrivacidadeMS = () => {
                   <p className="text-gray-600 text-sm mt-2 italic">
                     Esses dados são coletados para viabilizar o cadastro e aprovação de parceiros, permitir que eles ofereçam serviços na plataforma e facilitar a conexão com usuários interessados em reservas e experiências turísticas.
                   </p>
+                  <div className="text-gray-700 text-sm mt-3 leading-relaxed space-y-2">
+                    <p>
+                      No <strong>Stripe Connect</strong>, a <strong>Stripe</strong> trata a conta de recebimento e os
+                      dados de pagamento do parceiro (por exemplo identificação e banco), como empresa de pagamentos.
+                    </p>
+                    <p>
+                      O Descubra MS pode mostrar <strong>só histórico na plataforma</strong>, para consulta.{' '}
+                      <strong>Sacar para a conta bancária</strong> faz-se pelo <strong>Stripe</strong>, não pelo nosso
+                      site.
+                    </p>
+                  </div>
                 </div>
 
                 <div>

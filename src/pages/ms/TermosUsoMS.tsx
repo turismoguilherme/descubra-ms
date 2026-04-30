@@ -355,6 +355,26 @@ const TermosUsoMS = () => {
                         criar ofertas e participar do programa de recompensas. A plataforma se reserva o direito de recusar 
                         ou suspender parceiros que não cumpram os termos ou ofereçam serviços de baixa qualidade.
                       </p>
+                      <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg mt-3">
+                        <p className="text-sm text-gray-800 font-semibold mb-2">Pagamentos e Stripe (parceiros)</p>
+                        <ul className="text-xs text-gray-700 ml-4 space-y-2 list-disc">
+                          <li>
+                            Para receber por reservas ligadas à plataforma, o parceiro precisa concluir o{' '}
+                            <strong>Stripe Connect</strong> no passo indicado no cadastro ou no painel. Quem pede
+                            documentos e dados bancários nessa etapa é o <strong>Stripe</strong>.
+                          </li>
+                          <li>
+                            No painel do Descubra MS o parceiro pode ver <strong>lista e resumo</strong> de transações,
+                            comissões e repasses, para <strong>acompanhar</strong> o negócio. Isso{' '}
+                            <strong>não é extrato oficial</strong> e pode não bater em tempo real com o saldo no Stripe.
+                          </li>
+                          <li>
+                            <strong>Conta no Stripe, saldo, sacar para o banco, bloqueios, estornos e suporte desse
+                            fluxo</strong> são do <strong>Stripe</strong>. A plataforma <strong>não substitui</strong> o
+                            Stripe nisso e <strong>não responde</strong> por esses pontos.
+                          </li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
