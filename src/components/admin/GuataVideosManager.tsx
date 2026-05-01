@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { getGuataCarouselThumbnail, getGuataVideoProvider } from '@/utils/guataVideo';
 import { ArrowDown, ArrowUp, Loader2, Plus, Trash2, Video } from 'lucide-react';
 
+const COVER_MAX_BYTES = 2 * 1024 * 1024;
+const COVER_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+
 interface GuataVideo {
   id: string;
   title: string;
@@ -19,12 +22,43 @@ interface GuataVideo {
   is_active: boolean;
 }
 
+async function uploadGuataVideoCover(file: File): Promise<string> {
+  if (!COVER_MIME.includes(file.type)) {
+    throw new Error('Formato inválido. Use JPG, PNG ou WebP.');
+  }
+  if (file.size > COVER_MAX_BYTES) {
+    throw new Error('Imagem acima de 2 MB. Reduza o tamanho e tente de novo.');
+  }
+  const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+  const path = `guata-video-covers/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from('tourism-images').upload(path, file, {
+    contentType: file.type,
+    upsert: true,
+  });
+  if (error) throw new Error(error.message);
+  const { data } = supabase.storage.from('tourism-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
 const GuataVideosManager = () => {
   const { toast } = useToast();
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const [videos, setVideos] = useState<GuataVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ title: '', videoUrl: '', thumbnailUrl: '' });
+  const [form, setForm] = useState({ title: '', videoUrl: '' });
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(coverFile);
+    setCoverPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [coverFile]);
 
   const load = async () => {
     setLoading(true);
@@ -44,6 +78,11 @@ const GuataVideosManager = () => {
     load();
   }, []);
 
+  const clearCover = () => {
+    setCoverFile(null);
+    if (coverInputRef.current) coverInputRef.current.value = '';
+  };
+
   const handleAdd = async () => {
     if (!form.title.trim() || !form.videoUrl.trim()) {
       toast({ title: 'Preencha título e link do vídeo', variant: 'destructive' });
@@ -60,12 +99,22 @@ const GuataVideosManager = () => {
     }
     setSaving(true);
     try {
+      let thumbnailUrl: string | null = null;
+      if (coverFile) {
+        try {
+          thumbnailUrl = await uploadGuataVideoCover(coverFile);
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          toast({ title: 'Erro no upload da capa', description: msg, variant: 'destructive' });
+          return;
+        }
+      }
+
       const nextOrder = (videos[videos.length - 1]?.display_order ?? -1) + 1;
-      const thumb = form.thumbnailUrl.trim() || null;
       const { error } = await supabase.from('guata_videos').insert({
         title: form.title.trim(),
         youtube_url: form.videoUrl.trim(),
-        thumbnail_url: thumb,
+        thumbnail_url: thumbnailUrl,
         display_order: nextOrder,
         is_active: true,
       });
@@ -77,7 +126,8 @@ const GuataVideosManager = () => {
         });
         return;
       }
-      setForm({ title: '', videoUrl: '', thumbnailUrl: '' });
+      setForm({ title: '', videoUrl: '' });
+      clearCover();
       toast({ title: 'Vídeo adicionado!' });
       load();
     } finally {
@@ -128,6 +178,12 @@ const GuataVideosManager = () => {
         <p className="text-muted-foreground mt-1">
           Gerencie os vídeos exibidos no carrossel da home do Descubra MS (YouTube ou Instagram).
         </p>
+        <p className="text-sm text-muted-foreground mt-2 max-w-3xl">
+          O <strong>título</strong> e o <strong>texto</strong> da seção acima do carrossel: em{' '}
+          <strong className="text-foreground">Conteúdo da plataforma</strong> (
+          <code className="text-xs bg-muted px-1 rounded">/viajar/admin/viajar/content</code>
+          ), selecione <strong>Descubra MS</strong> e a seção <strong>Vídeos do Guatá (home)</strong>.
+        </p>
       </div>
 
       <Card>
@@ -158,17 +214,31 @@ const GuataVideosManager = () => {
               />
             </div>
           </div>
-          <div>
-            <Label htmlFor="thumb">URL da capa (opcional)</Label>
+          <div className="space-y-2">
+            <Label htmlFor="cover">Capa do card (opcional)</Label>
             <Input
-              id="thumb"
-              placeholder="https://…jpg — miniatura exibida no carrossel"
-              value={form.thumbnailUrl}
-              onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))}
+              id="cover"
+              ref={coverInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="cursor-pointer"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setCoverFile(f);
+              }}
             />
-            <p className="text-xs text-muted-foreground mt-1">
-              YouTube usa a capa oficial automaticamente se você deixar vazio. No Instagram, sem URL aqui o card mostra um placeholder na home.
+            <p className="text-xs text-muted-foreground">
+              JPG, PNG ou WebP, máximo 2 MB. Se não enviar, o YouTube usa a capa oficial do vídeo; no Instagram o card
+              usa um placeholder até você enviar uma imagem.
             </p>
+            {coverPreview && (
+              <div className="flex items-start gap-3 pt-2">
+                <img src={coverPreview} alt="" className="h-24 w-auto max-w-[200px] rounded-md border object-cover" />
+                <Button type="button" variant="outline" size="sm" onClick={clearCover}>
+                  Remover imagem
+                </Button>
+              </div>
+            )}
           </div>
           <Button type="button" onClick={handleAdd} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}

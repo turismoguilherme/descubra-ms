@@ -27,6 +27,8 @@ export function getGuataEmbedSrc(
 ): string | null {
   const provider = getGuataVideoProvider(videoUrl);
   if (provider === 'youtube') return getYoutubeEmbedUrl(videoUrl, youtubeOpts);
-  if (provider === 'instagram') return getInstagramEmbedUrl(videoUrl);
+  if (provider === 'instagram') {
+    return getInstagramEmbedUrl(videoUrl, { autoplay: youtubeOpts.autoplay !== false });
+  }
   return null;
 }

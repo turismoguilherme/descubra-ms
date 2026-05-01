@@ -16,9 +16,19 @@ export function parseInstagramVideoUrl(
   return null;
 }
 
-export function getInstagramEmbedUrl(url: string | null | undefined): string | null {
+/**
+ * Embed oficial. Parâmetro autoplay=1 é tentativa (opção A): o Instagram/navegador
+ * pode ainda exigir interação — não há garantia contratual da Meta.
+ */
+export function getInstagramEmbedUrl(
+  url: string | null | undefined,
+  opts: { autoplay?: boolean } = {}
+): string | null {
   const parsed = parseInstagramVideoUrl(url);
   if (!parsed) return null;
   const segment = parsed.kind === 'reel' ? 'reel' : 'p';
-  return `https://www.instagram.com/${segment}/${parsed.shortcode}/embed/?utm_source=embed`;
+  const { autoplay = true } = opts;
+  const params = new URLSearchParams({ utm_source: 'embed' });
+  if (autoplay) params.set('autoplay', '1');
+  return `https://www.instagram.com/${segment}/${parsed.shortcode}/embed/?${params.toString()}`;
 }

@@ -172,6 +172,22 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'ms_destinations_description', label: 'Descrição', type: 'textarea', placeholder: 'Descubra os principais destinos...', section: 'Destinos em Destaque' },
     { key: 'ms_destinations_button', label: 'Texto do Botão', type: 'text', placeholder: 'Ver Todos os Destinos', section: 'Destinos em Destaque' },
     
+    // Vídeos do Guatá (carrossel na home)
+    {
+      key: 'ms_guata_videos_title',
+      label: 'Título da seção',
+      type: 'text',
+      placeholder: 'Descubra Mato Grosso do Sul com o Guatá',
+      section: 'Vídeos do Guatá (home)',
+    },
+    {
+      key: 'ms_guata_videos_description',
+      label: 'Subtítulo / descrição',
+      type: 'textarea',
+      placeholder: 'Com nosso mascote de turismo do MS.',
+      section: 'Vídeos do Guatá (home)',
+    },
+    
     // Página Sobre
     { key: 'ms_about_title', label: 'Título da Página', type: 'text', placeholder: 'Sobre o Descubra MS', section: 'Página Sobre' },
     { key: 'ms_about_subtitle', label: 'Subtítulo', type: 'textarea', placeholder: 'Sua plataforma completa para explorar as maravilhas do estado mais biodiverso do Brasil.', section: 'Página Sobre' },
@@ -246,6 +262,8 @@ const getHelpText = (key: string, type: string): string => {
     'ms_destinations_title': 'Título da seção de destinos em destaque',
     'ms_destinations_description': 'Descrição que convida a explorar os destinos',
     'ms_destinations_button': 'Texto do botão para ver todos os destinos',
+    'ms_guata_videos_title': 'Título exibido acima do carrossel de vídeos do Guatá na home',
+    'ms_guata_videos_description': 'Texto de apoio abaixo do título da seção de vídeos do Guatá',
     
     // Descubra MS - Experiências
     'ms_experience_title': 'Título da seção de experiências',

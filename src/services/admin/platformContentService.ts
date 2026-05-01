@@ -175,6 +175,24 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
       ]
     },
     {
+      id: 'guata_videos',
+      name: 'Seção Vídeos do Guatá (home)',
+      fields: [
+        {
+          key: 'ms_guata_videos_title',
+          label: 'Título da seção',
+          type: 'text',
+          placeholder: 'Descubra Mato Grosso do Sul com o Guatá',
+        },
+        {
+          key: 'ms_guata_videos_description',
+          label: 'Subtítulo / descrição',
+          type: 'textarea',
+          placeholder: 'Com nosso mascote de turismo do MS.',
+        },
+      ],
+    },
+    {
       id: 'contact',
       name: 'Informações de Contato',
       fields: [

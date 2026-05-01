@@ -75,13 +75,10 @@ const GuataVideosSection = () => {
         <div className="ms-container">
           <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <h2 className="text-4xl md:text-5xl font-bold text-ms-primary-blue mb-5">
-              {get('ms_guata_videos_title', 'Conheça MS com o Guatá')}
+              {get('ms_guata_videos_title', 'Descubra Mato Grosso do Sul com o Guatá')}
             </h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              {get(
-                'ms_guata_videos_description',
-                'Vídeos curtos do nosso guia digital mostrando os encantos de Mato Grosso do Sul.'
-              )}
+              {get('ms_guata_videos_description', 'Com nosso mascote de turismo do MS.')}
             </p>
           </div>
 
