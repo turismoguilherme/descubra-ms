@@ -5,11 +5,11 @@ import { useEffect } from 'react';
  * Deve ser incluído no head da aplicação
  * 
  * NOTA: CSP completo deve ser configurado no servidor (Vercel/Netlify) em produção.
- * Esta configuração permite VLibras e recursos externos necessários.
+ * Script/style remoto (ex.: VLibras) entra via https: nas diretivas abaixo quando necessário.
  */
 export const SecurityHeaders = () => {
   useEffect(() => {
-    // CSP permissivo para desenvolvimento e VLibras
+    // CSP permissivo para desenvolvimento (recursos https:, compatível com VLibras no index.html)
     // Em produção, configurar CSP mais restritivo via headers HTTP no servidor
 
     // Remover meta tags CSP existentes ANTES de criar novas (evita múltiplas meta tags)

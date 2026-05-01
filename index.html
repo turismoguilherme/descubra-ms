@@ -9,8 +9,7 @@
     <link rel="canonical" href="https://descubrams.com/" />
     <meta name="geo.region" content="BR-MS" />
     <meta name="geo.placename" content="Mato Grosso do Sul" />
-    <!-- Content Security Policy desabilitado temporariamente para VLibras -->
-    <!-- O CSP será configurado no servidor em produção -->
+    <!-- Content Security Policy no servidor pode incluir VLibras (vlibras.gov.br); ver headers -->
     <!-- Additional Security Headers -->
     <!-- X-Frame-Options deve ser configurado via cabeçalho HTTP no servidor, não via meta tag -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -74,8 +73,8 @@
 
   <body>
     <div id="root"></div>
-    
-    <!-- VLibras - Acessibilidade em Libras (carregado antes do CSP ser aplicado) -->
+
+    <!-- VLibras - Acessibilidade em Libras (visual padrão do plugin; sem overrides CSS locais no botão) -->
     <div vw class="enabled">
       <div vw-access-button class="active"></div>
       <div vw-plugin-wrapper>
@@ -88,7 +87,6 @@
     </script>
     
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    <!-- Temporariamente desabilitado para permitir VLibras em desenvolvimento -->
     <!-- <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script> -->
     <script type="module" src="/src/main.tsx"></script>
   </body>

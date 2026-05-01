@@ -167,7 +167,6 @@ function AppRoutes() {
     <BrandProvider>
       {/* Normalizar barras invertidas em rotas (Windows usa \ mas URLs usam /) */}
       <NormalizePathRoute />
-      {/* VLibras - Controle de visibilidade por rota */}
       <VLibrasWidget />
       <div className="min-h-screen bg-background font-sans antialiased">
         <Routes>

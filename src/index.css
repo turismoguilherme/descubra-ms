@@ -232,24 +232,6 @@
   }
 }
 
-/* Estilos específicos do VLibras */
-[vw-access-button] {
-  background-color: #0066cc !important;
-  border-radius: 50% !important;
-  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3) !important;
-  transition: all 0.3s ease !important;
-}
-
-[vw-access-button]:hover {
-  transform: scale(1.1) !important;
-  box-shadow: 0 6px 16px rgba(0, 102, 204, 0.4) !important;
-}
-
-.vw-plugin-top-wrapper {
-  border-radius: 12px !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
-}
-
 /* Melhorias de acessibilidade para componentes existentes */
 button:focus-visible,
 a:focus-visible,
