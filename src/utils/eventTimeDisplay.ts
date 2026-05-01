@@ -34,10 +34,15 @@ export function resolveEventTimes(row: TimeSource): { start?: string; end?: stri
   return { start, end };
 }
 
-/** Texto único para UI (ex.: modal, cards). */
+/** Texto único para UI (ex.: modal, cards). Ignora "00:00" como ausente. */
 export function formatEventTimeRange(start?: string, end?: string): string {
-  const s = start?.trim();
-  const e = end?.trim();
+  const clean = (v?: string) => {
+    const t = v?.trim();
+    if (!t || t === '00:00' || t === '00:00:00') return undefined;
+    return t;
+  };
+  const s = clean(start);
+  const e = clean(end);
   if (s && e && s !== e) return `${s} – ${e}`;
   if (s) return s;
   if (e) return `até ${e}`;

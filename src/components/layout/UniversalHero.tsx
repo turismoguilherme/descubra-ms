@@ -388,29 +388,30 @@ const UniversalHero = () => {
                     setVideoLoading(false);
                   }}
                 />
-                {/* Overlay físico para esconder informações do YouTube no mobile e barras pretas */}
-                {isMobile && (
-                  <div 
-                    className="absolute inset-0 w-full h-full z-[10] pointer-events-none"
-                    aria-hidden="true"
-                  >
-                    {/* Gradiente superior mais forte para esconder título/logo do YouTube e barras pretas */}
-                    <div 
-                      className="absolute top-0 left-0 right-0"
-                      style={{
-                        height: '200px', // Aumentado para 200px para cobrir área maior
-                        background: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 20%, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.3) 80%, transparent 100%)',
-                      }}
-                    />
-                    {/* Gradiente inferior para esconder barra de controles */}
-                    <div 
-                      className="absolute bottom-0 left-0 right-0 h-20"
-                      style={{
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)',
-                      }}
-                    />
-                  </div>
-                )}
+                {/* Overlay físico para esconder controles/título/logo do YouTube em todos os dispositivos */}
+                <div
+                  className="absolute inset-0 w-full h-full z-[10] pointer-events-none"
+                  aria-hidden="true"
+                >
+                  {/* Gradiente superior - esconde título e logo do YouTube */}
+                  <div
+                    className="absolute top-0 left-0 right-0"
+                    style={{
+                      height: isMobile ? '200px' : '120px',
+                      background:
+                        'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.2) 85%, transparent 100%)',
+                    }}
+                  />
+                  {/* Gradiente inferior - esconde barra de controles play/pause/setas */}
+                  <div
+                    className="absolute bottom-0 left-0 right-0"
+                    style={{
+                      height: isMobile ? '120px' : '100px',
+                      background:
+                        'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 40%, rgba(0,0,0,0.3) 75%, transparent 100%)',
+                    }}
+                  />
+                </div>
               </div>
             </div>
           ) : embedUrl.includes('vimeo.com') ? (
