@@ -59,23 +59,30 @@ const GuataVideosManager = () => {
       return;
     }
     setSaving(true);
-    const nextOrder = (videos[videos.length - 1]?.display_order ?? -1) + 1;
-    const thumb = form.thumbnailUrl.trim() || null;
-    const { error } = await supabase.from('guata_videos').insert({
-      title: form.title.trim(),
-      youtube_url: form.videoUrl.trim(),
-      thumbnail_url: thumb,
-      display_order: nextOrder,
-      is_active: true,
-    });
-    setSaving(false);
-    if (error) {
-      toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
-      return;
+    try {
+      const nextOrder = (videos[videos.length - 1]?.display_order ?? -1) + 1;
+      const thumb = form.thumbnailUrl.trim() || null;
+      const { error } = await supabase.from('guata_videos').insert({
+        title: form.title.trim(),
+        youtube_url: form.videoUrl.trim(),
+        thumbnail_url: thumb,
+        display_order: nextOrder,
+        is_active: true,
+      });
+      if (error) {
+        toast({
+          title: 'Erro ao salvar',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      setForm({ title: '', videoUrl: '', thumbnailUrl: '' });
+      toast({ title: 'Vídeo adicionado!' });
+      load();
+    } finally {
+      setSaving(false);
     }
-    setForm({ title: '', videoUrl: '', thumbnailUrl: '' });
-    toast({ title: 'Vídeo adicionado!' });
-    load();
   };
 
   const handleToggle = async (v: GuataVideo) => {
@@ -163,7 +170,7 @@ const GuataVideosManager = () => {
               YouTube usa a capa oficial automaticamente se você deixar vazio. No Instagram, sem URL aqui o card mostra um placeholder na home.
             </p>
           </div>
-          <Button onClick={handleAdd} disabled={saving}>
+          <Button type="button" onClick={handleAdd} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
             Adicionar
           </Button>

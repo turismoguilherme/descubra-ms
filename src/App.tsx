@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SearchOverlayProvider } from "@/context/SearchOverlayContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -397,6 +398,7 @@ function App() {
                   <LanguageProvider>
                     <TooltipProvider>
                       <Toaster />
+                      <SonnerToaster />
                       <BrowserRouter
                         future={{
                           v7_startTransition: true,
