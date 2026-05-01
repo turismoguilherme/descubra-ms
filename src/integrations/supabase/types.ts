@@ -1941,6 +1941,8 @@ export type Database = {
       events: {
         Row: {
           approval_status: string | null
+          approved_at: string | null
+          approved_by: string | null
           categoria: string | null
           cidade: string | null
           confiabilidade: number | null
@@ -1949,8 +1951,8 @@ export type Database = {
           created_at: string | null
           data_fim: string | null
           data_inicio: string | null
-          end_time: string | null
           descricao: string | null
+          end_time: string | null
           estado: string | null
           external_id: string
           fonte: string | null
@@ -1965,11 +1967,22 @@ export type Database = {
           organizador: string | null
           processado_por_ia: boolean | null
           publico_alvo: string | null
+          refund_amount: number | null
+          refund_error_message: string | null
+          refund_requested_at: string | null
+          refund_status: string | null
+          refunded_at: string | null
+          rejection_reason: string | null
           return_domain: string | null
           site_oficial: string | null
+          sponsor_amount: number | null
+          sponsor_end_date: string | null
           sponsor_payment_status: string | null
+          sponsor_start_date: string | null
+          sponsor_tier: string | null
           start_time: string | null
           stripe_payment_link_url: string | null
+          stripe_refund_id: string | null
           tags: string[] | null
           tipo_entrada: string | null
           titulo: string
@@ -1979,6 +1992,8 @@ export type Database = {
         }
         Insert: {
           approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           categoria?: string | null
           cidade?: string | null
           confiabilidade?: number | null
@@ -2003,11 +2018,22 @@ export type Database = {
           organizador?: string | null
           processado_por_ia?: boolean | null
           publico_alvo?: string | null
+          refund_amount?: number | null
+          refund_error_message?: string | null
+          refund_requested_at?: string | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          rejection_reason?: string | null
           return_domain?: string | null
           site_oficial?: string | null
+          sponsor_amount?: number | null
+          sponsor_end_date?: string | null
           sponsor_payment_status?: string | null
+          sponsor_start_date?: string | null
+          sponsor_tier?: string | null
           start_time?: string | null
           stripe_payment_link_url?: string | null
+          stripe_refund_id?: string | null
           tags?: string[] | null
           tipo_entrada?: string | null
           titulo: string
@@ -2017,6 +2043,8 @@ export type Database = {
         }
         Update: {
           approval_status?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           categoria?: string | null
           cidade?: string | null
           confiabilidade?: number | null
@@ -2041,11 +2069,22 @@ export type Database = {
           organizador?: string | null
           processado_por_ia?: boolean | null
           publico_alvo?: string | null
+          refund_amount?: number | null
+          refund_error_message?: string | null
+          refund_requested_at?: string | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          rejection_reason?: string | null
           return_domain?: string | null
           site_oficial?: string | null
+          sponsor_amount?: number | null
+          sponsor_end_date?: string | null
           sponsor_payment_status?: string | null
+          sponsor_start_date?: string | null
+          sponsor_tier?: string | null
           start_time?: string | null
           stripe_payment_link_url?: string | null
+          stripe_refund_id?: string | null
           tags?: string[] | null
           tipo_entrada?: string | null
           titulo?: string
