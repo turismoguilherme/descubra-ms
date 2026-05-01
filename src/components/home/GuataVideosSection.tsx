@@ -3,17 +3,15 @@ import { useEffect, useState } from 'react';
 import { Loader2, Play, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { platformContentService } from '@/services/admin/platformContentService';
-import {
-  extractYoutubeId,
-  getYoutubeEmbedUrl,
-  getYoutubeThumbnail,
-} from '@/utils/youtube';
+import { getGuataCarouselThumbnail, getGuataEmbedSrc, getGuataVideoProvider } from '@/utils/guataVideo';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface GuataVideo {
   id: string;
   title: string;
   youtube_url: string;
+  thumbnail_url: string | null;
   display_order: number;
 }
 
@@ -41,7 +39,7 @@ const GuataVideosSection = () => {
       try {
         const { data, error } = await supabase
           .from('guata_videos')
-          .select('id,title,youtube_url,display_order')
+          .select('id,title,youtube_url,thumbnail_url,display_order')
           .eq('is_active', true)
           .order('display_order', { ascending: true });
         if (error) throw error;
@@ -69,6 +67,8 @@ const GuataVideosSection = () => {
 
   if (videos.length === 0) return null;
 
+  const activeProvider = activeVideo ? getGuataVideoProvider(activeVideo.youtube_url) : null;
+
   return (
     <>
       <section className="py-24 bg-gradient-to-br from-ms-primary-blue/5 via-white to-ms-pantanal-green/5">
@@ -87,8 +87,9 @@ const GuataVideosSection = () => {
 
           <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-6 -mx-4 px-4 scrollbar-thin scrollbar-thumb-ms-primary-blue/30">
             {videos.map((v, idx) => {
-              const thumb = getYoutubeThumbnail(v.youtube_url, 'maxres');
-              const fallbackThumb = getYoutubeThumbnail(v.youtube_url, 'hq');
+              const thumb = getGuataCarouselThumbnail(v.youtube_url, v.thumbnail_url, 'maxres');
+              const fallbackThumb = getGuataCarouselThumbnail(v.youtube_url, v.thumbnail_url, 'hq');
+              const provider = getGuataVideoProvider(v.youtube_url);
               return (
                 <button
                   key={v.id}
@@ -104,11 +105,18 @@ const GuataVideosSection = () => {
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       loading="lazy"
                       onError={(e) => {
-                        if (fallbackThumb) (e.target as HTMLImageElement).src = fallbackThumb;
+                        if (fallbackThumb && (e.target as HTMLImageElement).src !== fallbackThumb) {
+                          (e.target as HTMLImageElement).src = fallbackThumb;
+                        }
                       }}
                     />
                   ) : (
-                    <div className="absolute inset-0 bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-ms-primary-blue to-ms-discovery-teal flex flex-col items-center justify-center gap-2 px-4">
+                      <Play size={40} className="text-white/90" />
+                      <span className="text-white/85 text-xs font-medium text-center">
+                        {provider === 'instagram' ? 'Instagram' : 'Vídeo'}
+                      </span>
+                    </div>
                   )}
 
                   {/* Overlay escuro pra contraste */}
@@ -141,7 +149,12 @@ const GuataVideosSection = () => {
 
       {/* Modal do player */}
       <Dialog open={!!activeVideo} onOpenChange={(o) => !o && setActiveVideo(null)}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black border-0 [&>button]:hidden">
+        <DialogContent
+          className={cn(
+            'p-0 overflow-hidden bg-black border-0 [&>button]:hidden',
+            activeProvider === 'instagram' ? 'max-w-[420px]' : 'max-w-4xl'
+          )}
+        >
           <DialogTitle className="sr-only">{activeVideo?.title || 'Vídeo'}</DialogTitle>
           <button
             onClick={() => setActiveVideo(null)}
@@ -151,14 +164,21 @@ const GuataVideosSection = () => {
             <X size={20} />
           </button>
           {activeVideo && (
-            <div className="aspect-video w-full">
+            <div
+              className={cn(
+                'w-full',
+                activeProvider === 'instagram' ? 'aspect-[9/16] max-h-[85vh]' : 'aspect-video'
+              )}
+            >
               <iframe
-                src={getYoutubeEmbedUrl(activeVideo.youtube_url, {
-                  autoplay: true,
-                  controls: true,
-                }) || ''}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                src={
+                  getGuataEmbedSrc(activeVideo.youtube_url, {
+                    autoplay: true,
+                    controls: true,
+                  }) || ''
+                }
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 title={activeVideo.title}
               />

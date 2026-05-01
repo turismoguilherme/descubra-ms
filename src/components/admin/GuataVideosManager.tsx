@@ -7,13 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { extractYoutubeId, getYoutubeThumbnail } from '@/utils/youtube';
+import { getGuataCarouselThumbnail, getGuataVideoProvider } from '@/utils/guataVideo';
 import { ArrowDown, ArrowUp, Loader2, Plus, Trash2, Video } from 'lucide-react';
 
 interface GuataVideo {
   id: string;
   title: string;
   youtube_url: string;
+  thumbnail_url: string | null;
   display_order: number;
   is_active: boolean;
 }
@@ -23,7 +24,7 @@ const GuataVideosManager = () => {
   const [videos, setVideos] = useState<GuataVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ title: '', youtube_url: '' });
+  const [form, setForm] = useState({ title: '', videoUrl: '', thumbnailUrl: '' });
 
   const load = async () => {
     setLoading(true);
@@ -44,23 +45,26 @@ const GuataVideosManager = () => {
   }, []);
 
   const handleAdd = async () => {
-    if (!form.title.trim() || !form.youtube_url.trim()) {
-      toast({ title: 'Preencha título e link', variant: 'destructive' });
+    if (!form.title.trim() || !form.videoUrl.trim()) {
+      toast({ title: 'Preencha título e link do vídeo', variant: 'destructive' });
       return;
     }
-    if (!extractYoutubeId(form.youtube_url)) {
+    const provider = getGuataVideoProvider(form.videoUrl.trim());
+    if (!provider) {
       toast({
         title: 'Link inválido',
-        description: 'Cole um link válido do YouTube (ex: https://youtu.be/...).',
+        description: 'Use um link do YouTube ou um post/reel público do Instagram (instagram.com/reel/... ou /p/...).',
         variant: 'destructive',
       });
       return;
     }
     setSaving(true);
     const nextOrder = (videos[videos.length - 1]?.display_order ?? -1) + 1;
+    const thumb = form.thumbnailUrl.trim() || null;
     const { error } = await supabase.from('guata_videos').insert({
       title: form.title.trim(),
-      youtube_url: form.youtube_url.trim(),
+      youtube_url: form.videoUrl.trim(),
+      thumbnail_url: thumb,
       display_order: nextOrder,
       is_active: true,
     });
@@ -69,7 +73,7 @@ const GuataVideosManager = () => {
       toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
       return;
     }
-    setForm({ title: '', youtube_url: '' });
+    setForm({ title: '', videoUrl: '', thumbnailUrl: '' });
     toast({ title: 'Vídeo adicionado!' });
     load();
   };
@@ -115,7 +119,7 @@ const GuataVideosManager = () => {
           Vídeos do Guatá
         </h1>
         <p className="text-muted-foreground mt-1">
-          Gerencie os vídeos exibidos no carrossel da home do Descubra MS.
+          Gerencie os vídeos exibidos no carrossel da home do Descubra MS (YouTube ou Instagram).
         </p>
       </div>
 
@@ -138,14 +142,26 @@ const GuataVideosManager = () => {
               />
             </div>
             <div>
-              <Label htmlFor="url">Link do YouTube</Label>
+              <Label htmlFor="url">Link do vídeo</Label>
               <Input
                 id="url"
-                placeholder="https://youtu.be/... ou https://youtube.com/watch?v=..."
-                value={form.youtube_url}
-                onChange={(e) => setForm((f) => ({ ...f, youtube_url: e.target.value }))}
+                placeholder="YouTube ou instagram.com/reel/... ou instagram.com/p/..."
+                value={form.videoUrl}
+                onChange={(e) => setForm((f) => ({ ...f, videoUrl: e.target.value }))}
               />
             </div>
+          </div>
+          <div>
+            <Label htmlFor="thumb">URL da capa (opcional)</Label>
+            <Input
+              id="thumb"
+              placeholder="https://…jpg — miniatura exibida no carrossel"
+              value={form.thumbnailUrl}
+              onChange={(e) => setForm((f) => ({ ...f, thumbnailUrl: e.target.value }))}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              YouTube usa a capa oficial automaticamente se você deixar vazio. No Instagram, sem URL aqui o card mostra um placeholder na home.
+            </p>
           </div>
           <Button onClick={handleAdd} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
@@ -168,7 +184,10 @@ const GuataVideosManager = () => {
           ) : (
             <div className="space-y-3">
               {videos.map((v, i) => {
-                const thumb = getYoutubeThumbnail(v.youtube_url, 'mq');
+                const mq = getGuataCarouselThumbnail(v.youtube_url, v.thumbnail_url, 'mq');
+                const hq = getGuataCarouselThumbnail(v.youtube_url, v.thumbnail_url, 'hq');
+                const thumb = mq || hq;
+                const provider = getGuataVideoProvider(v.youtube_url);
                 return (
                   <div
                     key={v.id}
@@ -177,12 +196,14 @@ const GuataVideosManager = () => {
                     {thumb ? (
                       <img src={thumb} alt={v.title} className="w-32 h-20 object-cover rounded" />
                     ) : (
-                      <div className="w-32 h-20 bg-muted rounded flex items-center justify-center">
-                        <Video className="w-6 h-6 text-muted-foreground" />
+                      <div className="w-32 h-20 bg-muted rounded flex flex-col items-center justify-center gap-0.5 text-[10px] text-muted-foreground px-1 text-center">
+                        <Video className="w-6 h-6 opacity-60" />
+                        {provider === 'instagram' ? 'Instagram' : 'Sem capa'}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{v.title}</p>
+                      <span className="text-[10px] uppercase text-muted-foreground">{provider || '?'}</span>
                       <a
                         href={v.youtube_url}
                         target="_blank"

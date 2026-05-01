@@ -3101,6 +3101,7 @@ export type Database = {
           display_order: number
           id: string
           is_active: boolean
+          thumbnail_url: string | null
           title: string
           updated_at: string
           youtube_url: string
@@ -3110,6 +3111,7 @@ export type Database = {
           display_order?: number
           id?: string
           is_active?: boolean
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
           youtube_url: string
@@ -3119,6 +3121,7 @@ export type Database = {
           display_order?: number
           id?: string
           is_active?: boolean
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
           youtube_url?: string
