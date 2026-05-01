@@ -306,12 +306,10 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                 {event.end_date && event.end_date !== event.start_date && (
                   <p className="text-gray-600 text-sm mt-1">até {formatDate(event.end_date)}</p>
                 )}
-                {timeRangeLabel && (
-                  <div className="flex items-center gap-2 mt-2 text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <span>{timeRangeLabel}</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2 mt-2 text-gray-600">
+                  <Clock className="w-4 h-4" />
+                  <span>{timeRangeLabel || 'Horário a definir'}</span>
+                </div>
               </div>
 
               {/* Localização */}
@@ -323,6 +321,18 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                 <p className="text-gray-800 font-medium">{getTranslatedLocation(event)}</p>
               </div>
             </div>
+
+            {/* Logo / Imagem do evento em destaque */}
+            {event.cover_image && (
+              <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200 flex items-center justify-center">
+                <img
+                  src={event.cover_image}
+                  alt={getTranslatedName(event)}
+                  className="max-h-72 w-auto object-contain rounded-lg"
+                  loading="lazy"
+                />
+              </div>
+            )}
 
             {/* Descrição */}
             {getTranslatedDescription(event) && (
