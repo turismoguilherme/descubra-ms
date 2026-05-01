@@ -204,6 +204,17 @@ export const adminModulesConfig: AdminModule[] = [
             helpText: 'Gerencie os avatares de animais do Pantanal disponíveis para os usuários. Adicione, edite ou remova avatares.',
           },
           {
+            id: 'guata-videos',
+            label: 'Vídeos do Guatá',
+            icon: Video,
+            path: '/viajar/admin/descubra-ms/guata-videos',
+            permission: 'content',
+            platform: 'descubra-ms',
+            title: 'Vídeos do Guatá',
+            description: 'Gerencie os vídeos exibidos no carrossel da home do Descubra MS',
+            helpText: 'Adicione vídeos do YouTube colando o link e o título. A miniatura é gerada automaticamente.',
+          },
+          {
             id: 'passport',
             label: 'Passaporte Digital',
             icon: Stamp,
