@@ -1,62 +1,91 @@
+## Recomendação para o carrossel
 
+Sobre os 3 formatos de carrossel, recomendo **cards verticais 9:16 (formato stories/reels)** porque:
 
-## Diagnóstico
+- Combina com a estética imersiva do Descubra MS (vídeos verticais valorizam paisagens em retrato — Pantanal, cachoeiras, etc.)
+- É o formato moderno (TikTok/Reels) que o público jovem espera
+- Vídeos do Guatá costumam ser curtos e verticais
+- O visual da imagem 3 que você gostou usa exatamente esse formato
 
-Hoje no admin existem **duas telas separadas** para parceiros, e isso está confundindo:
+Vou usar cards verticais com play centralizado, mas com a paleta MS (azul/teal/verde Pantanal) ao invés do roxo da referência, mantendo coerência com o resto do site.
 
-1. **Aba "Lista" (Parceiros)** → mostra cadastro + botões `Aprovar`, `Devolver p/ ajuste`, `Baixa Manual`, `Reprovar (definitivo)`, `Excluir Permanentemente`. **NÃO mostra o PDF assinado.**
-2. **Aba "Termos"** → é onde o PDF físico assinado pelo parceiro aparece (campo `uploaded_pdf_url` da tabela `partner_terms_acceptances`). Você provavelmente nunca abriu essa aba — por isso "não consegue ver o documento".
+---
 
-## O que cada botão faz hoje (significado real no código)
+## Plano de execução
 
-| Botão | O que acontece de fato |
-|---|---|
-| **Aprovar** | Marca `status=approved` + `is_active=true`. Parceiro ainda precisa **pagar** a assinatura no Stripe para ter acesso. |
-| **Devolver p/ ajuste** | Marca `status=revision_requested`. Parceiro recebe email e pode reenviar dados/PDF. Mantém acesso. |
-| **Baixa Manual** | Aprova **+ ativa a assinatura sem pagamento** (`subscription_status=active`). Usado para **promoções/cortesias** (acesso grátis). |
-| **Reprovar (definitivo)** | Cancela assinatura no Stripe, tenta **reembolso integral** da última fatura e **encerra acesso**. Irreversível em termos de cobrança. |
-| **Excluir Permanentemente** | **Apaga** o registro do parceiro do banco + remove conta de auth. Não tem volta. |
+### 1. Esconder símbolo do YouTube no hero (desktop)
 
-## O que vou implementar
+**Arquivo:** `src/components/layout/UniversalHero.tsx`
 
-### 1. Mostrar o PDF assinado direto no card e modal de detalhes do parceiro (aba Lista)
+Hoje o overlay que cobre os controles do YouTube só existe no **mobile** (linhas 392-413). No desktop o iframe fica nu, e por isso aparecem os controles ▶ ⏸ ◀ ▶ sobrepostos ao texto.
 
-No `PartnersManagement.tsx`, ao carregar a lista, buscar também o termo mais recente (`partner_terms_acceptances`) de cada parceiro e exibir:
+**Correção:** mover o overlay de gradientes (top + bottom) pra fora do `if (isMobile)`, deixando ele sempre ativo. O `pointer-events-none` já está aplicado, então não atrapalha cliques nos botões do hero.
 
-- **No card do parceiro**: badge "Termo: Pendente / Aprovado / Rejeitado" + ícone para abrir o PDF assinado em nova aba (se existir `uploaded_pdf_url`).
-- **No modal "Ver Detalhes"**: nova seção **"Termo de Parceria"** com:
-  - Status da revisão
-  - Data de assinatura + IP
-  - Botão **"Ver PDF Digital (gerado)"** → abre `pdf_url`
-  - Botão **"Ver PDF Físico Assinado"** → abre `uploaded_pdf_url`
-  - Botões **"Aprovar termo"** / **"Solicitar ajuste"** / **"Rejeitar termo"** (mesma lógica da aba Termos, agora acessível direto daqui)
+### 2. Eventos: logo grande + horário visível
 
-### 2. Renomear botões para deixar o significado claro
+**Arquivo:** `src/components/events/EventDetailModal.tsx`
 
-Trocar os labels para serem autoexplicativos, sem mudar a lógica:
+a) **Logo grande antes do "Sobre o Evento":** inserir uma seção nova entre o grid de Data/Localização (linha 325) e o bloco "Sobre o Evento" (linha 327), exibindo `event.cover_image` num card centralizado, formato landscape (max-h ~280px, object-contain pra não cortar logos), com fundo sutil.
 
-- `Baixa Manual` → **"Liberar acesso grátis (cortesia)"** com tooltip "Aprova e ativa a assinatura sem cobrança no Stripe — para promoções"
-- `Reprovar (definitivo)` → **"Reprovar e cancelar assinatura"** com tooltip "Cancela no Stripe, tenta reembolso e encerra acesso"
-- `Excluir Permanentemente` → **"Apagar do banco (irreversível)"** com tooltip "Remove parceiro e conta de login — não tem volta"
-- `Devolver p/ ajuste` → **"Pedir ajuste ao parceiro"**
-- Adicionar pequeno ícone `?` ao lado de cada botão abrindo um popover com explicação curta em PT-BR.
+b) **Horário do evento:** o código já tenta mostrar via `timeRangeLabel`, mas só aparece se `start_time`/`end_time` estiverem preenchidos. Vou:
+- Verificar no `resolveEventTimes` se `00:00` é tratado como vazio (provável causa do horário sumido) → ajustar pra mostrar mesmo assim, ou mostrar "Horário a definir" quando ausente
+- Garantir que o card "Data e Horário" sempre mostre alguma indicação de horário (ou o range, ou "Horário a definir")
 
-### 3. Tornar o `window.confirm()` (alert nativo feio) um Dialog do shadcn
+### 3. Substituir CATs por carrossel de vídeos do Guatá
 
-Trocar os `window.confirm` de "Reprovar definitivo" e "Excluir permanentemente" por `AlertDialog` do shadcn com texto explicando exatamente o que vai acontecer (incluindo se haverá tentativa de reembolso, se Stripe será cancelado etc.).
+**Banco — nova tabela** (via migração):
+```
+guata_videos (
+  id uuid pk,
+  title text not null,
+  youtube_url text not null,
+  display_order int default 0,
+  is_active bool default true,
+  created_at, updated_at
+)
+```
+Com RLS: leitura pública (`select` para `anon`), escrita só pra admins (via `has_role(auth.uid(), 'admin')`).
 
-### 4. Manter a aba "Termos" funcionando como está
+**Novo componente:** `src/components/home/GuataVideosSection.tsx`
+- Busca vídeos ativos ordenados por `display_order`
+- Extrai videoId do YouTube e renderiza thumbnail automática (`https://img.youtube.com/vi/{id}/maxresdefault.jpg`)
+- Carrossel horizontal com cards verticais 9:16, ~240px de largura
+- Card: thumbnail + ícone play centralizado + título embaixo + badge MS no canto
+- Click abre modal com iframe do YouTube em player (com controles, fullscreen, modestbranding)
+- Paleta: `from-ms-primary-blue/5 via-white to-ms-pantanal-green/5` (igual atual)
+- Título da seção: "Conheça MS com o Guatá" (editável via `platformContentService` com prefixo `ms_guata_videos_`)
 
-Continua útil para revisão em massa de todos os termos. Apenas adicionamos atalho na lista de parceiros para não obrigar a navegar entre abas.
+**Substituição:** em `src/pages/MSIndex.tsx`, trocar `<CatsSection />` por `<GuataVideosSection />`. Manter `CatsSection.tsx` no projeto (pode ser reusado em outra rota se quiser no futuro).
 
-## Arquivos afetados
+**Admin:** novo manager `src/components/admin/GuataVideosManager.tsx`
+- Lista todos os vídeos com preview da thumbnail
+- Form simples: campo URL do YouTube + título
+- Botões: ativar/desativar, reordenar (setas ↑↓), excluir
+- Adicionar entrada no menu admin (provavelmente em `PlatformConfigCenter` ou similar — vou identificar o lugar certo na implementação)
 
-- `src/components/admin/descubra_ms/PartnersManagement.tsx` — adicionar fetch de termos, seção no modal, renomear botões, popovers de ajuda, AlertDialog
-- Reaproveitar a função `updateStatus` da `PartnerTermsReview.tsx` extraindo para `src/services/partners/partnerTermsReviewService.ts` (novo) para evitar duplicação de lógica
+### 4. Refatoração
+
+- `GuataVideosSection.tsx` ficará sob 200 linhas (separar `GuataVideoCard` se passar disso)
+- `GuataVideosManager.tsx` reaproveitar componentes shadcn (`Card`, `Input`, `Button`, `Switch`)
+- Util `extractYoutubeId(url)` em `src/utils/youtube.ts` (verificar se já existe — vi regex parecida no UniversalHero, vou centralizar)
+
+---
+
+## Detalhes técnicos (referência)
+
+| Item | Arquivo | Mudança |
+|---|---|---|
+| Overlay YouTube desktop | `UniversalHero.tsx` L391-413 | remover `{isMobile && ...}`, deixar overlay sempre |
+| Logo evento | `EventDetailModal.tsx` L325-327 | inserir bloco com `<img src={event.cover_image}>` |
+| Horário evento | `EventDetailModal.tsx` L309 + `resolveEventTimes` | tratar `00:00` e fallback "Horário a definir" |
+| Tabela vídeos | nova migração | `guata_videos` + RLS |
+| Seção home | novo `GuataVideosSection.tsx` + `MSIndex.tsx` | substitui `<CatsSection />` |
+| Admin | novo `GuataVideosManager.tsx` | CRUD + reorder |
+
+---
 
 ## Resultado esperado
 
-- Você abre **Parceiros → Ver Detalhes** e já vê o PDF assinado + status do termo + botões para aprovar/rejeitar o termo
-- Nenhum botão fica com nome ambíguo: cada um tem tooltip e popover de ajuda explicando exatamente o efeito (acesso, Stripe, reembolso, exclusão)
-- Confirmações destrutivas viram diálogos claros, não mais `alert()` do navegador
-
+- Hero do Descubra MS sem controles do YouTube visíveis em nenhum dispositivo
+- Modal de evento mostra logo grande do evento, horário sempre presente (real ou "a definir")
+- Home traz carrossel de vídeos verticais do Guatá no lugar dos CATs, gerenciável pelo admin com apenas link + título
