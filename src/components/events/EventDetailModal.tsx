@@ -323,10 +323,10 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             </div>
 
             {/* Logo / Imagem do evento em destaque */}
-            {event.cover_image && (
+            {(event.logo_evento || event.image_url) && (
               <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200 flex items-center justify-center">
                 <img
-                  src={event.cover_image}
+                  src={event.logo_evento || event.image_url}
                   alt={getTranslatedName(event)}
                   className="max-h-72 w-auto object-contain rounded-lg"
                   loading="lazy"
