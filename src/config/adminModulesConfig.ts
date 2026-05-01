@@ -44,6 +44,7 @@ import {
   Mail,
   TrendingUp,
   MessageCircle,
+  Video,
 } from 'lucide-react';
 import { ComponentType } from 'react';
 
