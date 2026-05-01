@@ -270,27 +270,48 @@ const PassportStampConfig: React.FC = () => {
       });
       await loadData();
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const postgrest = error as {
+        name?: string;
+        message?: string;
+        code?: string;
+        details?: string;
+        hint?: string;
+      };
+      const description =
+        postgrest.message ||
+        (error instanceof Error ? error.message : String(error));
+      const err = error instanceof Error ? error : new Error(description);
       console.error('❌ [PassportStampConfig] Erro completo ao salvar configuração:', {
-        message: err.message,
-        code: (err as { code?: string }).code,
-        details: (error as { details?: string }).details,
-        hint: (error as { hint?: string }).hint,
+        message: description,
+        code: postgrest.code,
+        details: postgrest.details,
+        hint: postgrest.hint,
         stack: err.stack,
       });
-      
-      // Verificar se é erro de migration não executada
-      if ((error as { name?: string }).name === 'MigrationRequiredError' || ((error as { code?: string }).code === 'PGRST204' && (error as { message?: string }).message?.includes('require_sequential'))) {
+
+      if (postgrest.name === 'StampThemeConstraintError') {
+        toast({
+          title: 'Banco desatualizado: tema do carimbo',
+          description,
+          variant: 'destructive',
+          duration: 12000,
+        });
+      } else if (
+        postgrest.name === 'MigrationRequiredError' ||
+        (postgrest.code === 'PGRST204' && postgrest.message?.includes('require_sequential'))
+      ) {
         toast({
           title: 'Migração do banco de dados necessária',
-          description: err.message || 'A coluna "require_sequential" não existe. Execute a migration no Supabase Dashboard.',
+          description:
+            description ||
+            'A coluna "require_sequential" não existe. Execute a migration no Supabase Dashboard.',
           variant: 'destructive',
-          duration: 10000, // Mostrar por mais tempo
+          duration: 10000,
         });
       } else {
         toast({
           title: 'Erro ao salvar configuração',
-          description: err.message,
+          description,
           variant: 'destructive',
         });
       }

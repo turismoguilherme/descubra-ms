@@ -45,9 +45,9 @@ class PassportAdminService {
         .from('passport_configurations')
         .select('*, routes(*)')
         .eq('route_id', routeId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('❌ [PassportAdminService] Erro ao buscar configuração:', error);
         throw error;
       }
@@ -79,7 +79,24 @@ class PassportAdminService {
 
       if (error) {
         console.error('❌ [PassportAdminService] Erro ao criar configuração:', error);
-        
+
+        const msg = error.message ?? '';
+
+        // CHECK antigo em stamp_theme (ex.: só onca, tuiuiu, jacare, arara) — migração 20250215000003 remove
+        if (
+          msg.includes('passport_configurations_stamp_theme_check') ||
+          (msg.includes('stamp_theme') &&
+            (msg.includes('check constraint') || msg.includes('violates check')))
+        ) {
+          const e = new Error(
+            'O banco ainda usa a restrição antiga de tema do carimbo. Execute no Supabase a migração ' +
+              'supabase/migrations/20250215000003_add_passport_enhancements.sql (remove o CHECK e amplia stamp_theme), ' +
+              'ou escolha temporariamente um dos temas antigos: onca, tuiuiu, jacare, arara.'
+          );
+          e.name = 'StampThemeConstraintError';
+          throw e;
+        }
+
         // Verificar se é erro de coluna não encontrada (migração não executada)
         if (error.code === 'PGRST204' && error.message?.includes('require_sequential')) {
           const migrationError = new Error(
@@ -93,7 +110,7 @@ class PassportAdminService {
           migrationError.name = 'MigrationRequiredError';
           throw migrationError;
         }
-        
+
         throw error;
       }
       console.log('✅ [PassportAdminService] Configuração criada:', data?.id);
@@ -127,7 +144,22 @@ class PassportAdminService {
 
       if (error) {
         console.error('❌ [PassportAdminService] Erro ao atualizar configuração:', error);
-        
+
+        const msgU = error.message ?? '';
+        if (
+          msgU.includes('passport_configurations_stamp_theme_check') ||
+          (msgU.includes('stamp_theme') &&
+            (msgU.includes('check constraint') || msgU.includes('violates check')))
+        ) {
+          const e = new Error(
+            'O banco ainda usa a restrição antiga de tema do carimbo. Execute no Supabase a migração ' +
+              'supabase/migrations/20250215000003_add_passport_enhancements.sql (remove o CHECK e amplia stamp_theme), ' +
+              'ou escolha temporariamente um dos temas antigos: onca, tuiuiu, jacare, arara.'
+          );
+          e.name = 'StampThemeConstraintError';
+          throw e;
+        }
+
         // Verificar se é erro de coluna não encontrada (migração não executada)
         if (error.code === 'PGRST204' && error.message?.includes('require_sequential')) {
           const migrationError = new Error(
@@ -141,7 +173,7 @@ class PassportAdminService {
           migrationError.name = 'MigrationRequiredError';
           throw migrationError;
         }
-        
+
         throw error;
       }
       console.log('✅ [PassportAdminService] Configuração atualizada:', data?.id);

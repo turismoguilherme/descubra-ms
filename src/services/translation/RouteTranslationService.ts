@@ -35,14 +35,14 @@ class RouteTranslationService {
         .select('*')
         .eq('route_id', routeId)
         .eq('language_code', languageCode)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Erro ao buscar tradução:', error);
         return null;
       }
 
-      return data || null;
+      return data ?? null;
     } catch (error) {
       console.error('Erro ao buscar tradução de roteiro:', error);
       return null;
