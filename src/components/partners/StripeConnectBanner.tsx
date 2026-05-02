@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { invokeStripeConnectOnboarding } from '@/utils/invokeStripeConnectOnboarding';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
 
@@ -28,29 +28,27 @@ export default function StripeConnectBanner({
     setLoading(true);
     try {
 
-      const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
-        body: {
-          partnerId,
-          partnerEmail,
-          partnerName,
-          returnUrl: `${window.location.origin}/partner/dashboard?stripe_connect=success`,
-          refreshUrl: `${window.location.origin}/partner/dashboard?stripe_connect=refresh`,
-        },
+      const { data, error } = await invokeStripeConnectOnboarding({
+        partnerId,
+        partnerEmail,
+        partnerName,
+        returnUrl: `${window.location.origin}/partner/dashboard?stripe_connect=success`,
+        refreshUrl: `${window.location.origin}/partner/dashboard?stripe_connect=refresh`,
       });
 
       if (error) {
-        throw new Error(error.message);
+        throw error;
       }
 
       if (data?.url) {
         window.location.href = data.url;
       }
     } catch (error: unknown) {
-      
-      console.error('Erro ao conectar Stripe:', error);
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro ao conectar Stripe:', err);
       toast({
         title: 'Erro ao conectar',
-        description: error.message || 'Não foi possível conectar com o Stripe.',
+        description: err.message || 'Não foi possível conectar com o Stripe.',
         variant: 'destructive',
       });
     } finally {

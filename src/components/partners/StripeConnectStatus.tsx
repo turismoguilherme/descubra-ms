@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeStripeConnectOnboarding } from '@/utils/invokeStripeConnectOnboarding';
 import { useToast } from '@/hooks/use-toast';
 import { 
   CreditCard, 
@@ -61,18 +62,16 @@ export default function StripeConnectStatus({ partnerId, compact = false }: Stri
         .eq('id', partnerId)
         .single();
 
-      const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
-        body: {
-          partnerId,
-          partnerEmail: partnerData?.contact_email || '',
-          partnerName: partnerData?.name || '',
-          returnUrl: `${window.location.origin}/partner/dashboard?stripe_connect=success`,
-          refreshUrl: `${window.location.origin}/partner/dashboard?stripe_connect=refresh`,
-        },
+      const { data, error } = await invokeStripeConnectOnboarding({
+        partnerId,
+        partnerEmail: partnerData?.contact_email || '',
+        partnerName: partnerData?.name || '',
+        returnUrl: `${window.location.origin}/partner/dashboard?stripe_connect=success`,
+        refreshUrl: `${window.location.origin}/partner/dashboard?stripe_connect=refresh`,
       });
 
       if (error) {
-        throw new Error(error.message);
+        throw error;
       }
 
       if (data?.url) {

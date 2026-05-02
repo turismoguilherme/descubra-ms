@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeStripeConnectOnboarding } from '@/utils/invokeStripeConnectOnboarding';
 import { useToast } from '@/hooks/use-toast';
 import { 
   CreditCard, 
@@ -142,18 +143,16 @@ export default function StripeConnectStep({
     setLoading(true);
     try {
       // Chamar Edge Function para criar link de onboarding
-      const { data, error } = await supabase.functions.invoke('stripe-connect-onboarding', {
-        body: {
-          partnerId,
-          partnerEmail,
-          partnerName,
-          returnUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=success`,
-          refreshUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=refresh`,
-        },
+      const { data, error } = await invokeStripeConnectOnboarding({
+        partnerId,
+        partnerEmail,
+        partnerName,
+        returnUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=success`,
+        refreshUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=refresh`,
       });
 
       if (error) {
-        throw new Error(error.message);
+        throw error;
       }
 
       if (data?.url) {
