@@ -1126,6 +1126,13 @@ export type Database = {
             referencedRelation: "commercial_partners"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "commercial_partner_metrics_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "commercial_partners_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       commercial_partners: {
@@ -7817,7 +7824,105 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      commercial_partners_public: {
+        Row: {
+          address: string | null
+          business_type: string | null
+          city: string | null
+          company_name: string | null
+          company_size: string | null
+          contact_email: string | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          featured: boolean | null
+          gallery_images: string[] | null
+          id: string | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          operating_hours: Json | null
+          price_range: string | null
+          seasonal_info: Json | null
+          services_offered: string[] | null
+          state: string | null
+          status: string | null
+          subscription_plan: string | null
+          target_audience: string[] | null
+          total_clicks: number | null
+          total_views: number | null
+          trade_name: string | null
+          updated_at: string | null
+          verified: boolean | null
+          website_url: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          business_type?: string | null
+          city?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          contact_email?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          featured?: boolean | null
+          gallery_images?: string[] | null
+          id?: string | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          operating_hours?: Json | null
+          price_range?: string | null
+          seasonal_info?: Json | null
+          services_offered?: string[] | null
+          state?: string | null
+          status?: string | null
+          subscription_plan?: string | null
+          target_audience?: string[] | null
+          total_clicks?: number | null
+          total_views?: number | null
+          trade_name?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+          website_url?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          business_type?: string | null
+          city?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          contact_email?: string | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          featured?: boolean | null
+          gallery_images?: string[] | null
+          id?: string | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          operating_hours?: Json | null
+          price_range?: string | null
+          seasonal_info?: Json | null
+          services_offered?: string[] | null
+          state?: string | null
+          status?: string | null
+          subscription_plan?: string | null
+          target_audience?: string[] | null
+          total_clicks?: number | null
+          total_views?: number | null
+          trade_name?: string | null
+          updated_at?: string | null
+          verified?: boolean | null
+          website_url?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       assign_user_role: {
