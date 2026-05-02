@@ -1,91 +1,94 @@
-## Recomendação para o carrossel
+## Plano de correções e melhoria — Passaporte Digital, Stripe Connect e Termos
 
-Sobre os 3 formatos de carrossel, recomendo **cards verticais 9:16 (formato stories/reels)** porque:
-
-- Combina com a estética imersiva do Descubra MS (vídeos verticais valorizam paisagens em retrato — Pantanal, cachoeiras, etc.)
-- É o formato moderno (TikTok/Reels) que o público jovem espera
-- Vídeos do Guatá costumam ser curtos e verticais
-- O visual da imagem 3 que você gostou usa exatamente esse formato
-
-Vou usar cards verticais com play centralizado, mas com a paleta MS (azul/teal/verde Pantanal) ao invés do roxo da referência, mantendo coerência com o resto do site.
+Antes de codar, tenho 2 dúvidas importantes que precisam de resposta — listadas no final do plano.
 
 ---
 
-## Plano de execução
+### 1) Passaporte Digital — checkpoints por DIA (rotas difíceis / multi-dia)
 
-### 1. Esconder símbolo do YouTube no hero (desktop)
+**Diagnóstico:** hoje `route_checkpoints` tem `order_sequence` (ordem linear), mas não há nenhum conceito de "dia". Para roteiros classificados como `Difícil` que ocupam vários dias, o admin precisa agrupar checkpoints por dia (Dia 1, Dia 2, …) e o app precisa exibir/validar respeitando essa divisão.
 
-**Arquivo:** `src/components/layout/UniversalHero.tsx`
+**O que será implementado:**
+- **Migration** adicionando à tabela `route_checkpoints`:
+  - `day_number INTEGER DEFAULT 1` (em qual dia do roteiro está o checkpoint)
+  - `day_title TEXT NULL` (rótulo opcional do dia, ex.: "Dia 1 – Bonito Centro")
+- Em `routes`: adicionar `total_days INTEGER DEFAULT 1` para o admin definir a duração em dias.
+- **Admin (`PassportCheckpointManager` + `PassportRouteManager`)**:
+  - Em rotas `Difícil`, exibir campo "Total de dias" e, ao criar/editar checkpoint, um seletor "Dia". Os checkpoints passam a ser listados agrupados por dia.
+- **App público (`PassaporteRota` / detalhe da rota)**:
+  - Renderizar a lista de checkpoints agrupada por dia, com cabeçalho de cada dia.
+  - O progresso por dia é exibido (X/Y do Dia 1, etc.); o sequencial continua respeitando `order_sequence` dentro do dia.
+- **Compatibilidade:** rotas existentes ficam com `day_number = 1` e `total_days = 1`, sem mudança visual.
 
-Hoje o overlay que cobre os controles do YouTube só existe no **mobile** (linhas 392-413). No desktop o iframe fica nu, e por isso aparecem os controles ▶ ⏸ ◀ ▶ sobrepostos ao texto.
+### 2) Tela "Nenhuma Rota Disponível" — remover botão administrativo
 
-**Correção:** mover o overlay de gradientes (top + bottom) pra fora do `if (isMobile)`, deixando ele sempre ativo. O `pointer-events-none` já está aplicado, então não atrapalha cliques nos botões do hero.
+**Diagnóstico:** `src/pages/ms/PassaporteLista.tsx` linhas 269–284 mostram botão "Ir para Painel Administrativo" para qualquer visitante quando não há rotas. Inadequado para o público final.
 
-### 2. Eventos: logo grande + horário visível
+**Correção:** substituir o estado vazio por mensagem amigável sem CTA administrativo:
+- Ícone + título "Em breve, novas rotas"
+- Texto: "Ainda não há rotas publicadas. Volte em breve para descobrir os roteiros do Passaporte Digital."
+- Botão único "Voltar para o início" → navega para `/descubrams`.
 
-**Arquivo:** `src/components/events/EventDetailModal.tsx`
+### 3) Stripe Connect — erro ao tentar conectar
 
-a) **Logo grande antes do "Sobre o Evento":** inserir uma seção nova entre o grid de Data/Localização (linha 325) e o bloco "Sobre o Evento" (linha 327), exibindo `event.cover_image` num card centralizado, formato landscape (max-h ~280px, object-contain pra não cortar logos), com fundo sutil.
+**Diagnóstico:** a edge function `stripe-connect-onboarding` (linhas 236 e 262) faz duas validações estritas:
+1. `partner.contact_email !== user.email` → bloqueia 403.
+2. `partner.contact_email !== partnerEmail` (do body) → lança erro.
 
-b) **Horário do evento:** o código já tenta mostrar via `timeRangeLabel`, mas só aparece se `start_time`/`end_time` estiverem preenchidos. Vou:
-- Verificar no `resolveEventTimes` se `00:00` é tratado como vazio (provável causa do horário sumido) → ajustar pra mostrar mesmo assim, ou mostrar "Horário a definir" quando ausente
-- Garantir que o card "Data e Horário" sempre mostre alguma indicação de horário (ou o range, ou "Horário a definir")
+Cenários reais que falham hoje:
+- Parceiro foi cadastrado pelo admin com `contact_email` diferente do email da conta auth do usuário-parceiro.
+- Letras maiúsculas/minúsculas ou espaços diferentes entre os emails.
+- Admin/master_admin tentando conectar em nome de um parceiro.
 
-### 3. Substituir CATs por carrossel de vídeos do Guatá
+**Correção:**
+- **Edge function `stripe-connect-onboarding`:**
+  - Comparar emails sempre normalizados: `.trim().toLowerCase()`.
+  - Permitir acesso quando o usuário é `admin`/`master_admin`/`tech` (consulta `user_roles`), além do próprio parceiro.
+  - Em vez de derivar `partnerEmail` do body, **usar sempre `partner.contact_email`** do banco (mais seguro e evita divergência); manter o body apenas como fallback.
+  - Mensagens de erro mais claras no `catch` final (incluir `error.code` quando vier do Stripe) para o front exibir o motivo real.
+- **Front `StripeConnectStep.tsx`:** mostrar a mensagem retornada pela edge function (já mostra `err.message`), e adicionar log do `error.context` para diagnóstico futuro.
 
-**Banco — nova tabela** (via migração):
+### 4) Termos do parceiro não aparecem no admin
+
+**Diagnóstico:** existem **3 registros pendentes** em `partner_terms_acceptances` com `pdf_url` e `uploaded_pdf_url` preenchidos, mas a política RLS de leitura para admin é:
+
 ```
-guata_videos (
-  id uuid pk,
-  title text not null,
-  youtube_url text not null,
-  display_order int default 0,
-  is_active bool default true,
-  created_at, updated_at
-)
+EXISTS (... user_roles WHERE role = ANY (ARRAY['admin','tech']))
 ```
-Com RLS: leitura pública (`select` para `anon`), escrita só pra admins (via `has_role(auth.uid(), 'admin')`).
 
-**Novo componente:** `src/components/home/GuataVideosSection.tsx`
-- Busca vídeos ativos ordenados por `display_order`
-- Extrai videoId do YouTube e renderiza thumbnail automática (`https://img.youtube.com/vi/{id}/maxresdefault.jpg`)
-- Carrossel horizontal com cards verticais 9:16, ~240px de largura
-- Card: thumbnail + ícone play centralizado + título embaixo + badge MS no canto
-- Click abre modal com iframe do YouTube em player (com controles, fullscreen, modestbranding)
-- Paleta: `from-ms-primary-blue/5 via-white to-ms-pantanal-green/5` (igual atual)
-- Título da seção: "Conheça MS com o Guatá" (editável via `platformContentService` com prefixo `ms_guata_videos_`)
+Não inclui `master_admin`. Em outras tabelas o padrão do projeto é aceitar `admin`, `tech` e `master_admin`. Como você (provavelmente `master_admin`) consulta a tabela e a RLS bloqueia, o painel `PartnerTermsReview` mostra "Nenhum termo encontrado" mesmo com dados válidos no banco. Isso também explica por que, ao "Solicitar ajuste" e o parceiro reenviar, o novo registro não aparece.
 
-**Substituição:** em `src/pages/MSIndex.tsx`, trocar `<CatsSection />` por `<GuataVideosSection />`. Manter `CatsSection.tsx` no projeto (pode ser reusado em outra rota se quiser no futuro).
-
-**Admin:** novo manager `src/components/admin/GuataVideosManager.tsx`
-- Lista todos os vídeos com preview da thumbnail
-- Form simples: campo URL do YouTube + título
-- Botões: ativar/desativar, reordenar (setas ↑↓), excluir
-- Adicionar entrada no menu admin (provavelmente em `PlatformConfigCenter` ou similar — vou identificar o lugar certo na implementação)
-
-### 4. Refatoração
-
-- `GuataVideosSection.tsx` ficará sob 200 linhas (separar `GuataVideoCard` se passar disso)
-- `GuataVideosManager.tsx` reaproveitar componentes shadcn (`Card`, `Input`, `Button`, `Switch`)
-- Util `extractYoutubeId(url)` em `src/utils/youtube.ts` (verificar se já existe — vi regex parecida no UniversalHero, vou centralizar)
+**Correção:**
+- **Migration:** atualizar a policy `Admins can view all term acceptances` (e equivalentes de UPDATE) em `partner_terms_acceptances` para incluir `master_admin`:
+  ```sql
+  USING (EXISTS (
+    SELECT 1 FROM user_roles
+    WHERE user_id = auth.uid()
+      AND role IN ('admin','tech','master_admin')
+  ))
+  ```
+- Conferir e alinhar a policy de UPDATE (aprovar/rejeitar/solicitar ajuste) com a mesma lista de roles.
+- **Bonus front-end (`PartnerTermsReview.tsx`):** quando o filtro estiver em "Todos", carregar de fato todos (já carrega), mas adicionar um aviso visual "0 registros visíveis" diferenciando "sem permissão" de "sem dados", lendo `count` separado.
 
 ---
 
-## Detalhes técnicos (referência)
+### Mudança técnica resumida
 
-| Item | Arquivo | Mudança |
-|---|---|---|
-| Overlay YouTube desktop | `UniversalHero.tsx` L391-413 | remover `{isMobile && ...}`, deixar overlay sempre |
-| Logo evento | `EventDetailModal.tsx` L325-327 | inserir bloco com `<img src={event.cover_image}>` |
-| Horário evento | `EventDetailModal.tsx` L309 + `resolveEventTimes` | tratar `00:00` e fallback "Horário a definir" |
-| Tabela vídeos | nova migração | `guata_videos` + RLS |
-| Seção home | novo `GuataVideosSection.tsx` + `MSIndex.tsx` | substitui `<CatsSection />` |
-| Admin | novo `GuataVideosManager.tsx` | CRUD + reorder |
+- **Migrations SQL** (1 arquivo):
+  - `route_checkpoints.day_number`, `route_checkpoints.day_title`
+  - `routes.total_days`
+  - Atualização das policies de SELECT/UPDATE em `partner_terms_acceptances` para incluir `master_admin`.
+- **Edge function:** `supabase/functions/stripe-connect-onboarding/index.ts` (normalização e bypass admin).
+- **Front-end:**
+  - `src/pages/ms/PassaporteLista.tsx` (estado vazio).
+  - `src/components/admin/passport/PassportCheckpointManager.tsx` e `PassportRouteManager.tsx` (UI de dias).
+  - `src/pages/ms/PassaporteRota.tsx` ou equivalente (agrupamento por dia).
+  - `src/types/passportDigital.ts` (campos novos opcionais).
+  - `src/integrations/supabase/types.ts` (regenerado pela migration).
 
 ---
 
-## Resultado esperado
+### Perguntas antes de implementar
 
-- Hero do Descubra MS sem controles do YouTube visíveis em nenhum dispositivo
-- Modal de evento mostra logo grande do evento, horário sempre presente (real ou "a definir")
-- Home traz carrossel de vídeos verticais do Guatá no lugar dos CATs, gerenciável pelo admin com apenas link + título
+1. **Checkpoints por dia — sequência:** dentro do mesmo dia, os checkpoints devem ser feitos **em ordem obrigatória** (sequencial), ou **em qualquer ordem**? E entre dias, o usuário precisa terminar o Dia 1 antes de fazer check-in no Dia 2?
+2. **Stripe Connect — bypass admin:** quando o admin/master_admin clicar em "Conectar Stripe" no painel, devo (a) **deixar o admin completar o onboarding em nome do parceiro** (gera link e abre normalmente) ou (b) **apenas permitir gerar o link e enviar por email/WhatsApp para o parceiro completar**? A opção (b) é mais segura porque o KYC pertence ao parceiro.
