@@ -149,15 +149,18 @@ export async function savePartnerTermsAcceptance(
 
     if (insertError) {
       console.error('Erro ao salvar aceite:', insertError);
+      const msg =
+        (insertError as { message?: string }).message ||
+        'Não foi possível salvar o aceite do termo no banco de dados.';
+      return { success: false, error: msg, pdfSaved: false };
     }
 
-    // Update partner
     await supabase
       .from('institutional_partners')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', partnerId);
 
-    return { success: true, pdfSaved: !!pdfUrl && pdfUrl.trim() !== '' };
+    return { success: true, pdfSaved: !!(pdfUrl && pdfUrl.trim() !== '') };
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
     console.error('Erro ao salvar aceite:', err);

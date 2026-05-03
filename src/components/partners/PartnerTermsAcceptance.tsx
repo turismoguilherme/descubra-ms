@@ -127,7 +127,19 @@ export default function PartnerTermsAcceptance({
       }
 
       // Opção B: o PDF enviado pelo parceiro tem prioridade; aceite segue mesmo se o PDF automático falhar.
-      await savePartnerTermsAcceptance(partnerId, partnerName, partnerEmail, termsVersion, pdfUrl, ipAddress, undefined, uploadedPdfUrl);
+      const saveResult = await savePartnerTermsAcceptance(
+        partnerId,
+        partnerName,
+        partnerEmail,
+        termsVersion,
+        pdfUrl,
+        ipAddress,
+        undefined,
+        uploadedPdfUrl,
+      );
+      if (!saveResult.success) {
+        throw new Error(saveResult.error || 'Não foi possível registrar o aceite do termo.');
+      }
 
       toast({
         title: 'Termo aceito!',

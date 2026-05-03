@@ -118,7 +118,7 @@ export default function PartnerTermsResubmit({
         /* optional */
       }
 
-      await savePartnerTermsAcceptance(
+      const saveResult = await savePartnerTermsAcceptance(
         partnerId,
         partnerName,
         partnerEmail,
@@ -128,6 +128,9 @@ export default function PartnerTermsResubmit({
         undefined,
         uploadedPdfUrl,
       );
+      if (!saveResult.success) {
+        throw new Error(saveResult.error || 'Não foi possível registrar o novo envio do termo.');
+      }
 
       await supabase
         .from('institutional_partners')

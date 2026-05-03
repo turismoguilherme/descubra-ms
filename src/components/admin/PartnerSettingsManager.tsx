@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Save, Loader2, Percent, ExternalLink, CreditCard, Link2, UserPlus } from 'lucide-react';
+import { DollarSign, Save, Loader2, Percent, ExternalLink, CreditCard, Link2, UserPlus, Mail, Phone } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import {
   PARTNER_ACCEPTING_NEW_APPLICATIONS_KEY,
@@ -20,6 +20,8 @@ export default function PartnerSettingsManager() {
   const [paymentLink, setPaymentLink] = useState<string>('');
   const [voluntaryRefundPercentIfApproved, setVoluntaryRefundPercentIfApproved] = useState<string>('0');
   const [acceptingNewPartnerApplications, setAcceptingNewPartnerApplications] = useState(true);
+  const [supportEmail, setSupportEmail] = useState('suporte@descubrams.com.br');
+  const [supportPhone, setSupportPhone] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -107,6 +109,26 @@ export default function PartnerSettingsManager() {
       if (!acceptingErr && acceptingRow?.setting_value !== undefined && acceptingRow?.setting_value !== null) {
         setAcceptingNewPartnerApplications(parsePartnerAcceptingNewApplicationsValue(acceptingRow.setting_value));
       }
+
+      const { data: supportMailRow } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', 'partner_support_email')
+        .maybeSingle();
+      if (supportMailRow?.setting_value != null && String(supportMailRow.setting_value).trim()) {
+        setSupportEmail(String(supportMailRow.setting_value).trim());
+      }
+
+      const { data: supportPhoneRow } = await supabase
+        .from('site_settings')
+        .select('setting_value')
+        .eq('platform', 'ms')
+        .eq('setting_key', 'partner_support_phone')
+        .maybeSingle();
+      if (supportPhoneRow?.setting_value != null) {
+        setSupportPhone(String(supportPhoneRow.setting_value).trim());
+      }
     } catch (error) {
       console.error('Erro ao carregar settings:', error);
     } finally {
@@ -140,6 +162,15 @@ export default function PartnerSettingsManager() {
       toast({
         title: 'Percentual inválido',
         description: 'O reembolso parcial no cancelamento voluntário (parceiro já aprovado) deve ser entre 0 e 100.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!supportEmail.trim() || !supportEmail.includes('@')) {
+      toast({
+        title: 'E-mail de suporte inválido',
+        description: 'Informe um e-mail de contato válido para parceiros.',
         variant: 'destructive',
       });
       return;
@@ -237,9 +268,33 @@ export default function PartnerSettingsManager() {
 
       if (acceptingSaveErr) throw acceptingSaveErr;
 
+      const { error: supportMailErr } = await supabase.from('site_settings').upsert(
+        {
+          platform: 'ms',
+          setting_key: 'partner_support_email',
+          setting_value: supportEmail.trim(),
+          description: 'E-mail de suporte exibido a parceiros (banner de conta bloqueada / inativa)',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'platform,setting_key' },
+      );
+      if (supportMailErr) throw supportMailErr;
+
+      const { error: supportPhoneErr } = await supabase.from('site_settings').upsert(
+        {
+          platform: 'ms',
+          setting_key: 'partner_support_phone',
+          setting_value: supportPhone.trim(),
+          description: 'Telefone de suporte exibido a parceiros (opcional)',
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'platform,setting_key' },
+      );
+      if (supportPhoneErr) throw supportPhoneErr;
+
       toast({
         title: 'Salvo com sucesso!',
-        description: `Valor mensal: R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} | Comissão: ${parseFloat(commissionRate).toFixed(2)}% | Reembolso parcial cancel. voluntário (aprovado): ${voluntaryPct}% | Novos cadastros: ${acceptingNewPartnerApplications ? 'abertos' : 'pausados'}`,
+        description: `Mensal: R$ ${parseFloat(monthlyFee).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} · Comissão ${parseFloat(commissionRate).toFixed(2)}% · Reembolso parcial (aprovado) ${voluntaryPct}% · Suporte ${supportEmail.trim()}${supportPhone.trim() ? ` · ${supportPhone.trim()}` : ''} · Novos cadastros ${acceptingNewPartnerApplications ? 'abertos' : 'pausados'}`,
       });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -382,6 +437,42 @@ export default function PartnerSettingsManager() {
             aprovado no Descubra MS (renovação desativada, acesso até o fim do período). Use <strong>0</strong> para não
             reembolsar automaticamente.
           </p>
+        </div>
+
+        <div className="space-y-2 rounded-lg border border-border p-4 bg-muted/20">
+          <p className="text-sm font-medium text-foreground mb-3">Suporte para parceiros (banner de acesso bloqueado)</p>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="partner_support_email" className="flex items-center gap-2">
+                <Mail className="w-4 h-4" />
+                E-mail de suporte
+              </Label>
+              <Input
+                id="partner_support_email"
+                type="email"
+                value={supportEmail}
+                onChange={(e) => setSupportEmail(e.target.value)}
+                placeholder="suporte@descubrams.com.br"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="partner_support_phone" className="flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                Telefone (opcional)
+              </Label>
+              <Input
+                id="partner_support_phone"
+                type="text"
+                value={supportPhone}
+                onChange={(e) => setSupportPhone(e.target.value)}
+                placeholder="Ex: (67) 99999-0000"
+              />
+              <p className="text-xs text-muted-foreground">
+                Exibido junto do e-mail quando o parceiro está com conta inativa ou bloqueada; o pagamento continua pelo
+                link Stripe acima.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">
