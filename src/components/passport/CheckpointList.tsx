@@ -102,8 +102,26 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
     );
   }
 
-  // Ordenar checkpoints por order_sequence
-  const sortedCheckpoints = [...checkpoints].sort((a, b) => a.order_sequence - b.order_sequence);
+  // Ordenar checkpoints por dia e ordem
+  const sortedCheckpoints = [...checkpoints].sort((a, b) => {
+    const dayA = (a as { day_number?: number }).day_number || 1;
+    const dayB = (b as { day_number?: number }).day_number || 1;
+    if (dayA !== dayB) return dayA - dayB;
+    return a.order_sequence - b.order_sequence;
+  });
+
+  // Agrupar por dia
+  const groupedByDay = sortedCheckpoints.reduce<Record<number, RouteCheckpointExtended[]>>(
+    (acc, cp) => {
+      const day = (cp as { day_number?: number }).day_number || 1;
+      if (!acc[day]) acc[day] = [];
+      acc[day].push(cp);
+      return acc;
+    },
+    {}
+  );
+  const dayNumbers = Object.keys(groupedByDay).map(Number).sort((a, b) => a - b);
+  const isMultiDay = dayNumbers.length > 1;
 
   return (
     <>
@@ -113,12 +131,26 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
             <div className="bg-ms-primary-blue/10 p-2 rounded-lg">
               <MapPin className="h-5 w-5 text-ms-primary-blue" />
             </div>
-            Checkpoints da Rota
+            {isMultiDay ? `Roteiro de ${dayNumbers.length} dias` : 'Checkpoints da Rota'}
           </h3>
         </div>
         <CardContent className="p-6">
-          <div className="space-y-4">
-            {sortedCheckpoints.map((checkpoint, index) => {
+          <div className="space-y-8">
+            {dayNumbers.map((day) => (
+              <div key={day} className="space-y-4">
+                {isMultiDay && (
+                  <div className="flex items-center gap-3">
+                    <div className="bg-ms-primary-blue text-white text-xs font-bold uppercase px-3 py-1 rounded-full">
+                      Dia {day}
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-ms-primary-blue/30 to-transparent" />
+                    <span className="text-xs text-gray-500">
+                      {groupedByDay[day].length} checkpoint{groupedByDay[day].length > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+                <div className="space-y-4">
+            {groupedByDay[day].map((checkpoint, index) => {
               const isCompleted = isCheckpointCompleted(checkpoint.id);
               const fragmentInfo = getFragmentInfo(checkpoint.id);
               const isBlocked = isCheckpointBlocked(checkpoint);
