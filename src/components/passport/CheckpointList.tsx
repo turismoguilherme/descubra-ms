@@ -278,6 +278,9 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
                 </div>
               );
             })}
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
