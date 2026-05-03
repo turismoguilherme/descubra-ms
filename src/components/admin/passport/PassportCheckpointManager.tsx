@@ -991,9 +991,23 @@ const PassportCheckpointManager: React.FC = () => {
                               />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                               <div>
-                                <Label>Ordem</Label>
+                                <Label>Dia</Label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={editCheckpointForm.day_number}
+                                  onChange={(e) =>
+                                    setEditCheckpointForm({
+                                      ...editCheckpointForm,
+                                      day_number: parseInt(e.target.value) || 1,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <Label>Ordem no Dia</Label>
                                 <Input
                                   type="number"
                                   value={editCheckpointForm.order_sequence}
