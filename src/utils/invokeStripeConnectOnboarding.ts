@@ -43,11 +43,31 @@ export async function invokeStripeConnectOnboarding(
   });
 
   if (error) {
+    // Tentar extrair mensagem detalhada do corpo da resposta da Edge Function
+    let detailedMessage: string | null = null;
+    try {
+      const ctx = (error as { context?: { response?: Response } }).context;
+      if (ctx?.response) {
+        const cloned = ctx.response.clone();
+        const json = (await cloned.json().catch(() => null)) as
+          | { error?: string; code?: string; type?: string }
+          | null;
+        if (json?.error) {
+          detailedMessage = json.code ? `${json.error} [${json.code}]` : json.error;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+
     const raw = error.message ?? '';
     const friendly =
-      raw.includes('non-2xx') || raw.includes('401')
-        ? 'O servidor não aceitou seu login ao abrir o Stripe. Atualize a página, entre de novo na conta ou confira no Supabase (Edge Function stripe-connect-onboarding) se as secrets SUPABASE_URL, SUPABASE_ANON_KEY e SUPABASE_SERVICE_ROLE_KEY estão corretas.'
-        : raw;
+      detailedMessage ||
+      (raw.includes('non-2xx') || raw.includes('401')
+        ? 'O servidor não aceitou a requisição ao abrir o Stripe. Atualize a página e confira se as secrets STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_ANON_KEY e SUPABASE_SERVICE_ROLE_KEY estão configuradas.'
+        : raw);
+
+    console.error('[stripe-connect-onboarding] erro:', { raw, detailedMessage });
     return { data: data as { url?: string } | null, error: new Error(friendly) };
   }
 
