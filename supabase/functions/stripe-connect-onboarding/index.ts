@@ -224,7 +224,7 @@ serve(async (req) => {
     // Verificar se o parceiro já tem uma conta Stripe Connect
     const { data: partner, error: partnerError } = await supabase
       .from('institutional_partners')
-      .select('stripe_account_id, stripe_connect_status, person_type, contact_email')
+      .select('stripe_account_id, stripe_connect_status, person_type, contact_email, created_by')
       .eq('id', partnerId)
       .single();
 
@@ -232,8 +232,27 @@ serve(async (req) => {
       throw new Error('Parceiro não encontrado');
     }
 
-    // Validar ownership: verificar se o email do usuário corresponde ao parceiro
-    if (partner.contact_email !== user.email) {
+    // Verificar se o usuário é admin / tech / master_admin (bypass de ownership)
+    const { data: roleRows } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+    const isAdmin = (roleRows || []).some(r =>
+      ['admin', 'tech', 'master_admin'].includes(r.role)
+    );
+
+    // Normalizar emails para comparação resiliente (case + espaços)
+    const normalize = (e?: string | null) => (e || '').trim().toLowerCase();
+    const partnerEmailDb = normalize(partner.contact_email);
+    const userEmail = normalize(user.email);
+    const providedEmail = normalize(partnerEmail);
+
+    // Ownership: aceitar se admin, OU se email do usuário bate com o do parceiro,
+    // OU se o usuário criou o registro do parceiro (cadastro em andamento).
+    const isOwnerByEmail = partnerEmailDb && partnerEmailDb === userEmail;
+    const isOwnerByCreator = partner.created_by && partner.created_by === user.id;
+
+    if (!isAdmin && !isOwnerByEmail && !isOwnerByCreator) {
       await logSecurityEvent(supabase, {
         action: 'stripe_connect_unauthorized_access',
         userId: user.id,
@@ -244,22 +263,22 @@ serve(async (req) => {
         metadata: {
           endpoint: 'stripe-connect-onboarding',
           requestedPartnerId: partnerId,
-          userEmail: user.email,
-          partnerEmail: partner.contact_email,
+          userEmail,
+          partnerEmail: partnerEmailDb,
         },
       });
 
       return new Response(
         JSON.stringify({ error: 'Você não tem permissão para acessar este parceiro' }),
-        { 
+        {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403 
+          status: 403,
         }
       );
     }
 
-    // Validar se o email fornecido corresponde ao parceiro
-    if (partner.contact_email !== partnerEmail) {
+    // Validar email fornecido vs banco (admin pode passar diferente; usar sempre o do banco)
+    if (!isAdmin && providedEmail && partnerEmailDb && providedEmail !== partnerEmailDb) {
       await logSecurityEvent(supabase, {
         action: 'stripe_connect_invalid_input',
         userId: user.id,
@@ -269,12 +288,18 @@ serve(async (req) => {
         userAgent: userAgent,
         metadata: {
           endpoint: 'stripe-connect-onboarding',
-          partnerId: partnerId,
-          providedEmail: partnerEmail,
-          expectedEmail: partner.contact_email,
+          partnerId,
+          providedEmail,
+          expectedEmail: partnerEmailDb,
         },
       });
-      throw new Error('Email não corresponde ao parceiro');
+      throw new Error('O email informado não corresponde ao do parceiro cadastrado.');
+    }
+
+    // Email a usar na criação da conta Stripe: SEMPRE o do banco (fonte de verdade)
+    const stripeAccountEmail = partnerEmailDb || providedEmail;
+    if (!stripeAccountEmail) {
+      throw new Error('Email do parceiro não está cadastrado.');
     }
 
     // Registrar início do onboarding
