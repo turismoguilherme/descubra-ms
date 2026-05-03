@@ -325,7 +325,7 @@ serve(async (req) => {
       const account = await stripe.accounts.create({
         type: 'express',
         country: 'BR',
-        email: partnerEmail,
+        email: stripeAccountEmail,
         capabilities: {
           card_payments: { requested: true },
           transfers: { requested: true },
