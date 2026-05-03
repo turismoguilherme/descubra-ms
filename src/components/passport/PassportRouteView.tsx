@@ -231,7 +231,13 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
               checkpoints={route.checkpoints}
               routeId={route.id}
               progress={progress}
-              requireSequential={route.configuration?.require_sequential || false}
+              requireSequential={
+                route.configuration?.require_sequential ||
+                // Roteiros multi-dia exigem sequência total automaticamente
+                (route.checkpoints || []).some(
+                  (cp) => ((cp as { day_number?: number }).day_number || 1) > 1
+                )
+              }
               onCheckinSuccess={handleProgressUpdate}
             />
           )}
