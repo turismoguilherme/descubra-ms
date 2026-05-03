@@ -286,6 +286,7 @@ const PassportCheckpointManager: React.FC = () => {
         name: newCheckpointForm.name,
         description: newCheckpointForm.description || null,
         order_sequence: newCheckpointForm.order_sequence,
+        day_number: newCheckpointForm.day_number || 1,
         latitude: newCheckpointForm.latitude,
         longitude: newCheckpointForm.longitude,
         geofence_radius: newCheckpointForm.geofence_radius,
