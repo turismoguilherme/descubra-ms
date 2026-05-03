@@ -321,6 +321,7 @@ const PassportCheckpointManager: React.FC = () => {
         name: '',
         description: '',
         order_sequence: checkpoints.length + 1,
+        day_number: 1,
         latitude: null,
         longitude: null,
         geofence_radius: 100,
