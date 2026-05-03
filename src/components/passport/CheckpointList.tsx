@@ -49,23 +49,26 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
     return progress.fragments.find(f => f.checkpoint_id === checkpointId);
   };
 
-  // Verificar se checkpoint está bloqueado (ordem sequencial)
+  // Verificar se checkpoint está bloqueado (ordem sequencial — agora considera dia)
   const isCheckpointBlocked = (checkpoint: RouteCheckpointExtended): boolean => {
     if (!requireSequential) return false;
-    
-    const sortedCheckpoints = [...checkpoints].sort((a, b) => a.order_sequence - b.order_sequence);
-    const currentIndex = sortedCheckpoints.findIndex(cp => cp.id === checkpoint.id);
-    
-    if (currentIndex === 0) return false; // Primeiro checkpoint sempre disponível
-    
-    // Verificar se checkpoints anteriores foram completados
+
+    const sorted = [...checkpoints].sort((a, b) => {
+      const dayA = (a as { day_number?: number }).day_number || 1;
+      const dayB = (b as { day_number?: number }).day_number || 1;
+      if (dayA !== dayB) return dayA - dayB;
+      return a.order_sequence - b.order_sequence;
+    });
+    const currentIndex = sorted.findIndex(cp => cp.id === checkpoint.id);
+
+    if (currentIndex === 0) return false;
+
     for (let i = 0; i < currentIndex; i++) {
-      const prevCheckpoint = sortedCheckpoints[i];
-      if (!isCheckpointCompleted(prevCheckpoint.id)) {
-        return true; // Bloqueado se houver checkpoint anterior não completado
+      if (!isCheckpointCompleted(sorted[i].id)) {
+        return true;
       }
     }
-    
+
     return false;
   };
 
