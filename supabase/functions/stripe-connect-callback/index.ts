@@ -43,19 +43,24 @@ serve(async (req) => {
       throw new Error('Variáveis de ambiente do Supabase não configuradas');
     }
 
-    // Criar cliente Supabase para autenticação
-    const supabaseAuth = createClient(
-      supabaseUrl,
-      Deno.env.get('SUPABASE_ANON_KEY') || '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
-    );
+    const anonKeyCb = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    if (!anonKeyCb) {
+      throw new Error('SUPABASE_ANON_KEY não configurada na Edge Function');
+    }
 
-    // Verificar usuário autenticado
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser();
+    const rawJwtCb = authHeader.replace(/^Bearer\s+/i, '').trim();
+    if (!rawJwtCb) {
+      return new Response(
+        JSON.stringify({ error: 'Missing bearer token' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        },
+      );
+    }
+
+    const supabaseAuth = createClient(supabaseUrl, anonKeyCb);
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(rawJwtCb);
     if (userError || !user) {
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
       const clientIP = getClientIP(req);
