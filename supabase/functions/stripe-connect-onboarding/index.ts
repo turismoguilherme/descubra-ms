@@ -5,6 +5,31 @@ import { getCorsHeaders } from '../_shared/cors.ts';
 import { checkRateLimit } from '../_shared/rateLimit.ts';
 import { logSecurityEvent, getClientIP, getClientUserAgent } from '../_shared/securityLog.ts';
 
+type AuthUserLite = { id: string; email: string | null };
+
+async function getAuthUserFromJwt(
+  supabaseUrl: string,
+  anonKey: string,
+  jwt: string,
+): Promise<{ user: AuthUserLite | null; logDetail: string }> {
+  const base = supabaseUrl.replace(/\/$/, '');
+  const res = await fetch(`${base}/auth/v1/user`, {
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+      apikey: anonKey,
+    },
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    return { user: null, logDetail: `auth/v1/user ${res.status}: ${txt}` };
+  }
+  const body = (await res.json()) as { id?: string; email?: string | null; message?: string };
+  if (!body?.id) {
+    return { user: null, logDetail: body?.message || 'no id in auth user payload' };
+  }
+  return { user: { id: body.id, email: body.email ?? null }, logDetail: '' };
+}
+
 serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
@@ -62,19 +87,17 @@ serve(async (req) => {
       );
     }
 
-    const supabaseAuth = createClient(supabaseUrl, anonKey);
-
-    // Validar JWT explicitamente (mais robusto que só header global no cliente)
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(rawJwt);
-    if (userError || !user) {
+    const { user, logDetail } = await getAuthUserFromJwt(supabaseUrl, anonKey, rawJwt);
+    if (!user) {
+      console.error('stripe-connect-onboarding: falha auth/v1/user', logDetail);
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
       const clientIP = getClientIP(req);
       const userAgent = getClientUserAgent(req);
-      
+
       await logSecurityEvent(supabase, {
         action: 'stripe_connect_unauthorized_access',
         success: false,
-        errorMessage: 'Token de autenticação inválido ou ausente',
+        errorMessage: `Token inválido: ${logDetail}`,
         ipAddress: clientIP,
         userAgent: userAgent,
         metadata: {
@@ -84,10 +107,10 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { 
+        {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401 
-        }
+          status: 401,
+        },
       );
     }
 
