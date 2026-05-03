@@ -398,7 +398,15 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Erro no stripe-connect-onboarding:', error);
-    
+
+    // Extrair mensagem detalhada (Stripe expõe error.raw / error.code / error.type)
+    const stripeCode = error?.code || error?.raw?.code;
+    const stripeType = error?.type || error?.raw?.type;
+    const stripeMsg = error?.raw?.message || error?.message || 'Erro interno';
+    const detailed = stripeCode
+      ? `${stripeMsg} (Stripe: ${stripeType || 'error'} / ${stripeCode})`
+      : stripeMsg;
+
     // Registrar erro de segurança
     try {
       const supabase = createClient(
@@ -407,30 +415,33 @@ serve(async (req) => {
       );
       const clientIP = getClientIP(req);
       const userAgent = getClientUserAgent(req);
-      
+
       await logSecurityEvent(supabase, {
         action: 'stripe_connect_error',
         success: false,
-        errorMessage: error.message || 'Erro interno',
+        errorMessage: detailed,
         ipAddress: clientIP,
         userAgent: userAgent,
         metadata: {
           endpoint: 'stripe-connect-onboarding',
-          errorType: error.name || 'Unknown',
+          errorType: stripeType || error?.name || 'Unknown',
+          errorCode: stripeCode || null,
         },
       });
     } catch (logError) {
       console.error('Erro ao registrar log de segurança:', logError);
     }
-    
+
     return new Response(
       JSON.stringify({
-        error: error.message || 'Erro interno',
+        error: detailed,
+        code: stripeCode || null,
+        type: stripeType || null,
       }),
       {
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
         },
         status: 400,
       }
