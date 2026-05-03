@@ -458,13 +458,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const redirectTo = `${window.location.origin}/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       if (error) throw error;
-
-      toast({
-        title: "Email de recuperação enviado!",
-        description: "Verifique sua caixa de entrada.",
-      });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       toast({
