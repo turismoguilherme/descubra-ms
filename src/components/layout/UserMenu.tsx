@@ -15,8 +15,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserAvatar } from "@/hooks/useUserAvatar";
 import { useSecureAuth } from "@/hooks/useSecureAuth";
+import { useBrand } from "@/context/BrandContext";
 
 const UserMenu = () => {
+  const { isMS: isMsBrand } = useBrand();
+
   // Verificar se o AuthProvider está disponível
   let auth = null;
   try {
@@ -44,8 +47,20 @@ const UserMenu = () => {
                        location.pathname.startsWith('/descubramatogrossodosul') ||
                        location.pathname.startsWith('/ms');
   const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
-  
-  console.log("🏛️ USERMENU: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
+
+  /** URL /partner/... não começa com /descubrams; isMsBrand garante prefixo MS no deploy Descubra MS. */
+  const useDescubramsPrefix = isDescubraMS || isMsBrand;
+
+  console.log(
+    "🏛️ USERMENU: Tenant detectado:",
+    currentTenant,
+    "isTenantPath:",
+    isTenantPath,
+    "isDescubraMS:",
+    isDescubraMS,
+    "isMsBrand:",
+    isMsBrand,
+  );
 
   if (!user) return null;
 
@@ -81,7 +96,7 @@ const UserMenu = () => {
   };
   
   const getPathWithTenant = (path: string) => {
-    if (isDescubraMS) {
+    if (useDescubramsPrefix) {
       return `/descubrams${path}`;
     }
     return isTenantPath ? `/${currentTenant}${path}` : path;
@@ -130,7 +145,7 @@ const UserMenu = () => {
         </DropdownMenuItem>
 
         {/* Dashboard e Admin Técnico apenas para ViaJAR, não para Descubra MS */}
-        {!isDescubraMS && isManager && (
+        {!useDescubramsPrefix && isManager && (
           <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Link to={getPathWithTenant(getDashboardRoute())} className="flex items-center">
               <BarChart3 className="mr-2 h-4 w-4" />
@@ -139,7 +154,7 @@ const UserMenu = () => {
           </DropdownMenuItem>
         )}
 
-        {!isDescubraMS && isAdmin && (
+        {!useDescubramsPrefix && isAdmin && (
           <DropdownMenuItem asChild className="hover:bg-gray-100 dark:hover:bg-gray-700">
             <Link to={getPathWithTenant("/technical-admin")} className="flex items-center">
               <Shield className="mr-2 h-4 w-4 text-red-500" />
