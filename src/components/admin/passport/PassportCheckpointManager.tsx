@@ -30,6 +30,7 @@ const PassportCheckpointManager: React.FC = () => {
     name: '',
     description: '',
     order_sequence: 1,
+    day_number: 1,
     latitude: null as number | null,
     longitude: null as number | null,
     geofence_radius: 100,
@@ -44,6 +45,7 @@ const PassportCheckpointManager: React.FC = () => {
     name: '',
     description: '',
     order_sequence: 1,
+    day_number: 1,
     latitude: null as number | null,
     longitude: null as number | null,
     geofence_radius: 100,
@@ -284,6 +286,7 @@ const PassportCheckpointManager: React.FC = () => {
         name: newCheckpointForm.name,
         description: newCheckpointForm.description || null,
         order_sequence: newCheckpointForm.order_sequence,
+        day_number: newCheckpointForm.day_number || 1,
         latitude: newCheckpointForm.latitude,
         longitude: newCheckpointForm.longitude,
         geofence_radius: newCheckpointForm.geofence_radius,
@@ -318,6 +321,7 @@ const PassportCheckpointManager: React.FC = () => {
         name: '',
         description: '',
         order_sequence: checkpoints.length + 1,
+        day_number: 1,
         latitude: null,
         longitude: null,
         geofence_radius: 100,
@@ -361,6 +365,7 @@ const PassportCheckpointManager: React.FC = () => {
       name: checkpoint.name || '',
       description: checkpoint.description || '',
       order_sequence: checkpoint.order_sequence || 1,
+      day_number: (checkpoint as { day_number?: number }).day_number || 1,
       latitude: checkpoint.latitude,
       longitude: checkpoint.longitude,
       geofence_radius: checkpoint.geofence_radius || 100,
@@ -583,13 +588,38 @@ const PassportCheckpointManager: React.FC = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <Label htmlFor="new_order">Ordem na Rota</Label>
+                            <Label htmlFor="new_day">Dia do Roteiro</Label>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Número que define a ordem de visitação dos checkpoints. O turista deve visitar na sequência: 1, 2, 3, etc.</p>
+                                <p>Em qual dia do roteiro este checkpoint deve ser visitado. Use 1 para roteiros de um único dia. Para roteiros multi-dia (difíceis), distribua os checkpoints em Dia 1, Dia 2, etc.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          <Input
+                            id="new_day"
+                            type="number"
+                            min="1"
+                            value={newCheckpointForm.day_number}
+                            onChange={(e) =>
+                              setNewCheckpointForm({
+                                ...newCheckpointForm,
+                                day_number: parseInt(e.target.value) || 1,
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Label htmlFor="new_order">Ordem dentro do Dia</Label>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Sequência do checkpoint dentro do dia. O turista deve visitar na ordem: 1, 2, 3...</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -961,9 +991,23 @@ const PassportCheckpointManager: React.FC = () => {
                               />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-3 gap-4">
                               <div>
-                                <Label>Ordem</Label>
+                                <Label>Dia</Label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={editCheckpointForm.day_number}
+                                  onChange={(e) =>
+                                    setEditCheckpointForm({
+                                      ...editCheckpointForm,
+                                      day_number: parseInt(e.target.value) || 1,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <Label>Ordem no Dia</Label>
                                 <Input
                                   type="number"
                                   value={editCheckpointForm.order_sequence}
