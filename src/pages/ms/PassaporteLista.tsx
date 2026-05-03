@@ -271,14 +271,14 @@ const PassaporteLista = () => {
               <div className="text-6xl mb-4">🗺️</div>
               <h2 className="text-2xl font-bold mb-4">Nenhuma Rota Disponível</h2>
               <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                Não há rotas de passaporte configuradas no momento. 
-                Configure rotas através do painel administrativo para começar a usar o sistema de passaporte digital.
+                Ainda não há roteiros publicados para o Passaporte Digital. Volte em breve —
+                novas experiências em Mato Grosso do Sul são adicionadas regularmente.
               </p>
-              <Button 
-                onClick={() => navigate('/viajar/admin/descubra-ms/passport')}
+              <Button
+                onClick={() => navigate('/descubrams')}
                 className="mt-4"
               >
-                Ir para Painel Administrativo
+                Explorar Descubra MS
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>

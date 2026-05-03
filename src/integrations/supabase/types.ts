@@ -6301,6 +6301,8 @@ export type Database = {
       route_checkpoints: {
         Row: {
           created_at: string | null
+          day_number: number
+          day_title: string | null
           description: string | null
           destination_id: string | null
           geofence_radius: number | null
@@ -6319,6 +6321,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          day_number?: number
+          day_title?: string | null
           description?: string | null
           destination_id?: string | null
           geofence_radius?: number | null
@@ -6337,6 +6341,8 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          day_number?: number
+          day_title?: string | null
           description?: string | null
           destination_id?: string | null
           geofence_radius?: number | null
@@ -6439,6 +6445,7 @@ export type Database = {
           passport_number_prefix: string | null
           region: string | null
           state_id: string | null
+          total_days: number
           updated_at: string | null
           updated_by: string | null
           video_url: string | null
@@ -6460,6 +6467,7 @@ export type Database = {
           passport_number_prefix?: string | null
           region?: string | null
           state_id?: string | null
+          total_days?: number
           updated_at?: string | null
           updated_by?: string | null
           video_url?: string | null
@@ -6481,6 +6489,7 @@ export type Database = {
           passport_number_prefix?: string | null
           region?: string | null
           state_id?: string | null
+          total_days?: number
           updated_at?: string | null
           updated_by?: string | null
           video_url?: string | null
