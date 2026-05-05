@@ -8254,6 +8254,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      partner_row_is_mine: { Args: { p_partner_id: string }; Returns: boolean }
       promote_user_to_role: {
         Args: { p_email: string; p_role: string }
         Returns: boolean
