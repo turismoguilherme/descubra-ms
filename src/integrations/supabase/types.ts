@@ -4594,6 +4594,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "partner_availability_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "partner_availability_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -4651,6 +4658,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "institutional_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_cancellation_policies_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
             referencedColumns: ["id"]
           },
         ]
@@ -4713,6 +4727,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "institutional_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_notifications_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
             referencedColumns: ["id"]
           },
           {
@@ -4792,6 +4813,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "institutional_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_pricing_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
             referencedColumns: ["id"]
           },
         ]
@@ -4923,6 +4951,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "partner_reservations_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "partner_reservations_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -4991,6 +5026,13 @@ export type Database = {
             referencedRelation: "institutional_partners"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "partner_terms_acceptances_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       partner_transactions: {
@@ -5054,6 +5096,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "institutional_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_transactions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
             referencedColumns: ["id"]
           },
           {
@@ -5433,6 +5482,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "institutional_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_refunds_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
             referencedColumns: ["id"]
           },
           {
@@ -6372,6 +6428,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "institutional_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "route_checkpoints_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
             referencedColumns: ["id"]
           },
           {
@@ -7833,6 +7896,63 @@ export type Database = {
       }
     }
     Views: {
+      ai_consultant_config_safe: {
+        Row: {
+          city_id: string | null
+          confidence_threshold: number | null
+          created_at: string | null
+          custom_prompts: Json | null
+          data_sources: Json | null
+          enabled: boolean | null
+          id: string | null
+          max_queries_per_day: number | null
+          region_id: string | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          confidence_threshold?: number | null
+          created_at?: string | null
+          custom_prompts?: Json | null
+          data_sources?: Json | null
+          enabled?: boolean | null
+          id?: string | null
+          max_queries_per_day?: number | null
+          region_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          confidence_threshold?: number | null
+          created_at?: string | null
+          custom_prompts?: Json | null
+          data_sources?: Json | null
+          enabled?: boolean | null
+          id?: string | null
+          max_queries_per_day?: number | null
+          region_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_consultant_config_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_consultant_config_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commercial_partners_public: {
         Row: {
           address: string | null
@@ -7840,7 +7960,6 @@ export type Database = {
           city: string | null
           company_name: string | null
           company_size: string | null
-          contact_email: string | null
           cover_image_url: string | null
           created_at: string | null
           description: string | null
@@ -7861,7 +7980,6 @@ export type Database = {
           total_clicks: number | null
           total_views: number | null
           trade_name: string | null
-          updated_at: string | null
           verified: boolean | null
           website_url: string | null
           zip_code: string | null
@@ -7872,7 +7990,6 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           company_size?: string | null
-          contact_email?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -7893,7 +8010,6 @@ export type Database = {
           total_clicks?: number | null
           total_views?: number | null
           trade_name?: string | null
-          updated_at?: string | null
           verified?: boolean | null
           website_url?: string | null
           zip_code?: string | null
@@ -7904,7 +8020,6 @@ export type Database = {
           city?: string | null
           company_name?: string | null
           company_size?: string | null
-          contact_email?: string | null
           cover_image_url?: string | null
           created_at?: string | null
           description?: string | null
@@ -7925,10 +8040,168 @@ export type Database = {
           total_clicks?: number | null
           total_views?: number | null
           trade_name?: string | null
-          updated_at?: string | null
           verified?: boolean | null
           website_url?: string | null
           zip_code?: string | null
+        }
+        Relationships: []
+      }
+      events_public: {
+        Row: {
+          approval_status: string | null
+          categoria: string | null
+          cidade: string | null
+          confiabilidade: number | null
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          descricao: string | null
+          end_time: string | null
+          estado: string | null
+          external_id: string | null
+          fonte: string | null
+          id: string | null
+          imagem_principal: string | null
+          is_sponsored: boolean | null
+          is_visible: boolean | null
+          link_inscricao: string | null
+          local: string | null
+          organizador: string | null
+          processado_por_ia: boolean | null
+          publico_alvo: string | null
+          site_oficial: string | null
+          sponsor_end_date: string | null
+          sponsor_start_date: string | null
+          sponsor_tier: string | null
+          start_time: string | null
+          tags: string[] | null
+          tipo_entrada: string | null
+          titulo: string | null
+          ultima_atualizacao: string | null
+          updated_at: string | null
+          video_promocional: string | null
+        }
+        Insert: {
+          approval_status?: string | null
+          categoria?: string | null
+          cidade?: string | null
+          confiabilidade?: number | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          end_time?: string | null
+          estado?: string | null
+          external_id?: string | null
+          fonte?: string | null
+          id?: string | null
+          imagem_principal?: string | null
+          is_sponsored?: boolean | null
+          is_visible?: boolean | null
+          link_inscricao?: string | null
+          local?: string | null
+          organizador?: string | null
+          processado_por_ia?: boolean | null
+          publico_alvo?: string | null
+          site_oficial?: string | null
+          sponsor_end_date?: string | null
+          sponsor_start_date?: string | null
+          sponsor_tier?: string | null
+          start_time?: string | null
+          tags?: string[] | null
+          tipo_entrada?: string | null
+          titulo?: string | null
+          ultima_atualizacao?: string | null
+          updated_at?: string | null
+          video_promocional?: string | null
+        }
+        Update: {
+          approval_status?: string | null
+          categoria?: string | null
+          cidade?: string | null
+          confiabilidade?: number | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          descricao?: string | null
+          end_time?: string | null
+          estado?: string | null
+          external_id?: string | null
+          fonte?: string | null
+          id?: string | null
+          imagem_principal?: string | null
+          is_sponsored?: boolean | null
+          is_visible?: boolean | null
+          link_inscricao?: string | null
+          local?: string | null
+          organizador?: string | null
+          processado_por_ia?: boolean | null
+          publico_alvo?: string | null
+          site_oficial?: string | null
+          sponsor_end_date?: string | null
+          sponsor_start_date?: string | null
+          sponsor_tier?: string | null
+          start_time?: string | null
+          tags?: string[] | null
+          tipo_entrada?: string | null
+          titulo?: string | null
+          ultima_atualizacao?: string | null
+          updated_at?: string | null
+          video_promocional?: string | null
+        }
+        Relationships: []
+      }
+      institutional_partners_public: {
+        Row: {
+          address: string | null
+          approved_at: string | null
+          created_at: string | null
+          description: string | null
+          discount_offer: string | null
+          gallery_images: string[] | null
+          id: string | null
+          is_active: boolean | null
+          logo_url: string | null
+          name: string | null
+          partner_type: string | null
+          status: string | null
+          updated_at: string | null
+          website_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          approved_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_offer?: string | null
+          gallery_images?: string[] | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string | null
+          partner_type?: string | null
+          status?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          approved_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          discount_offer?: string | null
+          gallery_images?: string[] | null
+          id?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string | null
+          partner_type?: string | null
+          status?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
