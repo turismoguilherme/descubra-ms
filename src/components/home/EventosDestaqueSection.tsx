@@ -35,9 +35,10 @@ const EventosDestaqueSection = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('events')
-        .select('id, titulo, descricao, data_inicio, data_fim, start_time, end_time, local, imagem_principal, is_visible, is_sponsored, sponsor_payment_status')
-        .eq('is_visible', true)
+        .from('events_public')
+        .select(
+          'id, titulo, descricao, data_inicio, data_fim, start_time, end_time, local, imagem_principal, is_visible, is_sponsored, sponsor_payment_status'
+        )
         .order('data_inicio', { ascending: true })
         .limit(80);
 

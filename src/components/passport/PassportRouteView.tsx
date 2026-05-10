@@ -9,7 +9,19 @@ import RewardsOverview from './RewardsOverview';
 import PassportMap from './PassportMap';
 import CheckpointList from './CheckpointList';
 import RouteCompletionModal from './RouteCompletionModal';
-import { MapPin, TrendingUp, WifiOff, KeyRound, Puzzle, Target, Gift, CheckCircle2, RotateCcw, AlertTriangle } from 'lucide-react';
+import {
+  MapPin,
+  TrendingUp,
+  WifiOff,
+  KeyRound,
+  Puzzle,
+  Target,
+  Gift,
+  CheckCircle2,
+  RotateCcw,
+  AlertTriangle,
+  Maximize2,
+} from 'lucide-react';
 import type { RouteExtended, StampProgress } from '@/types/passportDigital';
 import { passportService } from '@/services/passport/passportService';
 import { rewardsService } from '@/services/passport/rewardsService';
@@ -26,6 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 interface PassportRouteViewProps {
   route: RouteExtended;
@@ -40,6 +53,8 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
   const [totalPoints, setTotalPoints] = useState(0);
   const [isResetting, setIsResetting] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [illustrationDialogOpen, setIllustrationDialogOpen] = useState(false);
+  const [mapExpandedOpen, setMapExpandedOpen] = useState(false);
   const { toast } = useToast();
   
   // Determine animal theme from configuration or default
@@ -119,7 +134,6 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
         description={route.description || undefined}
         videoUrl={route.video_url || route.configuration?.video_url || undefined}
         imageUrl={route.image_url || undefined}
-        mapImageUrl={route.map_image_url || undefined}
         difficulty={route.difficulty || undefined}
         duration={route.estimated_duration || undefined}
         distance={route.distance_km || undefined}
@@ -245,19 +259,54 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
 
         {/* Right Column - Map & Info (1/3) */}
         <div className="space-y-6">
-          {/* Interactive Map */}
+          {route.map_image_url && (
+            <Card className="bg-white rounded-2xl shadow-lg border-0 overflow-hidden">
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-ms-primary-blue">
+                  <MapPin className="h-5 w-5" />
+                  Mapa ilustrativo
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIllustrationDialogOpen(true)}
+                  className="relative w-full overflow-hidden rounded-xl border border-gray-200 text-left transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ms-primary-blue"
+                >
+                  <img
+                    src={route.map_image_url}
+                    alt={`Mapa ilustrativo — ${route.name}`}
+                    className="h-44 w-full object-cover"
+                  />
+                  <span className="absolute bottom-2 right-2 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
+                    Clique para ampliar
+                  </span>
+                </button>
+              </CardContent>
+            </Card>
+          )}
+
           {route.checkpoints && route.checkpoints.length > 0 && (
             <Card className="bg-white rounded-2xl shadow-lg border-0 overflow-hidden">
               <CardContent className="p-4">
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-ms-primary-blue">
                   <MapPin className="h-5 w-5" />
-                  Mapa do Roteiro
+                  Mapa interativo
                 </h3>
                 <PassportMap
                   route={route}
                   checkpoints={route.checkpoints}
                   progress={progress}
+                  containerClassName="h-[380px]"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3 w-full gap-2"
+                  onClick={() => setMapExpandedOpen(true)}
+                >
+                  <Maximize2 className="h-4 w-4 shrink-0" />
+                  Ampliar mapa
+                </Button>
               </CardContent>
             </Card>
           )}
@@ -392,6 +441,36 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={illustrationDialogOpen} onOpenChange={setIllustrationDialogOpen}>
+        <DialogContent className="max-w-5xl border-0 p-2 sm:p-4">
+          {route.map_image_url && (
+            <img
+              src={route.map_image_url}
+              alt={`Mapa ilustrativo — ${route.name}`}
+              className="max-h-[85vh] w-full rounded-lg object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={mapExpandedOpen} onOpenChange={setMapExpandedOpen}>
+        <DialogContent className="max-h-[92vh] w-[95vw] max-w-5xl overflow-y-auto p-3 sm:p-4">
+          <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold text-ms-primary-blue">
+            <MapPin className="h-5 w-5 shrink-0" />
+            Mapa do Roteiro
+          </h3>
+          {mapExpandedOpen && route.checkpoints && route.checkpoints.length > 0 && (
+            <PassportMap
+              key="passport-map-expanded"
+              route={route}
+              checkpoints={route.checkpoints}
+              progress={progress}
+              containerClassName="h-[min(72vh,640px)] min-h-[280px]"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

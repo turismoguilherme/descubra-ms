@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Loader2, X, MapPin, Power, PowerOff, AlertTriangle } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, X, MapPin, Power, PowerOff, AlertTriangle, ImageIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,13 +27,37 @@ import {
 interface Route {
   id: string;
   name: string;
+  description?: string | null;
+  region?: string | null;
+  difficulty?: string | null;
   video_url?: string;
   passport_number_prefix?: string;
   map_image_url?: string;
+  image_url?: string | null;
   is_active?: boolean;
   is_published?: boolean;
   checkpoints_count?: number;
   [key: string]: unknown;
+}
+
+const UI_TO_DB_DIFFICULTY: Record<'facil' | 'medio' | 'dificil', string> = {
+  facil: 'easy',
+  medio: 'medium',
+  dificil: 'hard',
+};
+
+function routeDifficultyToUi(raw: string | null | undefined): 'facil' | 'medio' | 'dificil' {
+  if (!raw) return 'medio';
+  const k = String(raw).toLowerCase();
+  const map: Record<string, 'facil' | 'medio' | 'dificil'> = {
+    easy: 'facil',
+    medium: 'medio',
+    hard: 'dificil',
+    facil: 'facil',
+    medio: 'medio',
+    dificil: 'dificil',
+  };
+  return map[k] || 'medio';
 }
 
 const PassportRouteManager: React.FC = () => {
@@ -47,15 +71,26 @@ const PassportRouteManager: React.FC = () => {
     region: '',
     difficulty: 'medio' as 'facil' | 'medio' | 'dificil',
   });
+  const [editRouteForm, setEditRouteForm] = useState({
+    name: '',
+    description: '',
+    region: '',
+    difficulty: 'medio' as 'facil' | 'medio' | 'dificil',
+  });
   const [formData, setFormData] = useState({
     video_url: '',
     passport_number_prefix: 'MS',
     map_image_url: '',
-    // wallpaper_url removido - agora é global (não por rota)
+    image_url: '',
   });
   const [mapImageFile, setMapImageFile] = useState<File | null>(null);
   const [mapImagePreview, setMapImagePreview] = useState<string | null>(null);
+  const [mapImageRemoved, setMapImageRemoved] = useState(false);
   const [uploadingMapImage, setUploadingMapImage] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
+  const [coverImageRemoved, setCoverImageRemoved] = useState(false);
+  const [uploadingCoverImage, setUploadingCoverImage] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [routeToDelete, setRouteToDelete] = useState<Route | null>(null);
   const [deletingRoute, setDeletingRoute] = useState(false);
@@ -462,15 +497,26 @@ const PassportRouteManager: React.FC = () => {
   };
 
   const handleEdit = (route: Route) => {
+    setCreatingRoute(false);
     setEditingRoute(route);
+    setEditRouteForm({
+      name: route.name || '',
+      description: route.description || '',
+      region: route.region || '',
+      difficulty: routeDifficultyToUi(route.difficulty as string | undefined),
+    });
     setFormData({
       video_url: route.video_url || '',
       passport_number_prefix: route.passport_number_prefix || 'MS',
       map_image_url: route.map_image_url || '',
-      // wallpaper_url removido - agora é global (não por rota)
+      image_url: route.image_url || '',
     });
     setMapImageFile(null);
+    setMapImageRemoved(false);
     setMapImagePreview(route.map_image_url || null);
+    setCoverImageFile(null);
+    setCoverImageRemoved(false);
+    setCoverImagePreview(route.image_url || null);
   };
 
   const handleMapImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -495,12 +541,58 @@ const PassportRouteManager: React.FC = () => {
       return;
     }
 
+    setMapImageRemoved(false);
     setMapImageFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       setMapImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCoverImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Arquivo inválido',
+        description: 'Por favor, selecione uma imagem.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: 'A imagem deve ter no máximo 10MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCoverImageRemoved(false);
+    setCoverImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCoverImagePreview(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearMapImage = () => {
+    setMapImageRemoved(true);
+    setMapImageFile(null);
+    setMapImagePreview(null);
+    setFormData((prev) => ({ ...prev, map_image_url: '' }));
+  };
+
+  const clearCoverImage = () => {
+    setCoverImageRemoved(true);
+    setCoverImageFile(null);
+    setCoverImagePreview(null);
+    setFormData((prev) => ({ ...prev, image_url: '' }));
   };
 
   const uploadMapImage = async (routeId: string): Promise<string | null> => {
@@ -545,22 +637,91 @@ const PassportRouteManager: React.FC = () => {
     }
   };
 
+  const uploadCoverImage = async (routeId: string): Promise<string | null> => {
+    if (!coverImageFile) return formData.image_url?.trim() || null;
+
+    try {
+      setUploadingCoverImage(true);
+      const fileExt = coverImageFile.name.split('.').pop();
+      const fileName = `routes/${routeId}/cover/${uuidv4()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, coverImageFile, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
+          console.warn('⚠️ Bucket não encontrado, continuando sem upload da capa');
+          return formData.image_url?.trim() || null;
+        }
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
+      return publicUrlData?.publicUrl || null;
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Erro no upload da capa:', err);
+      toast({
+        title: 'Erro no upload',
+        description: `Erro ao fazer upload da capa: ${err.message}`,
+        variant: 'destructive',
+      });
+      return formData.image_url?.trim() || null;
+    } finally {
+      setUploadingCoverImage(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!editingRoute) return;
 
+    if (!editRouteForm.name.trim()) {
+      toast({
+        title: 'Nome obrigatório',
+        description: 'Informe o nome da rota.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
-      // Upload da imagem do mapa se houver
-      let mapImageUrl = formData.map_image_url;
+      let mapImageUrl: string | null;
       if (mapImageFile) {
         const uploadedUrl = await uploadMapImage(editingRoute.id);
-        if (uploadedUrl) {
-          mapImageUrl = uploadedUrl;
-        }
+        mapImageUrl = uploadedUrl ?? null;
+      } else if (mapImageRemoved) {
+        mapImageUrl = null;
+      } else {
+        mapImageUrl = formData.map_image_url?.trim() || null;
       }
 
+      let heroImageUrl: string | null;
+      if (coverImageFile) {
+        const uploadedCover = await uploadCoverImage(editingRoute.id);
+        heroImageUrl = uploadedCover ?? null;
+      } else if (coverImageRemoved) {
+        heroImageUrl = null;
+      } else {
+        heroImageUrl = formData.image_url?.trim() || null;
+      }
+
+      const dbDifficulty =
+        UI_TO_DB_DIFFICULTY[editRouteForm.difficulty] || 'medium';
+
       await passportAdminService.updateRoute(editingRoute.id, {
-        ...formData,
+        name: editRouteForm.name.trim(),
+        description: editRouteForm.description.trim() ? editRouteForm.description.trim() : null,
+        region: editRouteForm.region.trim() ? editRouteForm.region.trim() : null,
+        difficulty: dbDifficulty,
+        video_url: formData.video_url || null,
+        passport_number_prefix: formData.passport_number_prefix || 'MS',
         map_image_url: mapImageUrl,
+        image_url: heroImageUrl,
+        updated_at: new Date().toISOString(),
       });
 
       // Traduzir automaticamente após salvar
@@ -576,8 +737,8 @@ const PassportRouteManager: React.FC = () => {
           // Traduzir em background (não bloquear UI)
           autoTranslateRoute({
             id: updatedRoute.id,
-            title: updatedRoute.name || formData.name || '',
-            description: updatedRoute.description || formData.description || null,
+            title: updatedRoute.name || editRouteForm.name || '',
+            description: updatedRoute.description || editRouteForm.description || null,
           });
         }
       } catch (translationError) {
@@ -592,6 +753,10 @@ const PassportRouteManager: React.FC = () => {
       setEditingRoute(null);
       setMapImageFile(null);
       setMapImagePreview(null);
+      setMapImageRemoved(false);
+      setCoverImageFile(null);
+      setCoverImagePreview(null);
+      setCoverImageRemoved(false);
       loadRoutes();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -770,6 +935,20 @@ const PassportRouteManager: React.FC = () => {
             <Button 
               onClick={() => {
                 console.log('🔵 [PassportRouteManager] Botão "Nova Rota" clicado');
+                setEditingRoute(null);
+                setEditRouteForm({ name: '', description: '', region: '', difficulty: 'medio' });
+                setMapImageFile(null);
+                setMapImagePreview(null);
+                setMapImageRemoved(false);
+                setCoverImageFile(null);
+                setCoverImagePreview(null);
+                setCoverImageRemoved(false);
+                setFormData({
+                  video_url: '',
+                  passport_number_prefix: 'MS',
+                  map_image_url: '',
+                  image_url: '',
+                });
                 setCreatingRoute(true);
                 console.log('🔵 [PassportRouteManager] creatingRoute definido como true');
               }}
@@ -836,6 +1015,14 @@ const PassportRouteManager: React.FC = () => {
                               <span className="text-green-600">Configurado</span>
                             ) : (
                               <span className="text-muted-foreground">Não configurado</span>
+                            )}
+                          </div>
+                          <div className="text-sm">
+                            <span className="font-medium">Capa (hero):</span>{' '}
+                            {route.image_url ? (
+                              <span className="text-green-600">Configurada</span>
+                            ) : (
+                              <span className="text-muted-foreground">Não configurada</span>
                             )}
                           </div>
                         </div>
@@ -908,6 +1095,58 @@ const PassportRouteManager: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
+              <Label htmlFor="edit_name">Nome da Rota *</Label>
+              <Input
+                id="edit_name"
+                value={editRouteForm.name}
+                onChange={(e) =>
+                  setEditRouteForm({ ...editRouteForm, name: e.target.value })
+                }
+                placeholder="Ex: Descubra Campo Grande"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_description">Descrição</Label>
+              <Textarea
+                id="edit_description"
+                value={editRouteForm.description}
+                onChange={(e) =>
+                  setEditRouteForm({ ...editRouteForm, description: e.target.value })
+                }
+                placeholder="Descrição da rota..."
+                rows={4}
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_region">Região</Label>
+              <Input
+                id="edit_region"
+                value={editRouteForm.region}
+                onChange={(e) =>
+                  setEditRouteForm({ ...editRouteForm, region: e.target.value })
+                }
+                placeholder="Ex: Campo Grande"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_difficulty">Dificuldade</Label>
+              <Select
+                value={editRouteForm.difficulty}
+                onValueChange={(v: 'facil' | 'medio' | 'dificil') =>
+                  setEditRouteForm({ ...editRouteForm, difficulty: v })
+                }
+              >
+                <SelectTrigger id="edit_difficulty">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="facil">Fácil</SelectItem>
+                  <SelectItem value="medio">Médio</SelectItem>
+                  <SelectItem value="dificil">Difícil</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <Label htmlFor="video_url">URL do Vídeo</Label>
               <Input
                 id="video_url"
@@ -931,9 +1170,61 @@ const PassportRouteManager: React.FC = () => {
               />
             </div>
             <div>
+              <Label htmlFor="cover_image">Capa do roteiro (hero)</Label>
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleCoverImageSelect}
+                    className="hidden"
+                    id="cover_image"
+                  />
+                  <label
+                    htmlFor="cover_image"
+                    className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 hover:bg-muted"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    {coverImageFile ? 'Trocar capa' : 'Selecionar capa'}
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:bg-destructive/10"
+                    disabled={
+                      !coverImageFile &&
+                      !coverImagePreview &&
+                      !(editingRoute?.image_url && !coverImageRemoved)
+                    }
+                    onClick={clearCoverImage}
+                  >
+                    Remover capa
+                  </Button>
+                </div>
+                {coverImagePreview && (
+                  <div className="relative mt-2">
+                    <img
+                      src={coverImagePreview}
+                      alt="Preview da capa"
+                      className="max-h-52 w-full max-w-md rounded-md border object-cover"
+                    />
+                  </div>
+                )}
+                {!coverImagePreview && coverImageRemoved && editingRoute?.image_url && (
+                  <p className="text-xs text-amber-700">
+                    Capa será removida ao salvar.
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Imagem larga atrás do título da rota na tela do passaporte (recomendado formato paisagem).
+                </p>
+              </div>
+            </div>
+            <div>
               <Label htmlFor="map_image">Imagem do Mapa do Roteiro</Label>
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="file"
                     accept="image/*"
@@ -943,11 +1234,25 @@ const PassportRouteManager: React.FC = () => {
                   />
                   <label
                     htmlFor="map_image"
-                    className="flex items-center gap-2 px-4 py-2 border rounded-md cursor-pointer hover:bg-muted"
+                    className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 hover:bg-muted"
                   >
                     <MapPin className="h-4 w-4" />
-                    {mapImageFile ? 'Trocar Imagem' : 'Selecionar Imagem'}
+                    {mapImageFile ? 'Trocar imagem' : 'Selecionar imagem'}
                   </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive hover:bg-destructive/10"
+                    disabled={
+                      !mapImageFile &&
+                      !mapImagePreview &&
+                      !(editingRoute?.map_image_url && !mapImageRemoved)
+                    }
+                    onClick={clearMapImage}
+                  >
+                    Remover imagem
+                  </Button>
                 </div>
                 {mapImagePreview && (
                   <div className="relative mt-2">
@@ -956,37 +1261,42 @@ const PassportRouteManager: React.FC = () => {
                       alt="Preview do mapa"
                       className="w-full max-w-md rounded-md border"
                     />
-                    {mapImageFile && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setMapImageFile(null);
-                          setMapImagePreview(formData.map_image_url || null);
-                        }}
-                        className="absolute top-2 right-2"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 )}
+                {!mapImagePreview && mapImageRemoved && editingRoute?.map_image_url && (
+                  <p className="text-xs text-amber-700">
+                    Imagem do mapa será removida ao salvar.
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
-                  Imagem do mapa do roteiro que será exibida na visualização do passaporte
+                  Mapa ilustrativo na lateral da rota no passaporte (clique para ampliar).
                 </p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={uploadingMapImage}>
-                {uploadingMapImage && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              <Button onClick={handleSave} disabled={uploadingMapImage || uploadingCoverImage}>
+                {(uploadingMapImage || uploadingCoverImage) && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Salvar
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setEditingRoute(null);
+                  setEditRouteForm({ name: '', description: '', region: '', difficulty: 'medio' });
                   setMapImageFile(null);
                   setMapImagePreview(null);
+                  setMapImageRemoved(false);
+                  setCoverImageFile(null);
+                  setCoverImagePreview(null);
+                  setCoverImageRemoved(false);
+                  setFormData({
+                    video_url: '',
+                    passport_number_prefix: 'MS',
+                    map_image_url: '',
+                    image_url: '',
+                  });
                 }}
               >
                 Cancelar

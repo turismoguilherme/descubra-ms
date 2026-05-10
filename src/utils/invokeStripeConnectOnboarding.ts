@@ -13,13 +13,16 @@ type PublicSupabaseClient = {
   supabaseKey?: string;
 };
 
-function getSupabaseUrlAndAnonKey(): { url: string; anonKey: string } {
+function getSupabaseUrlAndApiKey(): { url: string; apiKey: string } {
   const envUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
+  const envPublishable = (
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined
+  )?.trim();
   const envAnon = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();
   const internal = supabase as unknown as PublicSupabaseClient;
   const url = envUrl || internal.supabaseUrl || '';
-  const anonKey = envAnon || internal.supabaseKey || '';
-  return { url, anonKey };
+  const apiKey = envPublishable || envAnon || internal.supabaseKey || '';
+  return { url, apiKey };
 }
 
 /**
@@ -51,12 +54,12 @@ export async function invokeStripeConnectOnboarding(
     };
   }
 
-  const { url: supabaseUrl, anonKey } = getSupabaseUrlAndAnonKey();
-  if (!supabaseUrl || !anonKey) {
+  const { url: supabaseUrl, apiKey } = getSupabaseUrlAndApiKey();
+  if (!supabaseUrl || !apiKey) {
     return {
       data: null,
       error: new Error(
-        'Configuração Supabase incompleta no app (URL ou chave anônima). Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.'
+        'Configuração Supabase incompleta no app. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY ou VITE_SUPABASE_ANON_KEY.'
       ),
     };
   }
@@ -70,7 +73,7 @@ export async function invokeStripeConnectOnboarding(
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
-        apikey: anonKey,
+        apikey: apiKey,
       },
       body: JSON.stringify(body),
     });
@@ -80,16 +83,20 @@ export async function invokeStripeConnectOnboarding(
   }
 
   const json = (await response.json().catch(() => null)) as
-    | { url?: string; error?: string; code?: string }
+    | { url?: string; error?: string; code?: string; diagnostic?: string }
     | null;
 
   if (!response.ok) {
+    const diag =
+      typeof json?.diagnostic === 'string' && json.diagnostic.trim()
+        ? ` ${json.diagnostic.trim()}`
+        : '';
     const detailed =
       json?.error && json?.code ? `${json.error} [${json.code}]` : json?.error || null;
     const friendly =
-      detailed ||
+      (detailed ? `${detailed}${diag}` : null) ||
       (response.status === 401
-        ? 'O servidor não aceitou seu login ao abrir o Stripe. Atualize a página, entre de novo, ou confira no Supabase (Edge Function stripe-connect-onboarding) se SUPABASE_ANON_KEY e SUPABASE_SERVICE_ROLE_KEY batem com este projeto.'
+        ? `Unauthorized.${diag || ' Atualize a página, faça login de novo ou faça deploy das Edge Functions (stripe-connect-onboarding) com o código mais recente.'}`
         : `Erro ${response.status} ao conectar Stripe.`);
 
     console.error('[stripe-connect-onboarding] HTTP', response.status, { friendly, json });

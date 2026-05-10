@@ -5,6 +5,7 @@ import { GUATA_DEFAULT_SUGGESTION_QUESTIONS } from "@/components/guata/guataSugg
 
 interface SuggestionQuestionsProps {
   onSuggestionClick: (suggestion: string) => void;
+  suggestionsOverride?: string[];
 }
 
 function parseSuggestionJson(raw: string | null | undefined): string[] {
@@ -20,11 +21,20 @@ function parseSuggestionJson(raw: string | null | undefined): string[] {
   }
 }
 
-const SuggestionQuestions = ({ onSuggestionClick }: SuggestionQuestionsProps) => {
-  const [items, setItems] = useState<string[]>(GUATA_DEFAULT_SUGGESTION_QUESTIONS);
-  const [loading, setLoading] = useState(true);
+const SuggestionQuestions = ({ onSuggestionClick, suggestionsOverride }: SuggestionQuestionsProps) => {
+  const hasOverride = Array.isArray(suggestionsOverride) && suggestionsOverride.length > 0;
+  const [items, setItems] = useState<string[]>(
+    hasOverride ? suggestionsOverride : GUATA_DEFAULT_SUGGESTION_QUESTIONS
+  );
+  const [loading, setLoading] = useState(!hasOverride);
 
   useEffect(() => {
+    if (hasOverride) {
+      setItems(suggestionsOverride);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       try {
@@ -43,7 +53,7 @@ const SuggestionQuestions = ({ onSuggestionClick }: SuggestionQuestionsProps) =>
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasOverride, suggestionsOverride]);
 
   if (loading) {
     return (

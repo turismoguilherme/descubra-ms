@@ -1,34 +1,10 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.5.0';
 import { getCorsHeaders } from '../_shared/cors.ts';
+import { getAuthUserFromRequest, resolveServiceRoleKey } from '../_shared/getAuthUserFromRequest.ts';
 import { checkRateLimit } from '../_shared/rateLimit.ts';
 import { logSecurityEvent, getClientIP, getClientUserAgent } from '../_shared/securityLog.ts';
-
-type AuthUserLite = { id: string; email: string | null };
-
-async function getAuthUserFromJwt(
-  supabaseUrl: string,
-  anonKey: string,
-  jwt: string,
-): Promise<{ user: AuthUserLite | null; logDetail: string }> {
-  const base = supabaseUrl.replace(/\/$/, '');
-  const res = await fetch(`${base}/auth/v1/user`, {
-    headers: {
-      Authorization: `Bearer ${jwt}`,
-      apikey: anonKey,
-    },
-  });
-  if (!res.ok) {
-    const txt = await res.text();
-    return { user: null, logDetail: `auth/v1/user ${res.status}: ${txt}` };
-  }
-  const body = (await res.json()) as { id?: string; email?: string | null; message?: string };
-  if (!body?.id) {
-    return { user: null, logDetail: body?.message || 'no id in auth user payload' };
-  }
-  return { user: { id: body.id, email: body.email ?? null }, logDetail: '' };
-}
 
 serve(async (req) => {
   const origin = req.headers.get('origin');
@@ -65,48 +41,37 @@ serve(async (req) => {
     });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
+    const supabaseServiceKey = resolveServiceRoleKey();
+
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error('Variáveis de ambiente do Supabase não configuradas');
     }
 
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
-    if (!anonKey) {
-      throw new Error('SUPABASE_ANON_KEY não configurada na Edge Function');
-    }
-
-    const rawJwt = authHeader.replace(/^Bearer\s+/i, '').trim();
-    if (!rawJwt) {
-      return new Response(
-        JSON.stringify({ error: 'Missing bearer token' }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        },
-      );
-    }
-
-    const { user, logDetail } = await getAuthUserFromJwt(supabaseUrl, anonKey, rawJwt);
+    const { user, logDetail } = await getAuthUserFromRequest(authHeader, supabaseUrl);
     if (!user) {
-      console.error('stripe-connect-onboarding: falha auth/v1/user', logDetail);
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      const clientIP = getClientIP(req);
-      const userAgent = getClientUserAgent(req);
+      console.error('stripe-connect-onboarding: falha ao resolver usuário do JWT', logDetail);
+      try {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        const clientIP = getClientIP(req);
+        const userAgent = getClientUserAgent(req);
+        await logSecurityEvent(supabase, {
+          action: 'stripe_connect_unauthorized_access',
+          success: false,
+          errorMessage: `Token inválido: ${logDetail}`,
+          ipAddress: clientIP,
+          userAgent: userAgent,
+          metadata: {
+            endpoint: 'stripe-connect-onboarding',
+          },
+        });
+      } catch (logErr) {
+        console.error('stripe-connect-onboarding: log segurança (401)', logErr);
+      }
 
-      await logSecurityEvent(supabase, {
-        action: 'stripe_connect_unauthorized_access',
-        success: false,
-        errorMessage: `Token inválido: ${logDetail}`,
-        ipAddress: clientIP,
-        userAgent: userAgent,
-        metadata: {
-          endpoint: 'stripe-connect-onboarding',
-        },
-      });
-
+      const diagnostic =
+        logDetail.length > 450 ? `${logDetail.slice(0, 450)}…` : logDetail;
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', diagnostic }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 401,
@@ -441,7 +406,7 @@ serve(async (req) => {
     try {
       const supabase = createClient(
         Deno.env.get('SUPABASE_URL') || '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+        resolveServiceRoleKey() || '',
       );
       const clientIP = getClientIP(req);
       const userAgent = getClientUserAgent(req);

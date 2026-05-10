@@ -22,9 +22,8 @@ export async function searchAll(query: string): Promise<SearchResult[]> {
       .ilike('name', searchTerm)
       .limit(5),
     supabase
-      .from('events')
+      .from('events_public')
       .select('id, titulo, local')
-      .eq('is_visible', true)
       .ilike('titulo', searchTerm)
       .limit(5),
     supabase

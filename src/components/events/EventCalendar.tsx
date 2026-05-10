@@ -38,6 +38,31 @@ import { optimizeEventCardImage } from '@/utils/imageOptimization';
 import { resolveEventTimes } from '@/utils/eventTimeDisplay';
 import { isEventActiveForPublicListing, type EventRowDates } from '@/utils/eventPublicVisibility';
 
+/** Região turística → cidades (minúsculas) — filtro e inferência a partir do perfil */
+const EVENT_REGION_CITIES: Record<string, string[]> = {
+  'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
+  'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
+  'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
+  'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
+  'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina'],
+  'pantanal': ['corumbá', 'aquidauana', 'miranda', 'ladário', 'anastácio', 'pantanal'],
+  'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
+  'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
+  'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
+};
+
+function inferRegionSlugFromCityName(city: string | undefined | null): string | null {
+  if (!city?.trim()) return null;
+  const c = city.trim().toLowerCase();
+  for (const [slug, cities] of Object.entries(EVENT_REGION_CITIES)) {
+    for (const ct of cities) {
+      const cl = ct.toLowerCase();
+      if (c === cl || c.includes(cl) || cl.includes(c)) return slug;
+    }
+  }
+  return null;
+}
+
 interface EventCalendarProps {
   autoLoad?: boolean;
 }
@@ -110,11 +135,13 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
     });
 
     if (eventFilters && isPersonalized && !searchTerm && selectedRegion === 'all' && selectedCategory === 'all') {
-      // Aplicar automaticamente apenas se nenhum filtro manual estiver ativo
-      if (eventFilters.suggestedCity && eventFilters.suggestedCity !== 'Campo Grande') {
-        console.log('🚀 [APLICANDO AUTO FILTRO]', { suggestedCity: eventFilters.suggestedCity });
-        // Aplicar cidade sugerida automaticamente (exceto default)
-        setSelectedRegion(eventFilters.suggestedCity);
+      const city = eventFilters.suggestedCity?.trim();
+      if (city && city.toLowerCase() !== 'campo grande') {
+        const slug = inferRegionSlugFromCityName(city);
+        if (slug) {
+          console.log('🚀 [APLICANDO AUTO FILTRO]', { suggestedCity: city, regionSlug: slug });
+          setSelectedRegion(slug);
+        }
       }
     }
   }, [eventFilters, isPersonalized, searchTerm, selectedRegion, selectedCategory]);
@@ -194,10 +221,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
   const loadAllEvents = async () => {
     setLoading(true);
     try {
-      // Usar fetch direto (workaround para problema com cliente Supabase)
-      const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
-      const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
-
       const mapEvents = (rawData: unknown[]): EventItem[] => {
         return (rawData || []).map((event: unknown, index: number) => {
         try {
@@ -270,39 +293,18 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         }).filter((event): event is EventItem => event !== null);
       };
 
-      const headers = {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-      };
+      const { data: rawRows, error: fetchError } = await supabase
+        .from('events_public')
+        .select('*')
+        .order('data_inicio', { ascending: true });
 
-      // 1) Tenta consulta completa com região (join).
-      // 2) Se falhar por schema/relacionamento no ambiente, cai para consulta simples.
-      let data: unknown[] = [];
-      const primaryResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&select=*,tourist_region:tourist_regions(id,name,slug,color,color_hover)`,
-        { headers }
-      );
-
-      if (primaryResponse.ok) {
-        data = await primaryResponse.json();
-      } else {
-        const primaryError = await primaryResponse.text();
-        console.warn('Falha na consulta com join de região, ativando fallback:', primaryError);
-
-        const fallbackResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/events?is_visible=eq.true&select=*`,
-          { headers }
-        );
-
-        if (!fallbackResponse.ok) {
-          const fallbackError = await fallbackResponse.text();
-          console.error("Erro ao carregar eventos (fallback também falhou):", fallbackError);
-          setAllEvents([]);
-          return;
-        }
-
-        data = await fallbackResponse.json();
+      if (fetchError) {
+        console.error('Erro ao carregar eventos (events_public):', fetchError);
+        setAllEvents([]);
+        return;
       }
+
+      const data: unknown[] = rawRows || [];
 
       console.log('📊 Eventos brutos recebidos da API:', data?.length || 0);
       console.log('📋 Primeiro evento bruto:', data?.[0]);
@@ -331,19 +333,6 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Cidades por região para filtro
-  const regionCities: Record<string, string[]> = {
-    'bonito-serra-bodoquena': ['bonito', 'bodoquena', 'jardim', 'bela vista', 'caracol', 'guia lopes', 'nioaque', 'porto murtinho'],
-    'caminho-ipes': ['campo grande', 'corguinho', 'dois irmãos do buriti', 'jaraguari', 'nova alvorada', 'ribas do rio pardo', 'rio negro', 'sidrolândia', 'terenos'],
-    'caminhos-fronteira': ['ponta porã', 'antônio joão', 'laguna carapã'],
-    'costa-leste': ['três lagoas', 'água clara', 'aparecida do taboado', 'bataguassu', 'brasilândia', 'paranaíba', 'santa rita do pardo'],
-    'grande-dourados': ['dourados', 'caarapó', 'deodápolis', 'douradina', 'fátima do sul', 'glória de dourados', 'itaporã', 'maracaju', 'rio brilhante', 'vicentina'],
-    'pantanal': ['corumbá', 'aquidauana', 'miranda', 'ladário', 'anastácio', 'pantanal'],
-    'rota-norte': ['coxim', 'alcinópolis', 'bandeirantes', 'camapuã', 'costa rica', 'figueirão', 'paraíso das águas', 'pedro gomes', 'rio verde de mato grosso', 'são gabriel do oeste', 'sonora'],
-    'vale-aguas': ['nova andradina', 'angélica', 'batayporã', 'ivinhema', 'jateí', 'novo horizonte do sul', 'taquarussu'],
-    'vale-apore': ['cassilândia', 'chapadão do sul', 'inocência'],
   };
 
   const filteredEvents = (allEvents || []).filter(event => {
@@ -389,9 +378,9 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         }
         // Fallback: mapeamento por cidade (para eventos antigos sem tourist_region_id)
 
-        if (!matchesRegion && selectedRegion in regionCities) {
+        if (!matchesRegion && selectedRegion in EVENT_REGION_CITIES) {
           console.log('✅ [FALLBACK] CONDIÇÃO ATENDIDA - EXECUTANDO FALLBACK');
-          const cities = regionCities[selectedRegion];
+          const cities = EVENT_REGION_CITIES[selectedRegion];
           console.log('🔄 [Fallback] Verificando cidades:', cities);
           console.log('🔄 [Fallback] selectedRegion:', selectedRegion);
           console.log('🔄 [Fallback] event.location:', event.location);
@@ -408,7 +397,7 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
         } else {
           console.log('❌ [Fallback] Não executado - condição:', {
             matchesRegion,
-            hasSelectedRegionInCities: selectedRegion in regionCities,
+            hasSelectedRegionInCities: selectedRegion in EVENT_REGION_CITIES,
             selectedRegion
           });
         }

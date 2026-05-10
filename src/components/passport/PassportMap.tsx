@@ -3,14 +3,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import type { RouteExtended, RouteCheckpointExtended, StampProgress } from '@/types/passportDigital';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { cn } from '@/lib/utils';
 
 interface PassportMapProps {
   route: RouteExtended;
   checkpoints: RouteCheckpointExtended[];
   progress?: StampProgress | null;
+  /** Tailwind height classes for the map container (default h-[400px]) */
+  containerClassName?: string;
 }
 
-const PassportMap: React.FC<PassportMapProps> = ({ route, checkpoints, progress }) => {
+const PassportMap: React.FC<PassportMapProps> = ({
+  route,
+  checkpoints,
+  progress,
+  containerClassName,
+}) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
@@ -176,7 +184,10 @@ const PassportMap: React.FC<PassportMapProps> = ({ route, checkpoints, progress 
   return (
     <Card>
       <CardContent className="p-0">
-        <div ref={mapContainer} className="w-full h-[400px] rounded-lg" />
+        <div
+          ref={mapContainer}
+          className={cn('w-full rounded-lg', containerClassName ?? 'h-[400px]')}
+        />
       </CardContent>
     </Card>
   );

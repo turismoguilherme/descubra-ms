@@ -43,7 +43,7 @@ export const ENV = {
   GUATA: {
     AVATAR_URL: '/guata-mascote.jpg',
     NAME: 'Guatá',
-    DESCRIPTION: 'Seu guia de turismo inteligente',
+    DESCRIPTION: 'Seu Chatbot Inteligente de Turismo',
     DEFAULT_GREETING: 'Olá! Eu sou o Guatá, seu guia turístico virtual. Como posso ajudar você a descobrir o Mato Grosso do Sul hoje?'
   },
 

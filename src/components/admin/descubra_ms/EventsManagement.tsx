@@ -54,6 +54,11 @@ import EventPaymentConfig from '@/components/admin/EventPaymentConfig';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { optimizeModalImage, optimizeThumbnail } from '@/utils/imageOptimization';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
+import {
+  getEventEndUtcMs,
+  isEventActiveForPublicListing,
+  type EventRowDates,
+} from '@/utils/eventPublicVisibility';
 
 interface Event {
   id: string;
@@ -128,6 +133,56 @@ function normalizeEventFromDb(row: Record<string, unknown>): Event {
     refund_amount: (r.refund_amount as number) || null,
     refunded_at: (r.refunded_at as string) || null,
     refund_error_message: (r.refund_error_message as string) || null,
+  };
+}
+
+/** Mesmas regras da home /eventos: `EventRowDates` a partir do modelo da UI admin. */
+function eventToPublicListingRow(e: Event): EventRowDates {
+  return {
+    data_inicio: e.start_date,
+    data_fim: e.end_date,
+    start_time: e.start_time,
+    end_time: e.end_time,
+  };
+}
+
+/**
+ * Se o evento está aprovado e visível no cadastro, mas não entra na vitrine pública
+ * (data já passou ou datas não permitem calcular o fim).
+ */
+function publicVitrineOffReason(e: Event): null | 'ended' | 'incomplete' {
+  const row = eventToPublicListingRow(e);
+  const endMs = getEventEndUtcMs(row);
+  if (endMs == null) {
+    const hasStart = Boolean(String(e.start_date || '').trim());
+    const hasEnd = Boolean(String(e.end_date || '').trim());
+    if (hasStart || hasEnd) return 'incomplete';
+    return null;
+  }
+  if (!isEventActiveForPublicListing(row)) return 'ended';
+  return null;
+}
+
+function isMissingEventDetailsRelation(error: { code?: string; message?: string } | null | undefined): boolean {
+  if (!error) return false;
+  const m = (error.message || '').toLowerCase();
+  return (
+    error.code === 'PGRST205' ||
+    m.includes('could not find the table') ||
+    m.includes('schema cache') ||
+    (m.includes('relation') && m.includes('does not exist'))
+  );
+}
+
+/** Linha `events` do Supabase → payload esperado por `autoTranslateEvent` (campos em PT ou EN). */
+function mapEventRowForTranslation(row: Record<string, unknown>) {
+  const r = row as Record<string, unknown>;
+  return {
+    id: String(r.id),
+    name: String((r.titulo ?? r.name) || ''),
+    description: (r.descricao ?? r.description) != null ? String(r.descricao ?? r.description) : null,
+    location: (r.local ?? r.location) != null ? String(r.local ?? r.location) : null,
+    category: (r.categoria ?? r.category) != null ? String(r.categoria ?? r.category) : null,
   };
 }
 
@@ -611,9 +666,16 @@ export default function EventsManagement() {
       );
 
       // MOSTRAR TOAST DE SUCESSO IMEDIATAMENTE (antes do email)
+      const vitrineWhy = publicVitrineOffReason(event);
+      const approveDescription =
+        vitrineWhy === 'ended'
+          ? `O evento "${event.name}" foi aprovado. Como já passou da data/hora de término, ele não aparece na home nem em /eventos (comportamento esperado).`
+          : vitrineWhy === 'incomplete'
+            ? `O evento "${event.name}" foi aprovado. Corrija data/hora de início e término para ele aparecer na vitrine pública.`
+            : `O evento "${event.name}" está aprovado e pode aparecer na home e em /eventos conforme as datas.`;
       toast({
         title: '✅ Evento aprovado com sucesso!',
-        description: `O evento "${event.name}" agora está visível na plataforma.`,
+        description: approveDescription,
         duration: 5000,
       });
 
@@ -621,13 +683,13 @@ export default function EventsManagement() {
       try {
         if (updatedEvent && updatedEvent[0]) {
           const { autoTranslateEvent } = await import('@/utils/autoTranslation');
-          // Traduzir em background (não bloquear UI)
+          const tPayload = mapEventRowForTranslation(updatedEvent[0] as Record<string, unknown>);
           autoTranslateEvent({
-            id: updatedEvent[0].id,
-            name: updatedEvent[0].name || event.name || '',
-            description: updatedEvent[0].description || null,
-            location: updatedEvent[0].location || null,
-            category: updatedEvent[0].category || null,
+            id: tPayload.id,
+            name: tPayload.name || event.name || '',
+            description: tPayload.description,
+            location: tPayload.location,
+            category: tPayload.category,
           });
         }
       } catch (translationError) {
@@ -906,16 +968,22 @@ export default function EventsManagement() {
 
       // Excluir evento permanentemente do banco de dados
       
-      const { error, data } = await supabase
+      const { error, count } = await supabase
         .from('events')
-        .delete()
-        .eq('id', eventId)
-        .select();
+        .delete({ count: 'exact', head: true })
+        .eq('id', eventId);
 
       if (error) {
         console.error('Erro ao excluir evento:', error);
         
         throw error;
+      }
+
+      const deletedRows = typeof count === 'number' ? count : 0;
+      if (deletedRows === 0) {
+        throw new Error(
+          'Nenhuma linha foi excluída. Verifique permissões (RLS) no Supabase ou se o evento ainda existe.'
+        );
       }
 
       toast({
@@ -939,7 +1007,7 @@ export default function EventsManagement() {
       console.error('Erro ao excluir evento:', err);
       toast({
         title: '❌ Erro ao excluir evento',
-        description: error.message || 'Não foi possível excluir o evento. Tente novamente.',
+        description: err.message || 'Não foi possível excluir o evento. Tente novamente.',
         variant: 'destructive',
         duration: 5000,
       });
@@ -1080,6 +1148,13 @@ export default function EventsManagement() {
         updateData.tipo_entrada = editingEvent.is_free ? 'gratuito' : 'pago';
       }
 
+      // Opção B: evento já aprovado e visível — edição (ex.: remarcar datas) não deve despublicar nem voltar fluxo de pendência
+      const approval = (editingEvent as Event & { approval_status?: string }).approval_status;
+      if (editingEvent.is_visible && approval === 'approved') {
+        updateData.is_visible = true;
+        updateData.approval_status = 'approved';
+      }
+
       const { error } = await supabase
         .from('events')
         .update(updateData)
@@ -1090,43 +1165,38 @@ export default function EventsManagement() {
         throw error;
       }
 
-      // Atualizar também a tabela event_details se existir
+      // Atualizar também a tabela event_details quando existir no projeto Supabase
       if (editingEvent.video_url || editingEvent.image_url) {
-        try {
-          const { data: existingDetails } = await supabase
+        const detailsData: Record<string, unknown> = {
+          event_id: editingEvent.id,
+          updated_at: new Date().toISOString(),
+        };
+        if (editingEvent.video_url) detailsData.video_url = editingEvent.video_url;
+        if (editingEvent.image_url) detailsData.cover_image_url = editingEvent.image_url;
+
+        const { data: existingDetails, error: detailsSelectError } = await supabase
+          .from('event_details')
+          .select('id')
+          .eq('event_id', editingEvent.id)
+          .maybeSingle();
+
+        if (detailsSelectError) {
+          if (!isMissingEventDetailsRelation(detailsSelectError)) {
+            console.warn('event_details (select):', detailsSelectError);
+          }
+        } else if (existingDetails) {
+          const { error: updErr } = await supabase
             .from('event_details')
-            .select('id')
-            .eq('event_id', editingEvent.id)
-            .single();
-
-          const detailsData: Record<string, unknown> = {
-            event_id: editingEvent.id,
-            updated_at: new Date().toISOString()
-          };
-
-          if (editingEvent.video_url) {
-            detailsData.video_url = editingEvent.video_url;
+            .update(detailsData)
+            .eq('event_id', editingEvent.id);
+          if (updErr && !isMissingEventDetailsRelation(updErr)) {
+            console.warn('event_details (update):', updErr);
           }
-
-          if (editingEvent.image_url) {
-            detailsData.cover_image_url = editingEvent.image_url;
+        } else {
+          const { error: insErr } = await supabase.from('event_details').insert(detailsData);
+          if (insErr && !isMissingEventDetailsRelation(insErr)) {
+            console.warn('event_details (insert):', insErr);
           }
-
-          if (existingDetails) {
-            // Atualizar registro existente
-            await supabase
-              .from('event_details')
-              .update(detailsData)
-              .eq('event_id', editingEvent.id);
-          } else {
-            // Criar novo registro
-            await supabase
-              .from('event_details')
-              .insert(detailsData);
-          }
-        } catch (detailsError) {
-          console.warn('⚠️ Não foi possível atualizar event_details:', detailsError);
-          // Não falhar a edição principal por causa disso
         }
       }
 
@@ -1134,19 +1204,19 @@ export default function EventsManagement() {
       try {
         const { data: updatedEvent } = await supabase
           .from('events')
-          .select('id, name, description, location, category, approval_status')
+          .select('id, titulo, descricao, local, categoria, approval_status')
           .eq('id', editingEvent.id)
           .single();
 
         if (updatedEvent && (updatedEvent.approval_status === 'approved' || updateData.approval_status === 'approved')) {
           const { autoTranslateEvent } = await import('@/utils/autoTranslation');
-          // Traduzir em background (não bloquear UI)
+          const tPayload = mapEventRowForTranslation(updatedEvent as Record<string, unknown>);
           autoTranslateEvent({
-            id: updatedEvent.id,
-            name: updatedEvent.name || editingEvent.name || '',
-            description: updatedEvent.description || editingEvent.description || null,
-            location: updatedEvent.location || editingEvent.location || null,
-            category: updatedEvent.category || editingEvent.category || null,
+            id: tPayload.id,
+            name: tPayload.name || editingEvent.name || '',
+            description: (tPayload.description ?? editingEvent.description) || null,
+            location: (tPayload.location ?? editingEvent.location) || null,
+            category: (tPayload.category ?? editingEvent.category) || null,
           });
         }
       } catch (translationError) {
@@ -1311,6 +1381,26 @@ export default function EventsManagement() {
                     Arquivado
                   </Badge>
                 )}
+                {event.is_visible &&
+                  (event as Event & { approval_status?: string }).approval_status === 'approved' &&
+                  (() => {
+                    const why = publicVitrineOffReason(event);
+                    if (!why) return null;
+                    const title =
+                      why === 'ended'
+                        ? 'Aprovado no cadastro, mas não aparece na home nem em /eventos porque a data/hora de término já passou (regra da vitrine).'
+                        : 'Não aparece na vitrine pública: ajuste data/hora de início e término para a listagem calcular o fim do evento.';
+                    return (
+                      <Badge
+                        variant="outline"
+                        className="border-slate-400 text-slate-700 bg-slate-50"
+                        title={title}
+                      >
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {why === 'ended' ? 'Encerrado (fora da vitrine)' : 'Vitrine: revisar datas'}
+                      </Badge>
+                    );
+                  })()}
               </div>
             </div>
 
@@ -2088,7 +2178,12 @@ export default function EventsManagement() {
       </Dialog>
 
       {/* Modal de detalhes - Prévia do que aparece para os usuários */}
-      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+      <Dialog
+        open={!!selectedEvent}
+        onOpenChange={(open) => {
+          if (!open) setSelectedEvent(null);
+        }}
+      >
         <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-2xl [&>button]:hidden">
           {selectedEvent && (() => {
             const touristRegion = getTouristRegion(selectedEvent.location);
@@ -2130,6 +2225,10 @@ export default function EventsManagement() {
               'grande-dourados': 'Grande Dourados',
               'descubra-ms': 'Descubra MS'
             };
+
+            const vitrineOff = publicVitrineOffReason(selectedEvent);
+            const selectedApproved =
+              (selectedEvent as Event & { approval_status?: string }).approval_status === 'approved';
 
             return (
               <div className="relative max-h-[90vh] overflow-y-auto">
@@ -2199,6 +2298,25 @@ export default function EventsManagement() {
 
                 {/* Conteúdo principal */}
                 <div className="p-6 space-y-6 bg-white">
+                  {selectedEvent.is_visible && selectedApproved && vitrineOff && (
+                    <Alert className="border-amber-200 bg-amber-50 text-amber-950">
+                      <AlertDescription>
+                        {vitrineOff === 'ended' ? (
+                          <>
+                            Este evento está <strong>aprovado</strong>, mas{' '}
+                            <strong>não aparece na home nem em /eventos</strong> porque a data/hora de término já
+                            passou (comportamento esperado da vitrine).
+                          </>
+                        ) : (
+                          <>
+                            Este evento está <strong>aprovado</strong>, mas{' '}
+                            <strong>não aparece na vitrine pública</strong> porque as datas não permitem calcular o
+                            encerramento. Revise início e fim com data/hora válidos.
+                          </>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
                   {/* Informações principais */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Data e horário */}
@@ -2543,9 +2661,9 @@ export default function EventsManagement() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
+              onClick={async () => {
                 if (selectedEvent && deleteConfirmName === selectedEvent.name) {
-                  deleteEvent(selectedEvent.id);
+                  await deleteEvent(selectedEvent.id);
                 }
               }}
               disabled={!selectedEvent || deleteConfirmName !== selectedEvent.name || deletingEventId === selectedEvent.id}

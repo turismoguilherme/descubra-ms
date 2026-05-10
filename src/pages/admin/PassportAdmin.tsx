@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PassportRouteManager from '@/components/admin/passport/PassportRouteManager';
 import PassportStampConfig from '@/components/admin/passport/PassportStampConfig';
 import PassportCheckpointManager from '@/components/admin/passport/PassportCheckpointManager';
@@ -9,22 +8,26 @@ import PassportRewardsManager from '@/components/admin/passport/PassportRewardsM
 import PendingPartnerRewards from '@/components/admin/passport/PendingPartnerRewards';
 import PassportAnalytics from '@/components/admin/passport/PassportAnalytics';
 import PartnerCodesManager from '@/components/admin/passport/PartnerCodesManager';
-import PassportPhotosView from '@/components/admin/passport/PassportPhotosView';
-import PassportGlobalSettings from '@/components/admin/passport/PassportGlobalSettings';
-import { Route, Settings, Gift, MapPin, BarChart3, Key, Camera, Globe } from 'lucide-react';
+import { Route, Settings, Gift, MapPin, BarChart3, Key } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 
 const PassportAdmin: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get('tab') || 'routes';
-  const [activeTab, setActiveTab] = useState(tabFromUrl);
+  const rawTab = searchParams.get('tab') || 'routes';
+  const normalizedTab = rawTab === 'photos' || rawTab === 'global' ? 'routes' : rawTab;
+  const [activeTab, setActiveTab] = useState(normalizedTab);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
+    if (tab === 'photos' || tab === 'global') {
+      setActiveTab('routes');
+      setSearchParams({ tab: 'routes' }, { replace: true });
+      return;
+    }
     if (tab) {
       setActiveTab(tab);
     }
-  }, [searchParams]);
+  }, [searchParams, setSearchParams]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -40,7 +43,7 @@ const PassportAdmin: React.FC = () => {
       />
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
           <TabsTrigger value="routes" className="flex items-center gap-2">
             <Route className="h-4 w-4" />
             Rotas
@@ -60,14 +63,6 @@ const PassportAdmin: React.FC = () => {
           <TabsTrigger value="rewards" className="flex items-center gap-2">
             <Gift className="h-4 w-4" />
             Recompensas
-          </TabsTrigger>
-          <TabsTrigger value="photos" className="flex items-center gap-2">
-            <Camera className="h-4 w-4" />
-            Fotos
-          </TabsTrigger>
-          <TabsTrigger value="global" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Global
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -97,14 +92,6 @@ const PassportAdmin: React.FC = () => {
           
           {/* Gerenciamento manual de recompensas */}
           <PassportRewardsManager />
-        </TabsContent>
-
-        <TabsContent value="photos" className="space-y-4">
-          <PassportPhotosView />
-        </TabsContent>
-
-        <TabsContent value="global" className="space-y-4">
-          <PassportGlobalSettings />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">

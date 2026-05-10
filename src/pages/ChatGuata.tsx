@@ -9,9 +9,18 @@ import { guataTrueApiService } from "@/services/ai";
 import { guataMLService } from "@/services/ai/ml/guataMLService";
 import { getGuataSessionId, resetGuataSessionId } from "@/utils/guataSession";
 
+const CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS = [
+  "Quais são os principais pontos turísticos de Campo Grande?",
+  "O que fazer em Campo Grande em um dia?",
+  "Quais parques e áreas verdes visitar em Campo Grande?",
+  "Onde experimentar comidas típicas em Campo Grande?",
+  "Quais museus e centros culturais conhecer em Campo Grande?",
+  "Qual o melhor roteiro noturno em Campo Grande?"
+];
+
 const ChatGuata = () => {
   const location = useLocation();
-  const isChatGuataRoute = location.pathname === '/chatguata';
+  const isChatGuataRoute = /\/chatguata\/?$/.test(location.pathname);
   const { toast } = useToast();
   const { isConnected, connectionChecking } = useGuataConnection();
 
@@ -240,6 +249,7 @@ const ChatGuata = () => {
             <div className="flex flex-col min-h-0">
               <SuggestionQuestions 
                 onSuggestionClick={handleSuggestionClick}
+                suggestionsOverride={isChatGuataRoute ? CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS : undefined}
               />
             </div>
           </div>
