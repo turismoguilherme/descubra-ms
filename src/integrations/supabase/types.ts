@@ -8071,6 +8071,7 @@ export type Database = {
           publico_alvo: string | null
           site_oficial: string | null
           sponsor_end_date: string | null
+          sponsor_payment_status: string | null
           sponsor_start_date: string | null
           sponsor_tier: string | null
           start_time: string | null
@@ -8105,6 +8106,7 @@ export type Database = {
           publico_alvo?: string | null
           site_oficial?: string | null
           sponsor_end_date?: string | null
+          sponsor_payment_status?: string | null
           sponsor_start_date?: string | null
           sponsor_tier?: string | null
           start_time?: string | null
@@ -8139,6 +8141,7 @@ export type Database = {
           publico_alvo?: string | null
           site_oficial?: string | null
           sponsor_end_date?: string | null
+          sponsor_payment_status?: string | null
           sponsor_start_date?: string | null
           sponsor_tier?: string | null
           start_time?: string | null
