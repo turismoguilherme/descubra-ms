@@ -1,94 +1,104 @@
-## Plano de correções e melhoria — Passaporte Digital, Stripe Connect e Termos
+## Rebrand: ViaJARTur → Guatá Labs
 
-Antes de codar, tenho 2 dúvidas importantes que precisam de resposta — listadas no final do plano.
-
----
-
-### 1) Passaporte Digital — checkpoints por DIA (rotas difíceis / multi-dia)
-
-**Diagnóstico:** hoje `route_checkpoints` tem `order_sequence` (ordem linear), mas não há nenhum conceito de "dia". Para roteiros classificados como `Difícil` que ocupam vários dias, o admin precisa agrupar checkpoints por dia (Dia 1, Dia 2, …) e o app precisa exibir/validar respeitando essa divisão.
-
-**O que será implementado:**
-- **Migration** adicionando à tabela `route_checkpoints`:
-  - `day_number INTEGER DEFAULT 1` (em qual dia do roteiro está o checkpoint)
-  - `day_title TEXT NULL` (rótulo opcional do dia, ex.: "Dia 1 – Bonito Centro")
-- Em `routes`: adicionar `total_days INTEGER DEFAULT 1` para o admin definir a duração em dias.
-- **Admin (`PassportCheckpointManager` + `PassportRouteManager`)**:
-  - Em rotas `Difícil`, exibir campo "Total de dias" e, ao criar/editar checkpoint, um seletor "Dia". Os checkpoints passam a ser listados agrupados por dia.
-- **App público (`PassaporteRota` / detalhe da rota)**:
-  - Renderizar a lista de checkpoints agrupada por dia, com cabeçalho de cada dia.
-  - O progresso por dia é exibido (X/Y do Dia 1, etc.); o sequencial continua respeitando `order_sequence` dentro do dia.
-- **Compatibilidade:** rotas existentes ficam com `day_number = 1` e `total_days = 1`, sem mudança visual.
-
-### 2) Tela "Nenhuma Rota Disponível" — remover botão administrativo
-
-**Diagnóstico:** `src/pages/ms/PassaporteLista.tsx` linhas 269–284 mostram botão "Ir para Painel Administrativo" para qualquer visitante quando não há rotas. Inadequado para o público final.
-
-**Correção:** substituir o estado vazio por mensagem amigável sem CTA administrativo:
-- Ícone + título "Em breve, novas rotas"
-- Texto: "Ainda não há rotas publicadas. Volte em breve para descobrir os roteiros do Passaporte Digital."
-- Botão único "Voltar para o início" → navega para `/descubrams`.
-
-### 3) Stripe Connect — erro ao tentar conectar
-
-**Diagnóstico:** a edge function `stripe-connect-onboarding` (linhas 236 e 262) faz duas validações estritas:
-1. `partner.contact_email !== user.email` → bloqueia 403.
-2. `partner.contact_email !== partnerEmail` (do body) → lança erro.
-
-Cenários reais que falham hoje:
-- Parceiro foi cadastrado pelo admin com `contact_email` diferente do email da conta auth do usuário-parceiro.
-- Letras maiúsculas/minúsculas ou espaços diferentes entre os emails.
-- Admin/master_admin tentando conectar em nome de um parceiro.
-
-**Correção:**
-- **Edge function `stripe-connect-onboarding`:**
-  - Comparar emails sempre normalizados: `.trim().toLowerCase()`.
-  - Permitir acesso quando o usuário é `admin`/`master_admin`/`tech` (consulta `user_roles`), além do próprio parceiro.
-  - Em vez de derivar `partnerEmail` do body, **usar sempre `partner.contact_email`** do banco (mais seguro e evita divergência); manter o body apenas como fallback.
-  - Mensagens de erro mais claras no `catch` final (incluir `error.code` quando vier do Stripe) para o front exibir o motivo real.
-- **Front `StripeConnectStep.tsx`:** mostrar a mensagem retornada pela edge function (já mostra `err.message`), e adicionar log do `error.context` para diagnóstico futuro.
-
-### 4) Termos do parceiro não aparecem no admin
-
-**Diagnóstico:** existem **3 registros pendentes** em `partner_terms_acceptances` com `pdf_url` e `uploaded_pdf_url` preenchidos, mas a política RLS de leitura para admin é:
-
-```
-EXISTS (... user_roles WHERE role = ANY (ARRAY['admin','tech']))
-```
-
-Não inclui `master_admin`. Em outras tabelas o padrão do projeto é aceitar `admin`, `tech` e `master_admin`. Como você (provavelmente `master_admin`) consulta a tabela e a RLS bloqueia, o painel `PartnerTermsReview` mostra "Nenhum termo encontrado" mesmo com dados válidos no banco. Isso também explica por que, ao "Solicitar ajuste" e o parceiro reenviar, o novo registro não aparece.
-
-**Correção:**
-- **Migration:** atualizar a policy `Admins can view all term acceptances` (e equivalentes de UPDATE) em `partner_terms_acceptances` para incluir `master_admin`:
-  ```sql
-  USING (EXISTS (
-    SELECT 1 FROM user_roles
-    WHERE user_id = auth.uid()
-      AND role IN ('admin','tech','master_admin')
-  ))
-  ```
-- Conferir e alinhar a policy de UPDATE (aprovar/rejeitar/solicitar ajuste) com a mesma lista de roles.
-- **Bonus front-end (`PartnerTermsReview.tsx`):** quando o filtro estiver em "Todos", carregar de fato todos (já carrega), mas adicionar um aviso visual "0 registros visíveis" diferenciando "sem permissão" de "sem dados", lendo `count` separado.
+Aplicado **somente na landing pública ViaJAR** (`/viajar` e páginas do mesmo grupo: ViaJARSaaS, navbar, footer, termos, privacidade, cookies). Dashboards internos, Descubra MS e admin permanecem como estão.
 
 ---
 
-### Mudança técnica resumida
+### 1. Nova identidade visual
 
-- **Migrations SQL** (1 arquivo):
-  - `route_checkpoints.day_number`, `route_checkpoints.day_title`
-  - `routes.total_days`
-  - Atualização das policies de SELECT/UPDATE em `partner_terms_acceptances` para incluir `master_admin`.
-- **Edge function:** `supabase/functions/stripe-connect-onboarding/index.ts` (normalização e bypass admin).
-- **Front-end:**
-  - `src/pages/ms/PassaporteLista.tsx` (estado vazio).
-  - `src/components/admin/passport/PassportCheckpointManager.tsx` e `PassportRouteManager.tsx` (UI de dias).
-  - `src/pages/ms/PassaporteRota.tsx` ou equivalente (agrupamento por dia).
-  - `src/types/passportDigital.ts` (campos novos opcionais).
-  - `src/integrations/supabase/types.ts` (regenerado pela migration).
+**Paleta (da logo Guatá Labs):**
+- Verde floresta `#1F4D2C` → `--guata-forest`
+- Verde profundo `#143820` → `--guata-deep`
+- Dourado `#C9A24C` → `--guata-gold`
+- Bege papel `#F2EBDD` → `--guata-paper`
+- Off-white textura `#FAF6EC` → `--guata-cream`
+
+**Tipografia:** manter sans-serif atual; títulos em peso black/extrabold (referência da logo arredondada e robusta). Considerar Fraunces ou Outfit para headings.
+
+**Tokens:** adicionar em `src/index.css` e `tailwind.config.ts` namespace `guata-*` (sem remover `viajar-*` legados imediatamente — manter alias para evitar quebras durante migração).
+
+**Substituições nos componentes da landing:**
+- `ViaJARNavbar`, `ViaJARFooter`: logo Guatá Labs (anexada), trocar nome "ViaJARTur" por "Guatá Labs"
+- `TravelTechHero`, `BenefitsSection`, `WhatViajARTurDoesSection`, `SuccessCasesSection`, `PlatformInActionSection`, `KodaMarketingSection`, `HowItWorksSection`: reskin com paleta verde/dourado/bege, fundos bege papel ao invés de slate-950
+- `ViaJARSaaS.tsx`: substituir referências `bg-viajar-slate`, `viajar-cyan` etc. por novos tokens
+- Páginas `viajar/TermosUso`, `Privacidade`, `Cookies`: mesmo reskin
+
+**Logo:** copiar `user-uploads://image-27.png` para `src/assets/guata-labs-logo.png`.
 
 ---
 
-### Perguntas antes de implementar
+### 2. Mascote Capivara (Guatá) — papel completo
 
-1. **Checkpoints por dia — sequência:** dentro do mesmo dia, os checkpoints devem ser feitos **em ordem obrigatória** (sequencial), ou **em qualquer ordem**? E entre dias, o usuário precisa terminar o Dia 1 antes de fazer check-in no Dia 2?
-2. **Stripe Connect — bypass admin:** quando o admin/master_admin clicar em "Conectar Stripe" no painel, devo (a) **deixar o admin completar o onboarding em nome do parceiro** (gera link e abre normalmente) ou (b) **apenas permitir gerar o link e enviar por email/WhatsApp para o parceiro completar**? A opção (b) é mais segura porque o KYC pertence ao parceiro.
+O personagem (estilo 3D Pixar das imagens 28-30) aparecerá em 3 camadas:
+
+**A. Decorativo no Hero**
+- Imagem grande do Guatá (selfie/safari/pôr do sol) como elemento principal do hero, ao lado do título
+- Variação aleatória ou por horário (manhã/tarde/noite)
+
+**B. Tooltips/balões em seções estratégicas**
+- Pequeno avatar circular do Guatá com balão de fala curto em: "O que fazemos", "Casos de sucesso", "Como funciona", final de página antes do CTA
+- Texto editável via admin (ex.: `guata_tip_hero`, `guata_tip_benefits`...)
+
+**C. Mascote flutuante persistente**
+- Componente `<GuataFloatingMascot />` renderizado em todas as páginas da landing
+- Botão fixo bottom-right com avatar do Guatá
+- Ao clicar, abre balão com mensagem contextual (varia por rota: home, casos, contato)
+- Animação sutil de "respirar" / piscar
+- Pode ser fechado/minimizado (sessionStorage)
+- **Sem chat real** — apenas mensagens curtas pré-configuradas + CTA "Solicitar demonstração"
+
+---
+
+### 3. Admin — gestão de imagens e mensagens do mascote
+
+Reusar **`src/pages/admin/ViaJARAdminPanel.tsx`** (mesmo lugar que já edita conteúdos da ViaJARTur). Adicionar nova aba **"Mascote Guatá"** com:
+
+**Uploads de imagem (Supabase Storage bucket existente):**
+- `guata_mascot_hero` — imagem principal do hero
+- `guata_mascot_floating` — avatar do botão flutuante
+- `guata_mascot_about` — seção sobre/benefícios
+- `guata_mascot_404` — página de erro
+- `guata_mascot_cta` — antes do CTA final
+
+**Textos editáveis (mensagens do mascote):**
+- `guata_msg_floating_home` / `guata_msg_floating_casos` / `guata_msg_floating_contato`
+- `guata_tip_benefits` / `guata_tip_how_it_works` / `guata_tip_success`
+- `guata_brand_name` (default: "Guatá Labs")
+- `guata_brand_tagline`
+
+Tudo persistido via `platformContentService` (CMS unificado já existente — padrão `usePlatformContent`).
+
+**Seed inicial:** migration insere as 4 imagens anexadas (image-27 a image-30) em Storage e popula as chaves com URLs públicas + mensagens default em PT-BR.
+
+---
+
+### 4. Detalhes técnicos
+
+- **Componentes novos:**
+  - `src/components/guata-labs/GuataFloatingMascot.tsx`
+  - `src/components/guata-labs/GuataTooltipBubble.tsx`
+  - `src/components/guata-labs/GuataHeroMascot.tsx`
+  - `src/components/admin/viajar/MascotManagerTab.tsx`
+- **Hook:** `src/hooks/useGuataLabsContent.ts` — busca chaves `guata_*` do `platformContentService`, com cache e fallback para assets locais (image-27..30)
+- **Rotas afetadas:** `/viajar`, `/viajar/termos`, `/viajar/privacidade`, `/viajar/cookies` e qualquer rota que use `ViaJARNavbar`/`ViaJARFooter`
+- **Migração de tokens:** adicionar tokens novos sem remover os antigos; alias `viajar-cyan` → `guata-gold` etc. para componentes não migrados
+- **Memória do projeto:** atualizar `mem://design/viajar-premium-identity` e `mem://brand/viajar-b2b-positioning` com a nova marca, ou criar `mem://brand/guata-labs-identity`
+
+---
+
+### 5. Fora do escopo (confirmado)
+
+- Descubra MS permanece com identidade própria
+- Dashboards internos de parceiros, admin master, financeiro: sem mudança visual
+- Emails transacionais: sem mudança nesta fase
+- Sem chat real do mascote (Guatá AI continua restrito a `/ms/guata`)
+
+---
+
+### Próximas perguntas antes de implementar (rápidas, no chat)
+
+1. Confirmar copiar as 4 imagens anexadas como defaults iniciais do mascote? ✅/✏️
+2. O mascote flutuante deve ter som/animação ao aparecer ou totalmente silencioso?
+3. Manter "ViaJARTur" no domínio/URLs (`/viajar`) ou também renomear futuramente para `/guata-labs`?
+
+Após sua aprovação deste plano, eu confirmo essas 3 e parto para implementação.
