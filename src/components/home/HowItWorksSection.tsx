@@ -40,7 +40,7 @@ const HowItWorksSection = () => {
     {
       number: '01',
       title: getContent('viajar_how_step_1_title', 'Agende uma Demo'),
-      description: getContent('viajar_how_step_1_description', 'Converse com nossa equipe e entenda como a ViajARTur pode ajudar seu negócio'),
+      description: getContent('viajar_how_step_1_description', 'Converse com nossa equipe e entenda como a Guatá Labs pode ajudar seu negócio'),
     },
     {
       number: '02',
@@ -59,10 +59,10 @@ const HowItWorksSection = () => {
   }
 
   return (
-    <section className="py-24 bg-background">
+    <section className="py-24 bg-guata-paper/90">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold font-guata text-guata-deep mb-4">
             {getContent('viajar_how_title', 'Como Funciona')}
           </h2>
           {getContent('viajar_how_subtitle') && (
@@ -79,14 +79,14 @@ const HowItWorksSection = () => {
               className="relative group"
             >
               {/* Número grande de fundo */}
-              <div className="absolute -top-4 -left-4 text-8xl font-bold text-viajar-cyan/10 group-hover:text-viajar-cyan/20 transition-colors duration-300">
+              <div className="absolute -top-4 -left-4 text-8xl font-bold text-guata-gold/15 group-hover:text-guata-gold/25 transition-colors duration-300">
                 {step.number}
               </div>
 
               {/* Card */}
-              <div className="relative bg-card rounded-2xl p-8 border border-border hover:border-viajar-cyan/50 transition-all duration-300 hover:shadow-xl h-full">
+              <div className="relative bg-white/90 rounded-2xl p-8 border border-guata-gold/20 hover:border-guata-gold/45 transition-all duration-300 hover:shadow-xl h-full">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-viajar-cyan to-viajar-blue flex items-center justify-center text-white font-bold text-lg">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-guata-gold to-guata-forest flex items-center justify-center text-guata-cream font-bold text-lg">
                     {step.number}
                   </div>
                   <h3 className="text-xl font-bold text-foreground">

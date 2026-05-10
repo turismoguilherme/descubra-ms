@@ -49,6 +49,7 @@ const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTur
 const TeamMembersManager = lazy(() => import('@/components/admin/viajar/TeamMembersManager'));
 const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
 const ViaJARSectionManager = lazy(() => import('@/components/admin/viajar/ViaJARSectionManager'));
+const MascotManagerTab = lazy(() => import('@/components/admin/viajar/MascotManagerTab'));
 
 const ADMIN_ROLES = ['admin', 'master_admin', 'tech'] as const;
 
@@ -117,6 +118,11 @@ export default function ViaJARAdminPanel() {
             <Route path="viajar/sections" element={
               <Suspense fallback={<LoadingFallback />}>
                 <ViaJARSectionManager />
+              </Suspense>
+            } />
+            <Route path="viajar/mascote-guata" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <MascotManagerTab />
               </Suspense>
             } />
             

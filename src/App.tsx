@@ -119,7 +119,6 @@ import Delinha from "@/pages/Delinha";
 import Welcome from "@/pages/Welcome";
 import BlogOverFlowOne from "@/pages/BlogOverFlowOne";
 import { OAuthCallback } from "@/components/auth/OAuthCallback";
-
 const queryClient = new QueryClient();
 
 // Componente para normalizar barras invertidas em rotas (Windows usa \ mas URLs usam /)

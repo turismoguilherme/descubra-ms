@@ -45,6 +45,7 @@ import {
   TrendingUp,
   MessageCircle,
   Video,
+  Sparkles,
 } from 'lucide-react';
 import { ComponentType } from 'react';
 
@@ -126,6 +127,17 @@ export const adminModulesConfig: AdminModule[] = [
             title: 'Membros da Equipe',
             description: 'Gerencie os membros da equipe ViajARTur',
             helpText: 'Adicione, edite ou remova membros da equipe e configure suas permissões.',
+          },
+          {
+            id: 'viajar-mascote-guata',
+            label: 'Mascote Guatá',
+            icon: Sparkles,
+            path: '/viajar/admin/viajar/mascote-guata',
+            permission: 'viajar',
+            platform: 'viajar',
+            title: 'Mascote Guatá Labs',
+            description: 'Imagens e mensagens do mascote na landing pública',
+            helpText: 'Envie imagens para o hero, avatar flutuante e edite os textos dos balões.',
           },
         ],
       },

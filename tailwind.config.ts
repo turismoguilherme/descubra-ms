@@ -115,6 +115,7 @@ export default {
 			fontFamily: {
 				sans: ['Poppins', 'sans-serif'],
 				playfair: ['Playfair Display', 'serif'],
+				guata: ['Outfit', 'Poppins', 'sans-serif'],
 			},
 			keyframes: {
 				'accordion-down': {
@@ -184,7 +185,11 @@ export default {
 				'rotate-globe': {
 					'0%': { transform: 'rotateY(0deg)' },
 					'100%': { transform: 'rotateY(360deg)' }
-				}
+				},
+				'guata-breathe': {
+					'0%, 100%': { transform: 'scale(1)', opacity: '0.85' },
+					'50%': { transform: 'scale(1.05)', opacity: '1' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -197,7 +202,8 @@ export default {
 				'data-flow-delayed': 'data-flow 4s ease-in-out infinite 1s',
 				'neon-pulse': 'neon-pulse 2s ease-in-out infinite',
 				'holographic-scan': 'holographic-scan 3s linear infinite',
-				'rotate-globe': 'rotate-globe 20s linear infinite'
+				'rotate-globe': 'rotate-globe 20s linear infinite',
+				'guata-breathe': 'guata-breathe 3.5s ease-in-out infinite',
 			},
 			backgroundImage: {
 				'gradient-ms': 'linear-gradient(to right, #003087, #2E7D32)',

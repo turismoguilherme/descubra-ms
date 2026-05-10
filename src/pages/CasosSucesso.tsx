@@ -4,10 +4,13 @@ import { Link } from 'react-router-dom';
 import { MapPin, ArrowRight, CheckCircle2, Bot, Sparkles, Award } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
-import TechBackground from '@/components/home/TechBackground';
 import { platformContentService } from '@/services/admin/platformContentService';
 
+const DEFAULT_CASES_PAGE_LEAD =
+  'Aqui você encontra implementações completas e produtos de IA aplicados ao turismo: plataformas para destinos, analytics para gestores e experiências conversacionais para viajantes. Cada projeto combina método, tecnologia e proximidade com quem opera o turismo no Brasil e no exterior.';
+
 const CasosSucesso = () => {
+  const [pageLead, setPageLead] = useState(DEFAULT_CASES_PAGE_LEAD);
   const [cases, setCases] = useState([
     {
       id: 'descubra-ms',
@@ -19,7 +22,7 @@ const CasosSucesso = () => {
         'Analytics',
         'Gestão de Eventos'
       ],
-      gradient: 'from-emerald-500 to-teal-600',
+      gradient: 'from-guata-forest to-guata-deep',
       icon: MapPin,
       link: '/descubrams',
       image_url: null as string | null
@@ -33,7 +36,7 @@ const CasosSucesso = () => {
         'Multi-idioma',
         'Web Search'
       ],
-      gradient: 'from-blue-500 to-cyan-600',
+      gradient: 'from-guata-gold to-guata-forest',
       icon: Bot,
       link: '/koda',
       image_url: null as string | null
@@ -53,6 +56,8 @@ const CasosSucesso = () => {
       contents.forEach(item => {
         contentMap[item.content_key] = item.content_value || '';
       });
+
+      setPageLead((contentMap['viajar_cases_page_lead'] || '').trim() || DEFAULT_CASES_PAGE_LEAD);
 
       // Parse technologies JSON
       const parseTechnologies = (key: string, fallback: string[]): string[] => {
@@ -79,7 +84,7 @@ const CasosSucesso = () => {
             'Analytics',
             'Gestão de Eventos'
           ]),
-          gradient: 'from-emerald-500 to-teal-600',
+          gradient: 'from-guata-forest to-guata-deep',
           icon: MapPin,
           link: '/descubrams',
           image_url: contentMap['viajar_cases_descubra_ms_image'] || null
@@ -93,7 +98,7 @@ const CasosSucesso = () => {
             'Multi-idioma',
             'Web Search'
           ]),
-          gradient: 'from-blue-500 to-cyan-600',
+          gradient: 'from-guata-gold to-guata-forest',
           icon: Bot,
           link: '/koda',
           image_url: contentMap['viajar_cases_koda_image'] || null
@@ -105,32 +110,40 @@ const CasosSucesso = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 min-h-[340px]">
-        <TechBackground variant="hero" />
-        
+      <section className="relative overflow-hidden py-20 min-h-[320px] bg-gradient-to-br from-guata-cream via-guata-paper to-guata-cream">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.2]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 20%, hsl(var(--guata-gold) / 0.12), transparent 45%),
+              radial-gradient(circle at 80% 10%, hsl(var(--guata-forest) / 0.06), transparent 40%)`,
+          }}
+        />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
-              <Award className="h-4 w-4 text-viajar-cyan" />
-              <span className="text-sm text-white/90 font-medium">Casos de Sucesso</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-guata-gold/35 text-guata-forest text-sm font-semibold mb-6 shadow-sm">
+              <Award className="h-4 w-4 text-guata-gold" />
+              <span>Casos de sucesso</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-deep mb-4">
               Cases
             </h1>
-            <p className="text-lg text-white/70">
-              O que desenvolvemos
+            <p className="text-lg font-medium text-guata-deep/90 mb-3">
+              O que desenvolvemos com a Guatá Labs
+            </p>
+            <p className="text-base md:text-lg text-guata-bark/90 max-w-3xl mx-auto leading-relaxed">
+              {pageLead}
             </p>
           </div>
         </div>
       </section>
 
       {/* Cases Grid */}
-      <section className="py-16">
+      <section className="py-16 bg-guata-paper">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {cases.map((caseItem) => {
@@ -202,22 +215,22 @@ const CasosSucesso = () => {
       </section>
 
       {/* CTA */}
-      <section className="relative py-16 overflow-hidden">
-        <TechBackground variant="section" />
+      <section className="relative py-16 overflow-hidden bg-guata-deep text-guata-cream">
+        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--guata-gold) / 0.4) 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+          <h2 className="text-2xl md:text-3xl font-extrabold font-guata text-guata-cream mb-6">
             Quer ser nosso próximo case?
           </h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contato">
-              <Button size="lg" className="bg-viajar-cyan hover:bg-viajar-cyan/90 text-viajar-slate font-semibold px-8 gap-2">
-                Falar com Especialista
+              <Button size="lg" className="bg-guata-gold hover:bg-guata-gold-light text-guata-deep font-semibold px-8 gap-2">
+                Falar com especialista
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link to="/precos">
-              <Button size="lg" className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/40 px-8">
-                Ver Planos
+              <Button size="lg" variant="outline" className="border-guata-cream/40 text-guata-cream hover:bg-white/10 px-8 bg-transparent">
+                Ver planos
               </Button>
             </Link>
           </div>

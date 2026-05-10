@@ -2,26 +2,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown, Shield, ArrowRight, Building2 } from "lucide-react";
+import { Menu, X, ChevronDown, Shield, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import ViaJARLogo from "./ViaJARLogo";
 import { menuService } from "@/services/admin/menuService";
+
+/** Itens padrão do marketing Viajar (sem /solucoes — página fora do layout atual). */
+const DEFAULT_VIAJAR_NAV_ITEMS = [
+  { name: "Cases", path: "/casos-sucesso" },
+  { name: "Preços", path: "/precos" },
+  { name: "Sobre", path: "/sobre" },
+  { name: "Contato", path: "/contato" },
+];
+
+function isHiddenMarketingNavItem(item: { name: string; path: string }) {
+  const path = (item.path || "").toLowerCase().split("?")[0];
+  const label = (item.name || "").trim().toLowerCase();
+  return path === "/solucoes" || label === "soluções" || label === "solucoes";
+}
 
 const ViaJARNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  // Menu simplificado - apenas 5 itens principais (marketing-first)
-  const [navigationItems, setNavigationItems] = useState([
-    { name: "Soluções", path: "/solucoes", hasDropdown: true },
-    { name: "Cases", path: "/casos-sucesso" },
-    { name: "Preços", path: "/precos" },
-    { name: "Sobre", path: "/sobre" },
-    { name: "Contato", path: "/contato" },
-  ]);
-
-  const [solutionsDropdownOpen, setSolutionsDropdownOpen] = useState(false);
-  const solutionsDropdownRef = useRef<HTMLDivElement>(null);
+  const [navigationItems, setNavigationItems] = useState(DEFAULT_VIAJAR_NAV_ITEMS);
   
   // Carregar menu do banco de dados
   useEffect(() => {
@@ -40,9 +44,13 @@ const ViaJARNavbar = () => {
               const menuB = menus.find((m: unknown) => m.label === b.name);
               return (menuA?.order_index || 0) - (menuB?.order_index || 0);
             });
-          
-          if (activeMenus.length > 0) {
-            setNavigationItems(activeMenus);
+
+          const withoutLegacySolucoes = activeMenus.filter(
+            (item: { name: string; path: string }) => !isHiddenMarketingNavItem(item)
+          );
+
+          if (withoutLegacySolucoes.length > 0) {
+            setNavigationItems(withoutLegacySolucoes);
           }
         }
       } catch (error) {
@@ -99,9 +107,6 @@ const ViaJARNavbar = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDashboardOpen(false);
       }
-      if (solutionsDropdownRef.current && !solutionsDropdownRef.current.contains(event.target as Node)) {
-        setSolutionsDropdownOpen(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -115,10 +120,10 @@ const ViaJARNavbar = () => {
   ];
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-500 ${
+    <nav className={`sticky top-0 z-50 transition-all duration-300 border-b ${
       isScrolled 
-        ? 'bg-slate-950/90 backdrop-blur-xl border-b border-cyan-500/10' 
-        : 'bg-slate-900/20 backdrop-blur-sm border-b border-white/5'
+        ? 'bg-guata-deep shadow-md border-guata-gold/25' 
+        : 'bg-guata-deep border-guata-gold/15'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -129,159 +134,19 @@ const ViaJARNavbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {navigationItems.map(item => {
-              if (item.hasDropdown && item.name === "Soluções") {
-                return (
-                  <div key={item.name} className="relative" ref={solutionsDropdownRef}>
-                    <button
-                      onClick={() => setSolutionsDropdownOpen(!solutionsDropdownOpen)}
-                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 flex items-center gap-1 ${
-                        isActivePath(item.path) 
-                          ? "text-cyan-400 bg-cyan-400/10" 
-                          : "text-white/90 hover:text-cyan-300 hover:bg-white/10"
-                      }`}
-                    >
-                      {item.name}
-                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${solutionsDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {solutionsDropdownOpen && (
-                      <div className="absolute top-full left-0 mt-2 w-[600px] bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/10 py-4 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
-                        <div className="grid grid-cols-2 gap-6 px-4">
-                          {/* Para Empresários */}
-                          <div>
-                            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-cyan-400" />
-                              Para Empresários
-                            </h3>
-                            <ul className="space-y-2">
-                              <li>
-                                <Link 
-                                  to="/solucoes#revenue-optimizer"
-                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
-                                  onClick={() => setSolutionsDropdownOpen(false)}
-                                >
-                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
-                                    Revenue Optimizer
-                                  </div>
-                                  <div className="text-xs text-white/60 mt-1">
-                                    Maximize receita com precificação inteligente
-                                  </div>
-                                </Link>
-                              </li>
-                              <li>
-                                <Link 
-                                  to="/solucoes#market-intelligence"
-                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
-                                  onClick={() => setSolutionsDropdownOpen(false)}
-                                >
-                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
-                                    Market Intelligence
-                                  </div>
-                                  <div className="text-xs text-white/60 mt-1">
-                                    Entenda seu mercado e concorrentes
-                                  </div>
-                                </Link>
-                              </li>
-                              <li>
-                                <Link 
-                                  to="/solucoes#ia-conversacional"
-                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
-                                  onClick={() => setSolutionsDropdownOpen(false)}
-                                >
-                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
-                                    IA Conversacional
-                                  </div>
-                                  <div className="text-xs text-white/60 mt-1">
-                                    Assistente inteligente para seu negócio
-                                  </div>
-                                </Link>
-                              </li>
-                            </ul>
-                          </div>
-
-                          {/* Para Setor Público */}
-                          <div>
-                            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                              <Shield className="h-4 w-4 text-cyan-400" />
-                              Para Setor Público
-                            </h3>
-                            <ul className="space-y-2">
-                              <li>
-                                <Link 
-                                  to="/solucoes#inventario-turistico"
-                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
-                                  onClick={() => setSolutionsDropdownOpen(false)}
-                                >
-                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
-                                    Inventário Turístico
-                                  </div>
-                                  <div className="text-xs text-white/60 mt-1">
-                                    Gestão completa de atrativos
-                                  </div>
-                                </Link>
-                              </li>
-                              <li>
-                                <Link 
-                                  to="/solucoes#gestao-cats"
-                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
-                                  onClick={() => setSolutionsDropdownOpen(false)}
-                                >
-                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
-                                    Gestão de CATs
-                                  </div>
-                                  <div className="text-xs text-white/60 mt-1">
-                                    Controle total dos Centros de Atendimento
-                                  </div>
-                                </Link>
-                              </li>
-                              <li>
-                                <Link 
-                                  to="/solucoes#analytics-governamental"
-                                  className="block p-2 rounded-lg hover:bg-white/10 transition-colors group"
-                                  onClick={() => setSolutionsDropdownOpen(false)}
-                                >
-                                  <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors">
-                                    Analytics Governamental
-                                  </div>
-                                  <div className="text-xs text-white/60 mt-1">
-                                    Dados para tomada de decisão
-                                  </div>
-                                </Link>
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                        <div className="border-t border-border/50 mt-4 pt-4 px-4">
-                          <Link 
-                            to="/solucoes"
-                            className="text-sm font-medium text-viajar-cyan hover:text-viajar-cyan/80 flex items-center gap-1"
-                            onClick={() => setSolutionsDropdownOpen(false)}
-                          >
-                            Ver todas as soluções
-                            <ArrowRight className="h-3 w-3" />
-                          </Link>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              
-              return (
-              <Link 
-                key={item.name} 
-                to={item.path} 
+            {navigationItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
-                  isActivePath(item.path) 
-                    ? "text-cyan-400 bg-cyan-400/10" 
-                    : "text-white/90 hover:text-cyan-300 hover:bg-white/10"
+                  isActivePath(item.path)
+                    ? 'text-guata-gold bg-guata-gold/15'
+                    : 'text-white hover:text-guata-gold-light hover:bg-white/10'
                 }`}
               >
                 {item.name}
               </Link>
-              );
-            })}
+            ))}
           </div>
 
           {/* Desktop Auth */}
@@ -290,7 +155,7 @@ const ViaJARNavbar = () => {
               <div className="relative" ref={dropdownRef}>
                 <Button 
                   variant="ghost"
-                  className="gap-2 text-white/90 hover:text-white hover:bg-white/10"
+                  className="gap-2 text-white hover:text-guata-gold-light hover:bg-white/10"
                   onClick={() => setIsDashboardOpen(!isDashboardOpen)}
                 >
                   Dashboard
@@ -305,7 +170,7 @@ const ViaJARNavbar = () => {
                         to={item.path}
                         className={`block px-4 py-2.5 text-sm transition-colors ${
                           isActivePath(item.path) 
-                            ? 'bg-viajar-cyan/10 text-viajar-cyan font-medium' 
+                            ? 'bg-guata-gold/15 text-guata-forest font-medium' 
                             : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                         }`}
                         onClick={() => setIsDashboardOpen(false)}
@@ -320,7 +185,7 @@ const ViaJARNavbar = () => {
                           to="/viajar/admin"
                           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                             isActivePath('/viajar/admin') 
-                              ? 'bg-viajar-cyan/10 text-viajar-cyan' 
+                              ? 'bg-guata-gold/15 text-guata-forest' 
                               : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                           }`}
                           onClick={() => setIsDashboardOpen(false)}
@@ -336,13 +201,13 @@ const ViaJARNavbar = () => {
             ) : (
               <>
                   <Link to="/viajar/login">
-                    <Button variant="ghost" className="text-white/90 hover:text-white hover:bg-white/10">
+                    <Button variant="ghost" className="text-white hover:text-guata-gold-light hover:bg-white/10">
                       Entrar
                   </Button>
                 </Link>
                 <Link to="/viajar/register">
-                  <Button className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white gap-2 relative group shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]">
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-cyan-500 rounded opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-300" />
+                  <Button className="bg-gradient-to-r from-guata-gold to-guata-gold-light hover:from-guata-gold-light hover:to-guata-gold text-guata-deep gap-2 relative group shadow-[0_0_20px_rgba(201,162,76,0.35)] hover:shadow-[0_0_28px_rgba(201,162,76,0.45)]">
+                    <div className="absolute inset-0 bg-gradient-to-r from-guata-gold to-guata-gold-light rounded opacity-0 group-hover:opacity-25 blur-xl transition-opacity duration-300" />
                     Começar Agora
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -357,7 +222,7 @@ const ViaJARNavbar = () => {
               variant="ghost" 
               size="icon"
               onClick={() => setIsOpen(!isOpen)} 
-              className="text-white/80 hover:text-white"
+              className="text-white hover:text-guata-gold-light"
             >
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -366,81 +231,33 @@ const ViaJARNavbar = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 bg-slate-950/95 backdrop-blur-xl border-t border-cyan-500/10 animate-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden py-4 bg-guata-deep border-t border-guata-gold/20 animate-in slide-in-from-top-2 duration-200">
             <div className="space-y-1">
-              {navigationItems.map(item => {
-                if (item.hasDropdown && item.name === "Soluções") {
-                  return (
-                    <div key={item.name}>
-                      <button
-                        onClick={() => setSolutionsDropdownOpen(!solutionsDropdownOpen)}
-                        className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors flex items-center justify-between ${
-                          isActivePath(item.path) 
-                            ? "text-viajar-cyan bg-viajar-cyan/10" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        }`}
-                      >
-                        {item.name}
-                        <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${solutionsDropdownOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      
-                      {solutionsDropdownOpen && (
-                        <div className="px-4 py-2 space-y-2 bg-muted/30 rounded-lg mt-1">
-                          <div className="text-xs font-semibold text-muted-foreground uppercase mb-2">Para Empresários</div>
-                          <Link to="/solucoes#revenue-optimizer" onClick={() => { setIsOpen(false); setSolutionsDropdownOpen(false); }} className="block py-2 text-sm text-foreground">
-                            Revenue Optimizer
-                          </Link>
-                          <Link to="/solucoes#market-intelligence" onClick={() => { setIsOpen(false); setSolutionsDropdownOpen(false); }} className="block py-2 text-sm text-foreground">
-                            Market Intelligence
-                          </Link>
-                          <Link to="/solucoes#ia-conversacional" onClick={() => { setIsOpen(false); setSolutionsDropdownOpen(false); }} className="block py-2 text-sm text-foreground">
-                            IA Conversacional
-                          </Link>
-                          
-                          <div className="text-xs font-semibold text-muted-foreground uppercase mb-2 mt-4">Para Setor Público</div>
-                          <Link to="/solucoes#inventario-turistico" onClick={() => { setIsOpen(false); setSolutionsDropdownOpen(false); }} className="block py-2 text-sm text-foreground">
-                            Inventário Turístico
-                          </Link>
-                          <Link to="/solucoes#gestao-cats" onClick={() => { setIsOpen(false); setSolutionsDropdownOpen(false); }} className="block py-2 text-sm text-foreground">
-                            Gestão de CATs
-                          </Link>
-                          <Link to="/solucoes#analytics-governamental" onClick={() => { setIsOpen(false); setSolutionsDropdownOpen(false); }} className="block py-2 text-sm text-foreground">
-                            Analytics Governamental
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-                
-                return (
-                <Link 
-                  key={item.name} 
-                  to={item.path} 
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
                   className={`block px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-                    isActivePath(item.path) 
-                      ? "text-viajar-cyan bg-viajar-cyan/10" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`} 
+                    isActivePath(item.path) ? 'text-guata-gold bg-white/10' : 'text-white hover:bg-white/10'
+                  }`}
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
                 </Link>
-                );
-              })}
+              ))}
               
-              <div className="pt-4 space-y-2 border-t border-border/50 mt-4">
+              <div className="pt-4 space-y-2 border-t border-white/15 mt-4">
                 {user ? (
                   <>
-                    <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dashboard</p>
+                    <p className="px-4 text-xs font-semibold text-guata-cream/80 uppercase tracking-wider">Dashboard</p>
                     {dashboardItems.map(item => (
                       <Link 
                         key={item.name} 
                         to={item.path} 
                         className={`block px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                           isActivePath(item.path) 
-                            ? "text-viajar-cyan bg-viajar-cyan/10" 
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            ? "text-guata-gold bg-white/10" 
+                            : "text-white hover:bg-white/10"
                         }`} 
                         onClick={() => setIsOpen(false)}
                       >
@@ -450,7 +267,7 @@ const ViaJARNavbar = () => {
                     {isAdmin && (
                       <Link 
                         to="/viajar/admin" 
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-viajar-cyan" 
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-guata-gold" 
                         onClick={() => setIsOpen(false)}
                       >
                         <Shield className="h-4 w-4" />
@@ -461,12 +278,12 @@ const ViaJARNavbar = () => {
                 ) : (
                   <div className="space-y-2 px-4">
                     <Link to="/viajar/login" onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full border-guata-cream/40 text-white hover:bg-white/10">
                         Entrar
                       </Button>
                     </Link>
                     <Link to="/viajar/register" onClick={() => setIsOpen(false)}>
-                      <Button className="w-full bg-viajar-slate hover:bg-viajar-slate/90 text-white">
+                      <Button className="w-full bg-guata-gold hover:bg-guata-gold-light text-guata-deep font-semibold">
                         Começar Agora
                       </Button>
                     </Link>

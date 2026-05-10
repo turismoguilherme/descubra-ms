@@ -102,11 +102,11 @@ const Cookies = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-viajar-slate to-slate-800 py-16">
+      <section className="relative overflow-hidden bg-gradient-to-b from-guata-deep to-guata-forest py-16">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
@@ -116,20 +116,20 @@ const Cookies = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link 
             to="/" 
-            className="inline-flex items-center text-white/80 hover:text-white mb-6 transition-colors"
+            className="inline-flex items-center text-guata-cream/85 hover:text-guata-cream mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar ao início
           </Link>
           <div className="flex items-center gap-4 mb-4">
-            <div className="bg-viajar-cyan/20 backdrop-blur-sm p-4 rounded-full">
-              <Cookie className="w-8 h-8 text-viajar-cyan" />
+            <div className="bg-guata-gold/20 backdrop-blur-sm p-4 rounded-full">
+              <Cookie className="w-8 h-8 text-guata-gold-light" />
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white">
+            <h1 className="text-4xl md:text-5xl font-extrabold font-guata text-guata-cream">
               Política de Cookies
             </h1>
           </div>
-          <p className="text-white/80 text-lg max-w-3xl">
+          <p className="text-guata-cream/85 text-lg max-w-3xl">
             Última atualização: {lastUpdated 
               ? new Date(lastUpdated).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
               : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}

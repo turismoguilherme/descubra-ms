@@ -90,7 +90,7 @@ export function useFooterSettings(platform: 'ms' | 'viajar') {
               linkedin: 'https://linkedin.com/company/viajartur',
               twitter: 'https://twitter.com/viajartur',
             },
-            copyright: `© ${new Date().getFullYear()} ViajARTur. Todos os direitos reservados.`,
+            copyright: `© ${new Date().getFullYear()} Guatá Labs. Todos os direitos reservados.`,
           });
         }
       }

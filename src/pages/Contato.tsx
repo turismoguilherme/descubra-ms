@@ -1,7 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import TechBackground from '@/components/home/TechBackground';
 import GlowCard from '@/components/home/GlowCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -201,58 +200,55 @@ const Contato = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
       
-      {/* Hero Section with Tech Background */}
-      <section className="relative overflow-hidden min-h-[60vh] flex items-center">
-        <TechBackground variant="hero" />
-        
+      <section className="relative overflow-hidden min-h-[48vh] flex items-center bg-gradient-to-br from-guata-cream via-guata-paper to-guata-cream">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.2]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 18% 25%, hsl(var(--guata-gold) / 0.12), transparent 45%),
+              radial-gradient(circle at 82% 18%, hsl(var(--guata-forest) / 0.06), transparent 38%)`,
+          }}
+        />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/20 backdrop-blur-sm border border-cyan-400/30 mb-6 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-              <MessageSquare className="h-4 w-4 text-cyan-400" />
-              <span className="text-sm text-cyan-100 font-medium">💬 Fale Conosco</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-guata-gold/35 text-guata-forest text-sm font-semibold mb-6 shadow-sm">
+              <MessageSquare className="h-4 w-4 text-guata-gold" />
+              <span>Fale conosco</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
-                {getContent('viajar_contact_hero_title', 'Entre em Contato')}
-              </span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-deep mb-4">
+              {getContent('viajar_contact_hero_title', 'Entre em contato')}
             </h1>
-            {getContent('viajar_contact_hero_subtitle', '') && (
-              <p className="text-xl text-white/70">
-                {getContent('viajar_contact_hero_subtitle', 'Estamos prontos para ajudar você a transformar o turismo na sua região')}
-              </p>
-            )}
+            <p className="text-xl text-guata-bark/85">
+              {getContent('viajar_contact_hero_subtitle', 'Estamos prontos para ajudar você a transformar o turismo na sua região')}
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section className="py-20 bg-slate-900">
+      <section className="py-20 bg-guata-paper">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Contact Info */}
             <div>
-              <h2 className="text-3xl font-bold text-white mb-6">
-                {getContent('viajar_contact_form_title', 'Vamos Conversar')}
+              <h2 className="text-3xl font-extrabold font-guata text-guata-deep mb-6">
+                {getContent('viajar_contact_form_title', 'Vamos conversar')}
               </h2>
-              {getContent('viajar_contact_form_description', '') && (
-                <p className="text-white/70 mb-8 leading-relaxed">
-                  {getContent('viajar_contact_form_description', 'Preencha o formulário ou entre em contato diretamente pelos nossos canais. Nossa equipe está pronta para atender empresários e gestores públicos.')}
-                </p>
-              )}
+              <p className="text-guata-bark/85 mb-8 leading-relaxed">
+                {getContent('viajar_contact_form_description', 'Preencha o formulário ou entre em contato diretamente pelos nossos canais. Nossa equipe está pronta para atender empresários e gestores públicos.')}
+              </p>
 
               <div className="space-y-6 mb-10">
                 {footerSettings.email && (
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center flex-shrink-0">
-                      <Mail className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 rounded-xl bg-guata-forest flex items-center justify-center flex-shrink-0">
+                      <Mail className="h-6 w-6 text-guata-cream" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white mb-1">Email</h3>
-                      <a href={`mailto:${footerSettings.email}`} className="text-cyan-400 hover:underline">
+                      <h3 className="font-semibold text-guata-deep mb-1">Email</h3>
+                      <a href={`mailto:${footerSettings.email}`} className="text-guata-forest hover:underline">
                         {footerSettings.email}
                       </a>
                     </div>
@@ -261,12 +257,12 @@ const Contato = () => {
 
                 {footerSettings.phone && (
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0">
-                      <Phone className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 rounded-xl bg-guata-gold flex items-center justify-center flex-shrink-0">
+                      <Phone className="h-6 w-6 text-guata-deep" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white mb-1">Telefone</h3>
-                      <a href={`tel:${footerSettings.phone.replace(/\D/g, '')}`} className="text-white/70 hover:text-white">
+                      <h3 className="font-semibold text-guata-deep mb-1">Telefone</h3>
+                      <a href={`tel:${footerSettings.phone.replace(/\D/g, '')}`} className="text-guata-bark/80 hover:text-guata-deep">
                         {footerSettings.phone}
                       </a>
                     </div>
@@ -275,12 +271,12 @@ const Contato = () => {
 
                 {footerSettings.address && (
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center flex-shrink-0">
-                      <MapPin className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 rounded-xl bg-guata-deep flex items-center justify-center flex-shrink-0">
+                      <MapPin className="h-6 w-6 text-guata-cream" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white mb-1">Endereço</h3>
-                      <p className="text-white/70">
+                      <h3 className="font-semibold text-guata-deep mb-1">Endereço</h3>
+                      <p className="text-guata-bark/80">
                         {footerSettings.address}
                       </p>
                     </div>
@@ -290,32 +286,32 @@ const Contato = () => {
 
               {/* Business Hours */}
               {footerSettings.business_hours && (
-                <GlowCard className="p-6 bg-slate-800/50">
+                <GlowCard className="p-6 bg-white border border-guata-gold/20">
                   <div className="flex items-center gap-3 mb-4">
-                    <Clock className="h-5 w-5 text-cyan-400" />
-                    <h3 className="font-semibold text-white">Horário de Atendimento</h3>
+                    <Clock className="h-5 w-5 text-guata-gold" />
+                    <h3 className="font-semibold text-guata-deep">Horário de atendimento</h3>
                   </div>
-                  <div className="space-y-2 text-sm text-white/70">
+                  <div className="space-y-2 text-sm text-guata-bark/80">
                     {footerSettings.business_hours.weekdays && (
                       <div className="flex justify-between">
                         <span>Segunda a Sexta</span>
-                        <span className="text-white">{footerSettings.business_hours.weekdays}</span>
+                        <span className="text-guata-deep font-medium">{footerSettings.business_hours.weekdays}</span>
                       </div>
                     )}
                     {footerSettings.business_hours.saturday && (
                       <div className="flex justify-between">
                         <span>Sábado</span>
-                        <span className="text-white">{footerSettings.business_hours.saturday}</span>
+                        <span className="text-guata-deep font-medium">{footerSettings.business_hours.saturday}</span>
                       </div>
                     )}
                     {footerSettings.business_hours.sunday && (
                       <div className="flex justify-between">
                         <span>Domingo</span>
-                        <span className="text-white/60">{footerSettings.business_hours.sunday}</span>
+                        <span className="text-guata-bark/70">{footerSettings.business_hours.sunday}</span>
                       </div>
                     )}
                     {!footerSettings.business_hours.weekdays && !footerSettings.business_hours.saturday && !footerSettings.business_hours.sunday && (
-                      <p className="text-white/60">Não informado</p>
+                      <p className="text-guata-bark/60">Não informado</p>
                     )}
                   </div>
                 </GlowCard>
@@ -323,12 +319,12 @@ const Contato = () => {
             </div>
 
             {/* Contact Form */}
-            <GlowCard className="p-8 bg-slate-800/50">
-              <h3 className="text-xl font-semibold text-white mb-6">Envie sua mensagem</h3>
+            <GlowCard className="p-8 bg-white border border-guata-gold/20">
+              <h3 className="text-xl font-semibold text-guata-deep mb-6">Envie sua mensagem</h3>
               
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-guata-deep mb-2">
                     Nome Completo *
                   </label>
                   <Input
@@ -339,13 +335,13 @@ const Contato = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="Seu nome"
-                    className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
+                    className="h-12 bg-guata-paper border-guata-gold/30 text-guata-deep placeholder:text-guata-bark/50"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                    <label htmlFor="email" className="block text-sm font-medium text-guata-deep mb-2">
                       Email *
                     </label>
                     <Input
@@ -356,11 +352,11 @@ const Contato = () => {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder="seu@email.com"
-                      className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
+                      className="h-12 bg-guata-paper border-guata-gold/30 text-guata-deep placeholder:text-guata-bark/50"
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-white mb-2">
+                    <label htmlFor="phone" className="block text-sm font-medium text-guata-deep mb-2">
                       Telefone
                     </label>
                     <Input
@@ -370,13 +366,13 @@ const Contato = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="(00) 00000-0000"
-                      className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
+                      className="h-12 bg-guata-paper border-guata-gold/30 text-guata-deep placeholder:text-guata-bark/50"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="organization" className="block text-sm font-medium text-white mb-2">
+                  <label htmlFor="organization" className="block text-sm font-medium text-guata-deep mb-2">
                     Organização / Empresa
                   </label>
                   <Input
@@ -386,12 +382,12 @@ const Contato = () => {
                     value={formData.organization}
                     onChange={handleChange}
                     placeholder="Nome da empresa ou organização"
-                    className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
+                    className="h-12 bg-guata-paper border-guata-gold/30 text-guata-deep placeholder:text-guata-bark/50"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="role" className="block text-sm font-medium text-white mb-2">
+                  <label htmlFor="role" className="block text-sm font-medium text-guata-deep mb-2">
                     Você é:
                   </label>
                   <select
@@ -399,7 +395,7 @@ const Contato = () => {
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
-                    className="w-full h-12 px-3 bg-slate-700/50 border border-slate-600 rounded-md text-white"
+                    className="w-full h-12 px-3 bg-guata-paper border border-guata-gold/30 rounded-md text-guata-deep"
                   >
                     <option value="">Selecione uma opção</option>
                     <option value="empresario">Empresário do setor turístico</option>
@@ -409,7 +405,7 @@ const Contato = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
+                  <label htmlFor="message" className="block text-sm font-medium text-guata-deep mb-2">
                     Mensagem
                   </label>
                   <Textarea
@@ -419,14 +415,14 @@ const Contato = () => {
                     value={formData.message}
                     onChange={handleChange}
                     placeholder="Conte-nos sobre suas necessidades..."
-                    className="bg-slate-700/50 border-slate-600 text-white placeholder-white/50"
+                    className="bg-guata-paper border-guata-gold/30 text-guata-deep placeholder:text-guata-bark/50"
                   />
                 </div>
 
                 <Button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full h-12 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:-translate-y-1"
+                  className="w-full h-12 bg-guata-forest hover:bg-guata-deep text-guata-cream font-semibold transition-all duration-300 shadow-md hover:-translate-y-0.5"
                 >
                   {loading ? (
                     <>

@@ -36,7 +36,7 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
       name: 'Hero Principal',
       fields: [
         { key: 'viajar_hero_badge', label: 'Badge (texto pequeno acima do título)', type: 'text', placeholder: 'Plataforma #1 de Turismo Inteligente' },
-        { key: 'viajar_hero_title', label: 'Título Principal', type: 'text', placeholder: 'ViajARTur' },
+        { key: 'viajar_hero_title', label: 'Título Principal', type: 'text', placeholder: 'Guatá Labs — IA que transforma a gestão do turismo' },
         { key: 'viajar_hero_subtitle', label: 'Subtítulo', type: 'text', placeholder: 'Ecossistema inteligente de turismo' },
         { key: 'viajar_hero_description', label: 'Descrição', type: 'textarea', placeholder: 'Transforme dados em decisões estratégicas. Analytics avançado e IA para o setor público e privado.' },
         { key: 'viajar_hero_cta_primary', label: 'Botão Principal', type: 'text', placeholder: 'Acessar Plataforma' },
@@ -81,7 +81,7 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
       name: 'Seção Vídeo',
       fields: [
         { key: 'viajar_video_title', label: 'Título', type: 'text', placeholder: 'Veja a Plataforma em Ação' },
-        { key: 'viajar_video_description', label: 'Descrição', type: 'textarea', placeholder: 'Descubra como a ViajARTur pode transformar...' },
+        { key: 'viajar_video_description', label: 'Descrição', type: 'textarea', placeholder: 'Descubra como a Guatá Labs pode transformar...' },
       ]
     },
     {
@@ -98,7 +98,7 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
       id: 'contact',
       name: 'Informações de Contato',
       fields: [
-        { key: 'viajar_contact_email', label: 'Email', type: 'text', placeholder: 'contato@viajartur.com' },
+        { key: 'viajar_contact_email', label: 'Email', type: 'text', placeholder: 'contato@suaempresa.com.br' },
         { key: 'viajar_contact_phone', label: 'Telefone', type: 'text', placeholder: '(67) 99999-9999' },
         { key: 'viajar_contact_address', label: 'Endereço', type: 'textarea' },
         { key: 'viajar_contact_whatsapp', label: 'WhatsApp', type: 'text', placeholder: '5567999999999' },
@@ -126,6 +126,9 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
       id: 'cases',
       name: 'Cases de Sucesso',
       fields: [
+        { key: 'viajar_cases_section_intro', label: 'Home — Texto introdutório (seção cases)', type: 'textarea', description: 'Parágrafo acima do subtítulo na landing.' },
+        { key: 'viajar_cases_subtitle', label: 'Home — Subtítulo da seção cases', type: 'textarea', placeholder: 'Do estado ao chatbot internacional…' },
+        { key: 'viajar_cases_page_lead', label: 'Página /casos-sucesso — Parágrafo do hero', type: 'textarea', description: 'Texto de apoio abaixo do título na página Cases.' },
         { key: 'viajar_cases_descubra_ms_title', label: 'Descubra MS - Título', type: 'text', placeholder: 'Descubra MS' },
         { key: 'viajar_cases_descubra_ms_subtitle', label: 'Descubra MS - Subtítulo', type: 'text', placeholder: 'Plataforma desenvolvida' },
         { key: 'viajar_cases_descubra_ms_technologies', label: 'Descubra MS - Tecnologias (JSON)', type: 'json', description: 'Array de strings: ["Guatá IA", "Passaporte Digital", "Analytics", "Gestão de Eventos"]' },
@@ -140,9 +143,24 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
       id: 'sobre',
       name: 'Página Sobre',
       fields: [
+        { key: 'viajar_sobre_page_lead', label: 'Página /sobre — Parágrafo do hero', type: 'textarea', description: 'Texto logo abaixo do título “Sobre a Guatá Labs”.' },
         { key: 'viajar_sobre_missao', label: 'Nossa Missão', type: 'textarea', placeholder: 'Democratizar tecnologia de ponta para o setor turístico.' },
         { key: 'viajar_sobre_visao', label: 'Nossa Visão', type: 'textarea', placeholder: 'Ser a plataforma líder em gestão inteligente de turismo no Brasil.' },
       ]
+    },
+    {
+      id: 'guata_labs_mascot',
+      name: 'Guatá Labs — Mascote e marca (landing)',
+      fields: [
+        { key: 'guata_navbar_logo_url', label: 'Logo navbar (URL)', type: 'image', placeholder: 'URL pública da logo' },
+        { key: 'guata_mascot_hero', label: 'Imagem hero (URL)', type: 'image' },
+        { key: 'guata_mascot_floating', label: 'Avatar flutuante (URL, reserva)', type: 'image' },
+        { key: 'guata_mascot_about', label: 'Imagem extra (URL, reserva)', type: 'image' },
+        { key: 'guata_mascot_404', label: 'Imagem 404 (URL)', type: 'image' },
+        { key: 'guata_mascot_cta', label: 'Imagem CTA (URL)', type: 'image' },
+        { key: 'guata_brand_name', label: 'Nome da marca', type: 'text', placeholder: 'Guatá Labs' },
+        { key: 'guata_brand_tagline', label: 'Tagline', type: 'textarea' },
+      ],
     },
   ],
   descubra_ms: [

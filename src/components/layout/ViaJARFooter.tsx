@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Instagram, Linkedin, Twitter, Shield, FlaskConical, Send } from 'lucide-react';
 import { useFooterSettings } from '@/hooks/useFooterSettings';
+import { useGuataLabsContent } from '@/hooks/useGuataLabsContent';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 const ViaJARFooter: React.FC = () => {
   const currentYear = new Date().getFullYear();
-  const { settings, loading } = useFooterSettings('viajar');
+  const { brandName, brandTagline } = useGuataLabsContent();
+  const { settings } = useFooterSettings('viajar');
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const { toast } = useToast();
@@ -43,7 +45,7 @@ const ViaJARFooter: React.FC = () => {
       } else {
         toast({
           title: "Inscrição realizada!",
-          description: "Você receberá nossas novidades da ViaJARTur.",
+          description: `Você receberá nossas novidades da ${brandName}.`,
         });
       }
       setNewsletterEmail('');
@@ -64,15 +66,16 @@ const ViaJARFooter: React.FC = () => {
   };
 
   return (
-    <footer className="bg-slate-950 text-white relative overflow-hidden">
+    <footer className="bg-guata-deep text-guata-cream relative overflow-hidden">
+      <div className="relative z-20 h-2.5 bg-guata-cream shadow-sm" aria-hidden />
       {/* Circuit grid background */}
-      <div className="absolute inset-0 opacity-10">
+      <div className="absolute left-0 right-0 bottom-0 top-2.5 opacity-[0.12]">
         <div 
           className="absolute inset-0" 
           style={{
             backgroundImage: `
-              linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px)
+              linear-gradient(hsl(var(--guata-gold) / 0.12) 1px, transparent 1px),
+              linear-gradient(90deg, hsl(var(--guata-gold) / 0.12) 1px, transparent 1px)
             `,
             backgroundSize: '30px 30px'
           }}
@@ -80,7 +83,7 @@ const ViaJARFooter: React.FC = () => {
       </div>
 
       {/* Top border with glow */}
-      <div className="border-t border-cyan-500/20 shadow-[0_-2px_15px_rgba(6,182,212,0.1)]" />
+      <div className="border-t border-guata-gold/25 shadow-[0_-2px_15px_rgba(201,162,76,0.12)]" />
 
       {/* Main Footer Content */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 z-10">
@@ -88,49 +91,40 @@ const ViaJARFooter: React.FC = () => {
           
           {/* Coluna 1 - Logo, Descrição, Contato e Redes Sociais */}
           <div className="text-center lg:text-left">
-            <div className="text-2xl font-bold mb-3">
-              <span className="text-white">Viaj</span>
-              <span 
-                className="text-cyan-400 relative"
-                style={{
-                  textShadow: '0 0 10px rgba(6, 182, 212, 0.5), 0 0 20px rgba(6, 182, 212, 0.3)'
-                }}
-              >
-                AR
-              </span>
-              <span className="text-white">Tur</span>
+            <div className="text-2xl font-extrabold font-guata mb-3 tracking-tight text-guata-cream">
+              {brandName}
             </div>
-            <p className="text-white/60 text-sm mb-6 max-w-xs mx-auto lg:mx-0">
-              Ecossistema inteligente de turismo powered by IA.
+            <p className="text-guata-cream/75 text-sm mb-6 max-w-xs mx-auto lg:mx-0">
+              {brandTagline}
             </p>
             
             {/* Contato */}
             <div className="space-y-3 mb-6">
               {settings.email && (
-                <div className="flex items-center justify-center lg:justify-start gap-3 text-white/70 text-sm group">
-                  <Mail className="h-4 w-4 flex-shrink-0 text-cyan-400" />
+                <div className="flex items-center justify-center lg:justify-start gap-3 text-guata-cream/75 text-sm group">
+                  <Mail className="h-4 w-4 flex-shrink-0 text-guata-gold" />
                   <a 
                     href={`mailto:${settings.email}`} 
-                    className="hover:text-cyan-400 transition-colors duration-300"
+                    className="hover:text-guata-gold transition-colors duration-300"
                   >
                     {settings.email}
                   </a>
                 </div>
               )}
               {settings.phone && (
-                <div className="flex items-center justify-center lg:justify-start gap-3 text-white/70 text-sm group">
-                  <Phone className="h-4 w-4 flex-shrink-0 text-cyan-400" />
+                <div className="flex items-center justify-center lg:justify-start gap-3 text-guata-cream/75 text-sm group">
+                  <Phone className="h-4 w-4 flex-shrink-0 text-guata-gold" />
                   <a 
                     href={`tel:${settings.phone.replace(/\D/g, '')}`} 
-                    className="hover:text-cyan-400 transition-colors duration-300"
+                    className="hover:text-guata-gold transition-colors duration-300"
                   >
                     {settings.phone}
                   </a>
                 </div>
               )}
               {settings.address && (
-                <div className="flex items-start justify-center lg:justify-start gap-3 text-white/70 text-sm">
-                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-cyan-400" />
+                <div className="flex items-start justify-center lg:justify-start gap-3 text-guata-cream/75 text-sm">
+                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-guata-gold" />
                   <span className="break-words">{settings.address}</span>
                 </div>
               )}
@@ -143,7 +137,7 @@ const ViaJARFooter: React.FC = () => {
                   href={settings.social_media.facebook} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-400/10 transition-all duration-300"
+                  className="w-10 h-10 rounded-lg bg-white/5 backdrop-blur-sm border border-guata-gold/20 flex items-center justify-center text-guata-cream/75 hover:text-guata-gold hover:border-guata-gold/50 hover:bg-guata-gold/10 transition-all duration-300"
                   aria-label="Facebook"
                 >
                   <Facebook className="h-5 w-5" />
@@ -154,7 +148,7 @@ const ViaJARFooter: React.FC = () => {
                   href={settings.social_media.instagram} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-400/10 transition-all duration-300"
+                  className="w-10 h-10 rounded-lg bg-white/5 backdrop-blur-sm border border-guata-gold/20 flex items-center justify-center text-guata-cream/75 hover:text-guata-gold hover:border-guata-gold/50 hover:bg-guata-gold/10 transition-all duration-300"
                   aria-label="Instagram"
                 >
                   <Instagram className="h-5 w-5" />
@@ -165,7 +159,7 @@ const ViaJARFooter: React.FC = () => {
                   href={settings.social_media.linkedin} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-400/10 transition-all duration-300"
+                  className="w-10 h-10 rounded-lg bg-white/5 backdrop-blur-sm border border-guata-gold/20 flex items-center justify-center text-guata-cream/75 hover:text-guata-gold hover:border-guata-gold/50 hover:bg-guata-gold/10 transition-all duration-300"
                   aria-label="LinkedIn"
                 >
                   <Linkedin className="h-5 w-5" />
@@ -176,7 +170,7 @@ const ViaJARFooter: React.FC = () => {
                   href={settings.social_media.twitter} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/70 hover:text-cyan-400 hover:border-cyan-400/40 hover:bg-cyan-400/10 transition-all duration-300"
+                  className="w-10 h-10 rounded-lg bg-white/5 backdrop-blur-sm border border-guata-gold/20 flex items-center justify-center text-guata-cream/75 hover:text-guata-gold hover:border-guata-gold/50 hover:bg-guata-gold/10 transition-all duration-300"
                   aria-label="Twitter"
                 >
                   <Twitter className="h-5 w-5" />
@@ -187,15 +181,15 @@ const ViaJARFooter: React.FC = () => {
 
           {/* Coluna 2 - Links Principais */}
           <div className="text-center lg:text-left">
-            <h3 className="text-sm font-bold mb-6 text-white">Links Principais</h3>
+            <h3 className="text-sm font-bold mb-6 text-guata-cream font-guata">Links Principais</h3>
             <ul className="space-y-3">
               <li>
                 <Link 
                   to="/solucoes" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Soluções
                 </Link>
               </li>
@@ -203,9 +197,9 @@ const ViaJARFooter: React.FC = () => {
                 <Link 
                   to="/casos-sucesso" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Cases
                 </Link>
               </li>
@@ -213,9 +207,9 @@ const ViaJARFooter: React.FC = () => {
                 <Link 
                   to="/precos" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Preços
                 </Link>
               </li>
@@ -223,9 +217,9 @@ const ViaJARFooter: React.FC = () => {
                 <Link 
                   to="/contato" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Contato
                 </Link>
               </li>
@@ -234,15 +228,15 @@ const ViaJARFooter: React.FC = () => {
 
           {/* Coluna 3 - Acesso + Links Secundários */}
           <div className="text-center lg:text-left">
-            <h3 className="text-sm font-bold mb-6 text-white">Acesso</h3>
+            <h3 className="text-sm font-bold mb-6 text-guata-cream font-guata">Acesso</h3>
             <ul className="space-y-3 mb-8">
               <li>
                 <Link 
                   to="/viajar/login" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <FlaskConical className="h-4 w-4 text-cyan-400 opacity-70 group-hover:opacity-100" />
+                  <FlaskConical className="h-4 w-4 text-guata-gold opacity-70 group-hover:opacity-100" />
                   Login
                 </Link>
               </li>
@@ -250,23 +244,23 @@ const ViaJARFooter: React.FC = () => {
                 <Link 
                   to="/viajar/admin" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <Shield className="h-4 w-4 text-cyan-400 opacity-70 group-hover:opacity-100" />
+                  <Shield className="h-4 w-4 text-guata-gold opacity-70 group-hover:opacity-100" />
                   Admin
                 </Link>
               </li>
             </ul>
             
-            <h3 className="text-sm font-bold mb-6 text-white">Mais</h3>
+            <h3 className="text-sm font-bold mb-6 text-guata-cream font-guata">Mais</h3>
             <ul className="space-y-3">
               <li>
                 <Link 
                   to="/sobre" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Sobre
                 </Link>
               </li>
@@ -274,9 +268,9 @@ const ViaJARFooter: React.FC = () => {
                 <Link 
                   to="/dados-turismo" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Dados
                 </Link>
               </li>
@@ -285,8 +279,8 @@ const ViaJARFooter: React.FC = () => {
 
           {/* Coluna 4 - Newsletter + Legal */}
           <div className="text-center lg:text-left">
-            <h3 className="text-sm font-bold mb-4 text-white">Newsletter</h3>
-            <p className="text-white/60 text-xs mb-3">Receba novidades da ViaJARTur</p>
+            <h3 className="text-sm font-bold mb-4 text-guata-cream font-guata">Newsletter</h3>
+            <p className="text-guata-cream/70 text-xs mb-3">Receba novidades da {brandName}</p>
             <form onSubmit={handleNewsletterSubmit} className="mb-6">
               <div className="flex flex-col gap-2">
                 <Input
@@ -294,12 +288,12 @@ const ViaJARFooter: React.FC = () => {
                   placeholder="Seu e-mail..."
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
-                  className="bg-white/5 border-cyan-500/20 text-white placeholder:text-white/40 focus:border-cyan-400/50 focus:bg-white/10 h-9 text-sm"
+                  className="bg-white border-guata-gold/40 text-guata-deep placeholder:text-guata-bark/50 focus:border-guata-forest focus:ring-1 focus:ring-guata-forest/30 h-9 text-sm"
                 />
                 <Button
                   type="submit"
                   disabled={newsletterLoading}
-                  className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-semibold w-full h-9 text-sm"
+                  className="bg-guata-gold hover:bg-guata-gold-light text-guata-deep font-semibold w-full h-9 text-sm"
                 >
                   {newsletterLoading ? 'Enviando...' : (
                     <>
@@ -311,15 +305,15 @@ const ViaJARFooter: React.FC = () => {
               </div>
             </form>
 
-            <h3 className="text-sm font-bold mb-4 text-white">Legal</h3>
+            <h3 className="text-sm font-bold mb-4 text-guata-cream font-guata">Legal</h3>
             <ul className="space-y-3">
               <li>
                 <Link 
                   to="/viajar/privacidade" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Privacidade
                 </Link>
               </li>
@@ -327,9 +321,9 @@ const ViaJARFooter: React.FC = () => {
                 <Link 
                   to="/viajar/termos" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Termos
                 </Link>
               </li>
@@ -337,9 +331,9 @@ const ViaJARFooter: React.FC = () => {
                 <Link 
                   to="/viajar/cookies" 
                   onClick={handleLinkClick} 
-                  className="text-white/70 hover:text-cyan-400 text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
+                  className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   Cookies
                 </Link>
               </li>
@@ -350,7 +344,7 @@ const ViaJARFooter: React.FC = () => {
 
       {/* Logos de Parceiros */}
       {settings.partner_logos && settings.partner_logos.length > 0 && (
-        <div className="border-t border-cyan-500/10 pt-8 mt-8 relative">
+        <div className="border-t border-guata-gold/15 pt-8 mt-8 relative">
           <div className="flex flex-wrap items-center justify-center gap-8">
             {settings.partner_logos
               .sort((a, b) => a.order - b.order)
@@ -372,10 +366,10 @@ const ViaJARFooter: React.FC = () => {
       )}
 
       {/* Copyright */}
-      <div className="border-t border-cyan-500/10 pt-6 mt-8 relative">
+      <div className="border-t border-guata-gold/15 pt-6 mt-8 relative">
         <div className="text-center">
-          <p className="text-white/50 text-sm">
-            {settings.copyright || `© ${currentYear} ViajARTur. Todos os direitos reservados.`}
+          <p className="text-guata-cream/55 text-sm">
+            {settings.copyright || `© ${currentYear} ${brandName}. Todos os direitos reservados.`}
           </p>
         </div>
       </div>

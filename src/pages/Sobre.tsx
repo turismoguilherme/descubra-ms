@@ -6,7 +6,6 @@ import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { supabase } from '@/integrations/supabase/client';
 import { platformContentService } from '@/services/admin/platformContentService';
-import FloatingTechElements from '@/components/home/FloatingTechElements';
 
 interface TeamMember {
   id: string;
@@ -18,9 +17,13 @@ interface TeamMember {
   linkedin_url: string | null;
 }
 
+const DEFAULT_SOBRE_PAGE_LEAD =
+  'Somos um ecossistema de software e inteligência artificial focado em turismo. Apoiamos secretarias, empresários e equipes técnicas com dados confiáveis, produtos modulares e implementação acompanhada — do diagnóstico ao uso no dia a dia.';
+
 const Sobre = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingTeam, setLoadingTeam] = useState(true);
+  const [heroLead, setHeroLead] = useState(DEFAULT_SOBRE_PAGE_LEAD);
   const [narrativa, setNarrativa] = useState<{ destaque: string; texto: string }>({
     destaque: '',
     texto: ''
@@ -42,10 +45,11 @@ const Sobre = () => {
       contents.forEach(item => {
         contentMap[item.content_key] = item.content_value || '';
       });
+      setHeroLead((contentMap['viajar_sobre_page_lead'] || '').trim() || DEFAULT_SOBRE_PAGE_LEAD);
       setNarrativa({
         destaque: contentMap['viajar_sobre_destaque'] || 'Transformar dados turísticos em decisões estratégicas que geram impacto real.',
         texto: contentMap['viajar_sobre_narrativa'] ||
-          'A ViajarTur existe para transformar dados turísticos em decisões estratégicas. Nosso propósito é estruturar o turismo como um sistema inteligente, integrado e orientado por evidências.\n\nNascemos da visão de que o turismo brasileiro merece ferramentas de gestão de excelência. Combinamos tecnologia de ponta, inteligência artificial e conhecimento profundo do setor para entregar soluções que realmente fazem diferença.\n\nNossa missão é democratizar o acesso à tecnologia turística, tornando-a acessível tanto para grandes destinos quanto para pequenas cidades que sonham em desenvolver seu potencial. Acreditamos que cada lugar tem uma história única para contar, e nossa plataforma ajuda a contá-la da melhor forma possível.'
+          'A Guatá Labs existe para transformar dados turísticos em decisões estratégicas. Nosso propósito é estruturar o turismo como um sistema inteligente, integrado e orientado por evidências.\n\nNascemos da visão de que o turismo brasileiro merece ferramentas de gestão de excelência. Combinamos tecnologia de ponta, inteligência artificial e conhecimento profundo do setor para entregar soluções que realmente fazem diferença.\n\nNossa missão é democratizar o acesso à tecnologia turística, tornando-a acessível tanto para grandes destinos quanto para pequenas cidades que sonham em desenvolver seu potencial. Acreditamos que cada lugar tem uma história única para contar, e nossa plataforma ajuda a contá-la da melhor forma possível.'
       });
     } catch (error) {
       console.error('Erro ao carregar conteúdo:', error);
@@ -69,69 +73,57 @@ const Sobre = () => {
   };
 
   return (
-    <div className="min-h-screen bg-travel-tech-dark-base">
+    <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden min-h-[55vh] flex items-center">
-        {/* Background effects */}
-        <div className="absolute inset-0">
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--travel-tech-turquoise)) 1px, transparent 0)`,
-              backgroundSize: '40px 40px'
-            }}
-          />
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-travel-tech-turquoise/5 blur-[120px]" />
-          <div className="absolute bottom-0 right-1/3 w-80 h-80 rounded-full bg-travel-tech-ocean-blue/5 blur-[100px]" />
-        </div>
-        <FloatingTechElements variant="section" />
+      <section className="relative overflow-hidden min-h-[50vh] flex items-center bg-gradient-to-br from-guata-cream via-guata-paper to-guata-cream">
+        <div
+          className="absolute inset-0 opacity-[0.18]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 30%, hsl(var(--guata-gold) / 0.12), transparent 45%),
+              radial-gradient(circle at 80% 15%, hsl(var(--guata-forest) / 0.06), transparent 40%)`,
+          }}
+        />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-travel-tech-turquoise/20 bg-travel-tech-turquoise/5 backdrop-blur-sm mb-6">
-              <Building2 className="h-4 w-4 text-travel-tech-turquoise" />
-              <span className="text-sm text-travel-tech-turquoise font-medium">Quem Somos</span>
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-guata-gold/35 bg-white text-guata-forest text-sm font-semibold mb-6 shadow-sm">
+              <Building2 className="h-4 w-4 text-guata-gold" />
+              <span>Quem somos</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-white via-travel-tech-turquoise to-travel-tech-ocean-blue bg-clip-text text-transparent">
-                Sobre a ViajARTur
-              </span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-deep mb-4">
+              Sobre a Guatá Labs
             </h1>
-            <p className="text-lg text-white/50">
+            <p className="text-lg font-medium text-guata-deep/90 mb-3">
               Tecnologia e inovação para a gestão inteligente do turismo
+            </p>
+            <p className="text-base md:text-lg text-guata-bark/90 max-w-3xl mx-auto leading-relaxed">
+              {heroLead}
             </p>
           </div>
         </div>
       </section>
 
-      {/* Narrativa */}
-      <section className="py-20 relative">
-        <div className="absolute inset-0 bg-travel-tech-dark-secondary/50" />
+      <section className="py-20 relative bg-guata-paper">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          {/* Glassmorphism quote card */}
-          <div className="relative rounded-2xl overflow-hidden mb-12">
-            <div className="absolute inset-0 bg-gradient-to-br from-travel-tech-turquoise/10 to-travel-tech-ocean-blue/10 backdrop-blur-md border border-white/10 rounded-2xl" />
+          <div className="relative rounded-2xl overflow-hidden mb-12 border border-guata-gold/25 bg-white shadow-sm">
             <div className="relative p-8 md:p-10 text-center">
               <blockquote>
-                <p className="text-2xl md:text-3xl font-semibold text-white leading-relaxed italic">
-                  "{narrativa.destaque}"
+                <p className="text-2xl md:text-3xl font-semibold font-guata text-guata-deep leading-relaxed italic">
+                  &ldquo;{narrativa.destaque}&rdquo;
                 </p>
               </blockquote>
             </div>
-            {/* Neon accent */}
-            <div className="absolute bottom-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-travel-tech-turquoise/50 to-transparent" />
+            <div className="absolute bottom-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-guata-gold/50 to-transparent" />
           </div>
 
-          {/* Decorative line */}
           <div className="flex justify-center mb-12">
-            <div className="w-24 h-1 bg-gradient-to-r from-travel-tech-turquoise to-travel-tech-ocean-blue rounded-full" />
+            <div className="w-24 h-1 bg-gradient-to-r from-guata-gold to-guata-forest rounded-full" />
           </div>
 
           <div className="text-center">
-            <p className="text-lg text-white/60 leading-relaxed whitespace-pre-line">
+            <p className="text-lg text-guata-bark/85 leading-relaxed whitespace-pre-line">
               {narrativa.texto}
             </p>
           </div>
@@ -140,60 +132,53 @@ const Sobre = () => {
 
       {/* Team Section */}
       {teamMembers.length > 0 && (
-        <section className="py-20 relative">
-          <div className="absolute inset-0">
-            <div className="absolute top-0 right-1/4 w-80 h-80 rounded-full bg-travel-tech-ocean-blue/5 blur-[100px]" />
-          </div>
+        <section className="py-20 relative bg-guata-cream">
+          <div className="absolute inset-0 opacity-[0.12]" style={{ backgroundImage: `linear-gradient(hsl(var(--guata-forest) / 0.06) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--guata-forest) / 0.06) 1px, transparent 1px)`, backgroundSize: '40px 40px' }} />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-travel-tech-ocean-blue/20 bg-travel-tech-ocean-blue/5 backdrop-blur-sm mb-6">
-                <Users className="h-4 w-4 text-travel-tech-ocean-blue" />
-                <span className="text-sm text-travel-tech-ocean-blue font-medium">Equipe</span>
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-guata-forest/25 bg-white text-guata-forest text-sm font-semibold mb-6 shadow-sm">
+                <Users className="h-4 w-4 text-guata-forest" />
+                <span>Equipe</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Nossa Equipe
+              <h2 className="text-3xl md:text-4xl font-extrabold font-guata text-guata-deep mb-4">
+                Nossa equipe
               </h2>
-              <p className="text-lg text-white/50 max-w-2xl mx-auto">
-                Os profissionais que fazem a ViajARTur acontecer
+              <p className="text-lg text-guata-bark/80 max-w-2xl mx-auto">
+                Os profissionais que fazem a Guatá Labs acontecer
               </p>
             </div>
 
             <div className={`grid gap-8 ${teamMembers.length === 1 ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
               {teamMembers.map((member) => (
-                <div key={member.id} className="group relative rounded-2xl overflow-hidden">
-                  {/* Glassmorphism bg */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-travel-tech-turquoise/10 to-travel-tech-ocean-blue/10 backdrop-blur-md border border-white/10 rounded-2xl" />
-                  {/* Neon hover border */}
-                  <div className="absolute inset-0 rounded-2xl border border-travel-tech-turquoise/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
+                <div key={member.id} className="group relative rounded-2xl overflow-hidden border border-guata-gold/20 bg-white shadow-sm hover:shadow-md transition-shadow">
                   <div className="relative p-6 text-center">
                     <div className="flex justify-center mb-4">
                       {member.photo_url ? (
                         <img
                           src={member.photo_url}
                           alt={member.name}
-                          className="w-24 h-24 rounded-full object-cover border-2 border-travel-tech-turquoise/20 group-hover:border-travel-tech-turquoise/50 transition-colors duration-300"
+                          className="w-24 h-24 rounded-full object-cover border-2 border-guata-gold/30 group-hover:border-guata-forest/40 transition-colors duration-300"
                         />
                       ) : (
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-travel-tech-turquoise to-travel-tech-ocean-blue flex items-center justify-center">
-                          <Users className="h-12 w-12 text-white" />
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-guata-forest to-guata-deep flex items-center justify-center">
+                          <Users className="h-12 w-12 text-guata-cream" />
                         </div>
                       )}
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">{member.name}</h3>
-                    <p className="text-travel-tech-turquoise font-medium mb-3">{member.position}</p>
+                    <h3 className="text-xl font-bold text-guata-deep mb-2">{member.name}</h3>
+                    <p className="text-guata-forest font-medium mb-3">{member.position}</p>
                     {member.bio && (
-                      <p className="text-sm text-white/50 mb-4 leading-relaxed">{member.bio}</p>
+                      <p className="text-sm text-guata-bark/75 mb-4 leading-relaxed">{member.bio}</p>
                     )}
                     {(member.instagram_url || member.linkedin_url) && (
                       <div className="flex justify-center gap-4 mt-4">
                         {member.instagram_url && (
-                          <a href={member.instagram_url} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-travel-tech-sunset-orange transition-colors" aria-label="Instagram">
+                          <a href={member.instagram_url} target="_blank" rel="noopener noreferrer" className="text-guata-bark/50 hover:text-guata-gold transition-colors" aria-label="Instagram">
                             <Instagram className="h-5 w-5" />
                           </a>
                         )}
                         {member.linkedin_url && (
-                          <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-travel-tech-ocean-blue transition-colors" aria-label="LinkedIn">
+                          <a href={member.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-guata-bark/50 hover:text-guata-forest transition-colors" aria-label="LinkedIn">
                             <Linkedin className="h-5 w-5" />
                           </a>
                         )}
@@ -208,29 +193,25 @@ const Sobre = () => {
       )}
 
       {/* CTA */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-travel-tech-dark-secondary/50" />
-        <div className="absolute inset-0">
-          <div className="absolute bottom-0 left-1/3 w-80 h-80 rounded-full bg-travel-tech-turquoise/5 blur-[100px]" />
-        </div>
-        <FloatingTechElements variant="section" />
+      <section className="py-20 relative overflow-hidden bg-guata-deep text-guata-cream">
+        <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--guata-gold) / 0.35) 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-travel-tech-turquoise/20 bg-travel-tech-turquoise/5 backdrop-blur-sm mb-6">
-            <Sparkles className="h-4 w-4 text-travel-tech-turquoise" />
-            <span className="text-sm text-travel-tech-turquoise font-medium">Junte-se a nós</span>
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-guata-gold/35 bg-white/10 mb-6">
+            <Sparkles className="h-4 w-4 text-guata-gold" />
+            <span className="text-sm text-guata-cream font-medium">Junte-se a nós</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          <h2 className="text-3xl md:text-4xl font-extrabold font-guata text-guata-cream mb-6">
             Quer fazer parte dessa história?
           </h2>
-          <p className="text-lg text-white/50 mb-10 max-w-2xl mx-auto">
+          <p className="text-lg text-guata-cream/80 mb-10 max-w-2xl mx-auto">
             Entre em contato e descubra como podemos transformar a gestão turística na sua região.
           </p>
           <Link to="/contato">
             <Button
               size="lg"
-              className="bg-gradient-to-r from-travel-tech-turquoise to-travel-tech-ocean-blue hover:from-travel-tech-ocean-blue hover:to-travel-tech-sunset-orange text-white font-semibold px-8 h-14 text-lg gap-2 hover:-translate-y-1 transition-all duration-300 hover:shadow-2xl hover:shadow-travel-tech-turquoise/20"
+              className="bg-guata-gold hover:bg-guata-gold-light text-guata-deep font-semibold px-8 h-14 text-lg gap-2 hover:-translate-y-1 transition-all duration-300 shadow-md"
             >
-              Falar Conosco
+              Falar conosco
               <ArrowRight className="h-5 w-5" />
             </Button>
           </Link>

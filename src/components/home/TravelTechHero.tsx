@@ -4,15 +4,14 @@ import { Play, ArrowRight, Users, TrendingUp, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { platformContentService } from '@/services/admin/platformContentService';
 import { useViaJARSectionControls } from '@/hooks/useViaJARSectionControls';
-import TravelTechRobot from './TravelTechRobot';
-import FloatingTechElements from './FloatingTechElements';
-import TechBackground from './TechBackground';
-import heroBackground from '@/assets/travel-tech-hero-bg.jpg';
+import { useGuataLabsContent } from '@/hooks/useGuataLabsContent';
+import GuataHeroMascot from '@/components/guata-labs/GuataHeroMascot';
 
 const TravelTechHero = () => {
   const [content, setContent] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const { isSectionActive, getActiveMetrics, loading: controlsLoading } = useViaJARSectionControls();
+  const { brandName, brandTagline } = useGuataLabsContent();
 
   useEffect(() => {
     loadContent();
@@ -22,7 +21,7 @@ const TravelTechHero = () => {
     try {
       const contents = await platformContentService.getContentByPrefix('viajar_hero_');
       const contentMap: Record<string, string> = {};
-      contents.forEach(item => {
+      contents.forEach((item) => {
         contentMap[item.content_key] = item.content_value || '';
       });
       setContent(contentMap);
@@ -43,123 +42,113 @@ const TravelTechHero = () => {
   const statIcons: Record<string, React.ComponentType<{ className?: string }>> = {
     hero_users: Users,
     hero_satisfaction: TrendingUp,
-    hero_ai: Zap
+    hero_ai: Zap,
   };
 
   if (loading || controlsLoading) {
     return (
-      <section className="relative min-h-screen flex items-center justify-center bg-travel-tech-dark-base">
-        <div className="animate-pulse text-travel-tech-turquoise">
-          <div className="w-8 h-8 border-2 border-travel-tech-turquoise border-t-transparent rounded-full animate-spin"></div>
+      <section className="relative min-h-screen flex items-center justify-center bg-guata-paper">
+        <div className="animate-pulse text-guata-forest">
+          <div className="w-8 h-8 border-2 border-guata-forest border-t-transparent rounded-full animate-spin" />
         </div>
       </section>
     );
   }
 
   return (
-    <section className="relative min-h-screen overflow-hidden">
-      {/* Immersive Background Image */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={heroBackground}
-          alt="Travel Tech Background"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-travel-tech-dark-base/90 via-travel-tech-dark-base/70 to-travel-tech-dark-base/50" />
-      </div>
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-guata-cream via-guata-paper to-guata-cream">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.22]"
+        style={{
+          backgroundImage: `radial-gradient(circle at 20% 20%, hsl(var(--guata-gold) / 0.15), transparent 45%),
+            radial-gradient(circle at 80% 10%, hsl(var(--guata-forest) / 0.08), transparent 40%)`,
+        }}
+      />
 
-      <TechBackground variant="hero" className="z-10" />
-      <FloatingTechElements variant="hero" />
-
-      {/* Main Content */}
       <div className="relative z-20 min-h-screen flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            
-            {/* Left Side - Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
             <motion.div
-              initial={{ opacity: 0, x: -50 }}
+              initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="space-y-8"
+              transition={{ duration: 0.75, ease: 'easeOut' }}
+              className="space-y-6 lg:space-y-8"
             >
-              {/* Travel Tech Badge */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="inline-flex items-center px-6 py-3 rounded-full border border-travel-tech-turquoise/30 bg-travel-tech-turquoise/10 backdrop-blur-sm"
+                transition={{ duration: 0.55, delay: 0.1 }}
+                className="inline-flex items-center px-5 py-2.5 rounded-full border border-guata-gold/40 bg-white shadow-sm"
               >
-                <span className="text-travel-tech-turquoise font-semibold text-sm tracking-wide">
-                  Travel Tech | Plataforma para Gestores de Turismo
+                <span className="text-guata-forest font-semibold text-sm tracking-wide font-guata">
+                  {brandName} · {brandTagline}
                 </span>
               </motion.div>
 
-              {/* Main Title */}
               <motion.h1
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight"
+                transition={{ duration: 0.7, delay: 0.15 }}
+                className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata leading-tight text-guata-deep"
               >
-                <span className="bg-gradient-to-r from-white via-travel-tech-turquoise to-travel-tech-ocean-blue bg-clip-text text-transparent">
-                  {getContent('viajar_hero_title', 'ViajARTur – IA que Transforma a Gestão do Turismo')}
+                <span className="bg-gradient-to-r from-guata-forest via-guata-deep to-guata-forest bg-clip-text text-transparent">
+                  {getContent('viajar_hero_title', 'Guatá Labs — IA que transforma a gestão do turismo')}
                 </span>
               </motion.h1>
 
-              {/* Subtitle - B2B focused */}
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-2xl"
+                transition={{ duration: 0.55, delay: 0.25 }}
+                className="text-lg md:text-xl text-guata-bark/90 leading-relaxed max-w-2xl"
               >
-                {getContent('viajar_hero_subtitle', 'Plataforma de inteligência artificial para secretarias de turismo, empresários e gestores públicos. Dashboards estratégicos, previsão de demanda e analytics em tempo real.')}
+                {getContent(
+                  'viajar_hero_subtitle',
+                  'Plataforma de inteligência artificial para secretarias de turismo, empresários e gestores públicos.'
+                )}
               </motion.p>
 
-              {/* CTA Buttons */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
+                transition={{ duration: 0.55, delay: 0.35 }}
                 className="flex flex-col sm:flex-row gap-4"
               >
                 <Link
                   to="/viajar/login"
-                  className="group inline-flex items-center justify-center px-8 py-4 rounded-xl bg-gradient-to-r from-travel-tech-turquoise to-travel-tech-ocean-blue text-white font-semibold text-lg hover:from-travel-tech-ocean-blue hover:to-travel-tech-turquoise transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-travel-tech-turquoise/30 border border-travel-tech-turquoise/20"
+                  className="group inline-flex items-center justify-center px-8 py-4 rounded-xl bg-guata-forest text-guata-cream font-semibold text-lg hover:bg-guata-deep transition-all duration-300 shadow-lg shadow-guata-forest/20"
                 >
-                  <span>Acessar Plataforma</span>
+                  <span>{getContent('viajar_hero_cta_primary', 'Acessar Plataforma')}</span>
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </Link>
-                
+
                 <Link
                   to="/contato"
-                  className="group inline-flex items-center justify-center px-8 py-4 rounded-xl border-2 border-travel-tech-turquoise/50 text-travel-tech-turquoise font-semibold text-lg hover:bg-travel-tech-turquoise hover:text-travel-tech-dark-base transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm"
+                  className="group inline-flex items-center justify-center px-8 py-4 rounded-xl border-2 border-guata-gold/60 text-guata-deep font-semibold text-lg hover:bg-guata-gold/15 transition-all duration-300 bg-white/60 backdrop-blur-sm"
                 >
-                  <Play className="mr-2 h-5 w-5" />
-                  <span>Solicitar Demonstração</span>
+                  <Play className="mr-2 h-5 w-5 text-guata-forest" />
+                  <span>{getContent('viajar_hero_cta_secondary', 'Solicitar Demonstração')}</span>
                 </Link>
               </motion.div>
 
-              {/* Mini Stats - Controlável via admin */}
               {showStats && activeStats.length > 0 && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.0 }}
-                  className="grid grid-cols-3 gap-6 pt-8"
+                  transition={{ duration: 0.55, delay: 0.45 }}
+                  className="grid grid-cols-3 gap-5 pt-6"
                 >
                   {activeStats.map((stat) => {
                     const StatIcon = statIcons[stat.metric_key] || TrendingUp;
                     return (
                       <div key={stat.metric_key} className="text-center">
-                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-full bg-travel-tech-turquoise/20 backdrop-blur-sm border border-travel-tech-turquoise/30">
-                          <StatIcon className="w-6 h-6 text-travel-tech-turquoise" />
+                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 rounded-full bg-guata-gold/15 border border-guata-gold/30">
+                          <StatIcon className="w-6 h-6 text-guata-forest" />
                         </div>
-                        <div className="text-2xl font-bold text-white mb-1">{stat.display_value}</div>
-                        <div className="text-sm text-gray-400">{stat.label}</div>
+                        <div className="text-xl md:text-2xl font-bold text-guata-deep mb-1">{stat.display_value}</div>
+                        <div className="text-xs md:text-sm text-guata-bark/80">{stat.label}</div>
                         {stat.is_projected && (
-                          <div className="text-[10px] text-amber-400/60">*Projeção</div>
+                          <div className="text-[10px] text-guata-gold mt-1">*Projeção</div>
                         )}
                       </div>
                     );
@@ -168,24 +157,9 @@ const TravelTechHero = () => {
               )}
             </motion.div>
 
-            {/* Right Side - Robot */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              className="relative h-[600px] lg:h-[700px]"
-            >
-              <TravelTechRobot />
-            </motion.div>
-            
+            <GuataHeroMascot />
           </div>
         </div>
-      </div>
-
-      {/* Holographic Scan Lines */}
-      <div className="absolute inset-0 pointer-events-none z-30">
-        <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-travel-tech-turquoise/30 to-transparent animate-data-flow" />
-        <div className="absolute bottom-1/3 right-0 w-full h-px bg-gradient-to-l from-transparent via-travel-tech-ocean-blue/30 to-transparent animate-data-flow-delayed" />
       </div>
     </section>
   );
