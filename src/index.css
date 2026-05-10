@@ -88,13 +88,22 @@
     --chart-5: 27 87% 67%;
     --radius: 0.75rem;
     
-    /* ViaJARTur Brand Colors */
-    --viajar-slate: 222 47% 11%;
-    --viajar-cyan: 187 85% 43%;
-    --viajar-cyan-light: 187 85% 53%;
-    --viajar-blue: 217 91% 60%;
-    --viajar-emerald: 160 84% 39%;
-    --viajar-amber: 38 92% 50%;
+    /* Guatá Labs Brand Colors (paleta da logo: verde floresta, dourado, bege papel) */
+    --guata-forest: 140 42% 22%;     /* #1F4D2C */
+    --guata-deep: 140 47% 15%;        /* #143820 */
+    --guata-gold: 42 53% 54%;         /* #C9A24C */
+    --guata-gold-light: 42 60% 64%;
+    --guata-paper: 40 41% 91%;        /* #F2EBDD */
+    --guata-cream: 45 60% 95%;        /* #FAF6EC */
+    --guata-bark: 30 30% 25%;
+    
+    /* Aliases legados ViaJARTur → remapeados para nova paleta Guatá Labs */
+    --viajar-slate: var(--guata-deep);
+    --viajar-cyan: var(--guata-gold);
+    --viajar-cyan-light: var(--guata-gold-light);
+    --viajar-blue: var(--guata-forest);
+    --viajar-emerald: 140 50% 35%;
+    --viajar-amber: 42 65% 50%;
     
     /* Travel Tech Premium 2025/2026 */
     --travel-tech-turquoise: 166 100% 37%; /* #06d6a0 - Verde tropical neon */
