@@ -64,7 +64,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// ViaJARTur Brand
+				// Guatá Labs Brand (paleta principal)
+				guata: {
+					'forest': 'hsl(var(--guata-forest))',
+					'deep': 'hsl(var(--guata-deep))',
+					'gold': 'hsl(var(--guata-gold))',
+					'gold-light': 'hsl(var(--guata-gold-light))',
+					'paper': 'hsl(var(--guata-paper))',
+					'cream': 'hsl(var(--guata-cream))',
+					'bark': 'hsl(var(--guata-bark))'
+				},
+				// ViaJARTur (legado, remapeado para Guatá Labs)
 				viajar: {
 					'slate': 'hsl(var(--viajar-slate))',
 					'cyan': 'hsl(var(--viajar-cyan))',
