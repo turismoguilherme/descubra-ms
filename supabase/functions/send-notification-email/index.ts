@@ -916,13 +916,12 @@ serve(async (req) => {
     
     // SEMPRE retornar sucesso para não bloquear o fluxo de aprovação
     // O email não é crítico para a operação principal
-    console.warn('Erro no envio de email, mas retornando sucesso para não bloquear o fluxo:', error.message || error);
+    console.warn('send-notification-email: erro não crítico', { message: error?.message });
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         message: 'Email não enviado (erro não crítico)',
         pending: true,
-        error: error.message || 'Erro desconhecido'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
