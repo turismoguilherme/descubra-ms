@@ -215,9 +215,9 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error('❌ [AutonomousAgentScheduler] Erro geral:', error);
+    console.error('autonomous-agent-scheduler: handler error', { message: error?.message, stack: error?.stack });
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Erro interno' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

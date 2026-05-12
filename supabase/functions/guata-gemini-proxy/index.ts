@@ -288,12 +288,9 @@ serve(async (req) => {
       cause: error?.cause
     });
     
-    // Retornar erro detalhado para debug (status 200 para que o cliente possa ver)
     const errorDetails = {
       error: 'Internal server error',
-      message: error?.message || String(error),
-      type: error?.name || 'UnknownError',
-      success: false
+      success: false,
     };
     
     return new Response(

@@ -99,11 +99,9 @@ serve(async (req) => {
     }
     
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: false,
-        error: error.message || 'Erro ao buscar sessão do Stripe',
-        errorType: error.type || 'Unknown',
-        errorCode: error.code || 'Unknown'
+        error: 'Erro ao buscar sessão do Stripe',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );

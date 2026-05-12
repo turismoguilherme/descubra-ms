@@ -126,7 +126,7 @@ serve(async (req) => {
     console.error('Error message:', error.message);
     console.error('Error stack:', error.stack);
     return new Response(
-      JSON.stringify({ error: error.message || 'Erro interno desconhecido' }),
+      JSON.stringify({ error: 'Erro interno desconhecido' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
