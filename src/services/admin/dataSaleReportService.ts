@@ -6,7 +6,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { alumiaService } from '@/services/alumia';
@@ -755,7 +755,7 @@ export class DataSaleReportService {
     if (entries.length === 0) return yPosition;
 
     const tableData = entries.map(([key, value]) => [key, value.toString()]);
-    (doc as any).autoTable({
+    autoTable(doc, {
       head: [[label, 'Quantidade']],
       body: tableData,
       startY: yPosition,

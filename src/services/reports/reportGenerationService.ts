@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -52,7 +52,7 @@ export class ReportGenerationService {
         ['Impacto Econômico', `R$ ${data.metrics.economicImpact.toLocaleString()}`]
       ];
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         startY: yPosition,
         head: [metrics[0]],
         body: metrics.slice(1),

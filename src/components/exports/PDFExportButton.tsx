@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from 'jspdf-autotable';
 
 interface PDFExportButtonProps {
   data: unknown[];
@@ -64,7 +64,7 @@ const PDFExportButton: React.FC<PDFExportButtonProps> = ({
       );
       
       // Gerar tabela
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: [columns.map(col => col.header)],
         body: tableData,
         startY: 40,
