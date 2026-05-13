@@ -7,7 +7,7 @@
  */
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReportAnalysis } from './reportAnalysisService';
@@ -395,7 +395,7 @@ export class PDFTemplateService {
     this.currentY += 8;
 
     // Tabela
-    (this.doc as any).autoTable({
+    autoTable(this.doc, {
       startY: this.currentY,
       head: [config.tableData.headers],
       body: config.tableData.rows,
@@ -455,7 +455,7 @@ export class PDFTemplateService {
           // Tabela (array de arrays)
           this.checkPageBreak(50);
           const tableContent = section.content as (string | number)[][];
-          (this.doc as any).autoTable({
+          autoTable(this.doc, {
             startY: this.currentY,
             head: [tableContent[0]],
             body: tableContent.slice(1),

@@ -5,7 +5,7 @@ import { Download, Loader2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from 'jspdf-autotable';
 
 interface AuditExportButtonProps {
   variant?: "default" | "outline" | "ghost";
@@ -97,7 +97,7 @@ const AuditExportButton: React.FC<AuditExportButtonProps> = ({
           event.error_message || 'N/A'
         ]);
 
-        (doc as any).autoTable({
+        autoTable(doc, {
           head: [['Data', 'Ação', 'Status', 'Erro']],
           body: criticalTableData,
           startY: yPosition,
@@ -129,7 +129,7 @@ const AuditExportButton: React.FC<AuditExportButtonProps> = ({
         log.user_id?.substring(0, 8) + '...' || 'Sistema'
       ]);
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: [['Data', 'Hora', 'Ação', 'Status', 'Usuário']],
         body: securityTableData,
         startY: yPosition,
@@ -155,7 +155,7 @@ const AuditExportButton: React.FC<AuditExportButtonProps> = ({
         log.user_name || 'Sistema'
       ]);
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: [['Data', 'Hora', 'Tabela', 'Ação', 'Usuário']],
         body: contentTableData,
         startY: yPosition,
@@ -180,7 +180,7 @@ const AuditExportButton: React.FC<AuditExportButtonProps> = ({
         new Date(role.created_at).toLocaleDateString('pt-BR')
       ]);
 
-      (doc as any).autoTable({
+      autoTable(doc, {
         head: [['ID Usuário', 'Função', 'Região', 'Data Criação']],
         body: rolesTableData,
         startY: yPosition,

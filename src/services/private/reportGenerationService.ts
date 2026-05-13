@@ -5,7 +5,7 @@
  */
 
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { QuestionnaireAnswers } from '@/types/diagnostic';
@@ -222,7 +222,7 @@ export class PrivateReportGenerationService {
       ['Número de Recomendações', `${result.recommendations.length}`]
     ];
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: yPosition,
       head: [metricsData[0]],
       body: metricsData.slice(1),
@@ -356,7 +356,7 @@ export class PrivateReportGenerationService {
       ]);
     });
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: yPosition,
       head: [goalsData[0]],
       body: goalsData.slice(1),

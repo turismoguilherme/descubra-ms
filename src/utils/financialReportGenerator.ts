@@ -1,6 +1,6 @@
 // @ts-nocheck
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export function generateDREPDF(data: any) {
   const doc = new jsPDF();
@@ -27,7 +27,7 @@ export function generateDREPDF(data: any) {
   yPos += 8;
 
   doc.setFontSize(12);
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Descrição', 'Valor']],
     body: [
@@ -60,7 +60,7 @@ export function generateDREPDF(data: any) {
     ['Impostos', `R$ ${data.taxes.toFixed(2).replace('.', ',')}`],
   );
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Descrição', 'Valor']],
     body: expensesRows,
@@ -77,7 +77,7 @@ export function generateDREPDF(data: any) {
   doc.text('RESULTADO', 20, yPos);
   yPos += 8;
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Descrição', 'Valor']],
     body: [
@@ -130,7 +130,7 @@ export function generateCashFlowPDF(data: any) {
     ]);
   }
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Mês', 'Entradas', 'Saídas', 'Saldo Líquido']],
     body: tableData,
@@ -185,7 +185,7 @@ export function generateProfitReportPDF(data: any) {
     ]);
   }
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Mês', 'Receitas', 'Despesas', 'Salários', 'Lucro Líquido', 'Margem (%)']],
     body: tableData,
