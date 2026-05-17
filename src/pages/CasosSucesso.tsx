@@ -114,28 +114,30 @@ const CasosSucesso = () => {
       <ViaJARNavbar />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 min-h-[320px] bg-gradient-to-br from-guata-cream via-guata-paper to-guata-cream">
+      <section className="relative overflow-hidden py-20 min-h-[320px] bg-gradient-to-b from-guata-deep via-guata-forest to-slate-900">
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.2]"
+          className="pointer-events-none absolute inset-0 opacity-[0.12]"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 20%, hsl(var(--guata-gold) / 0.12), transparent 45%),
-              radial-gradient(circle at 80% 10%, hsl(var(--guata-forest) / 0.06), transparent 40%)`,
+            backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--guata-gold) / 0.55) 1px, transparent 0)`,
+            backgroundSize: '40px 40px',
           }}
         />
+        <div className="absolute top-12 left-1/4 w-96 h-96 bg-guata-gold/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-guata-forest/40 rounded-full blur-3xl" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-guata-gold/35 text-guata-forest text-sm font-semibold mb-6 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-guata-gold/35 text-guata-cream text-sm font-semibold mb-6 shadow-sm backdrop-blur">
               <Award className="h-4 w-4 text-guata-gold" />
               <span>Casos de sucesso</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-deep mb-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-cream mb-4">
               Cases
             </h1>
-            <p className="text-lg font-medium text-guata-deep/90 mb-3">
+            <p className="text-lg font-medium text-guata-cream/90 mb-3">
               O que desenvolvemos com a Guatá Labs
             </p>
-            <p className="text-base md:text-lg text-guata-bark/90 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base md:text-lg text-guata-cream/75 max-w-3xl mx-auto leading-relaxed">
               {pageLead}
             </p>
           </div>

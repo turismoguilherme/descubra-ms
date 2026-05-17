@@ -76,29 +76,31 @@ const Sobre = () => {
     <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
 
-      <section className="relative overflow-hidden min-h-[50vh] flex items-center bg-gradient-to-br from-guata-cream via-guata-paper to-guata-cream">
+      <section className="relative overflow-hidden min-h-[50vh] flex items-center bg-gradient-to-b from-guata-deep via-guata-forest to-slate-900">
         <div
-          className="absolute inset-0 opacity-[0.18]"
+          className="absolute inset-0 opacity-[0.12]"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 30%, hsl(var(--guata-gold) / 0.12), transparent 45%),
-              radial-gradient(circle at 80% 15%, hsl(var(--guata-forest) / 0.06), transparent 40%)`,
+            backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--guata-gold) / 0.55) 1px, transparent 0)`,
+            backgroundSize: '40px 40px',
           }}
         />
+        <div className="absolute top-12 left-1/4 w-96 h-96 bg-guata-gold/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-guata-forest/40 rounded-full blur-3xl" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-guata-gold/35 bg-white text-guata-forest text-sm font-semibold mb-6 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-guata-gold/35 bg-white/10 text-guata-cream text-sm font-semibold mb-6 shadow-sm backdrop-blur">
               <Building2 className="h-4 w-4 text-guata-gold" />
               <span>Quem somos</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-deep mb-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-cream mb-4">
               Sobre a Guatá Labs
             </h1>
-            <p className="text-lg font-medium text-guata-deep/90 mb-3">
+            <p className="text-lg font-medium text-guata-cream/90 mb-3">
               Tecnologia e inovação para a gestão inteligente do turismo
             </p>
-            <p className="text-base md:text-lg text-guata-bark/90 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base md:text-lg text-guata-cream/75 max-w-3xl mx-auto leading-relaxed">
               {heroLead}
             </p>
           </div>

@@ -65,6 +65,14 @@ const ViaJARFooter: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const defaultCopyright = `© ${currentYear} ${brandName}. Todos os direitos reservados.`;
+  const storedCopyright = settings.copyright?.trim();
+  const isLegacyDescubraCopyright =
+    !!storedCopyright && /descubra\s+mato\s+grosso\s+do\s+sul/i.test(storedCopyright);
+  const copyrightLine = isLegacyDescubraCopyright
+    ? defaultCopyright
+    : storedCopyright || defaultCopyright;
+
   return (
     <footer className="bg-guata-deep text-guata-cream relative overflow-hidden">
       <div className="relative z-20 h-2.5 bg-guata-cream shadow-sm" aria-hidden />
@@ -369,7 +377,7 @@ const ViaJARFooter: React.FC = () => {
       <div className="border-t border-guata-gold/15 pt-6 mt-8 relative">
         <div className="text-center">
           <p className="text-guata-cream/55 text-sm">
-            {settings.copyright || `© ${currentYear} ${brandName}. Todos os direitos reservados.`}
+            {copyrightLine}
           </p>
         </div>
       </div>
