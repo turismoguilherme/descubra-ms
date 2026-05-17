@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import RouteHeroSection from './RouteHeroSection';
 import AnimalStampGrid from './AnimalStampGrid';
 import RewardsOverview from './RewardsOverview';
-import PassportMap from './PassportMap';
+import GoogleMyMapsEmbed from './GoogleMyMapsEmbed';
+import { normalizeGoogleMapsEmbedUrl } from '@/utils/googleMapsEmbed';
 import CheckpointList from './CheckpointList';
 import RouteCompletionModal from './RouteCompletionModal';
 import {
@@ -53,8 +54,8 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
   const [totalPoints, setTotalPoints] = useState(0);
   const [isResetting, setIsResetting] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
-  const [illustrationDialogOpen, setIllustrationDialogOpen] = useState(false);
   const [mapExpandedOpen, setMapExpandedOpen] = useState(false);
+  const mapsEmbedUrl = normalizeGoogleMapsEmbedUrl(route.google_maps_embed_url);
   const { toast } = useToast();
   
   // Determine animal theme from configuration or default
@@ -259,43 +260,17 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
 
         {/* Right Column - Map & Info (1/3) */}
         <div className="space-y-6">
-          {route.map_image_url && (
+          {mapsEmbedUrl && (
             <Card className="bg-white rounded-2xl shadow-lg border-0 overflow-hidden">
               <CardContent className="p-4">
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-ms-primary-blue">
                   <MapPin className="h-5 w-5" />
-                  Mapa ilustrativo
+                  Mapa do roteiro
                 </h3>
-                <button
-                  type="button"
-                  onClick={() => setIllustrationDialogOpen(true)}
-                  className="relative w-full overflow-hidden rounded-xl border border-gray-200 text-left transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ms-primary-blue"
-                >
-                  <img
-                    src={route.map_image_url}
-                    alt={`Mapa ilustrativo — ${route.name}`}
-                    className="h-44 w-full object-cover"
-                  />
-                  <span className="absolute bottom-2 right-2 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white">
-                    Clique para ampliar
-                  </span>
-                </button>
-              </CardContent>
-            </Card>
-          )}
-
-          {route.checkpoints && route.checkpoints.length > 0 && (
-            <Card className="bg-white rounded-2xl shadow-lg border-0 overflow-hidden">
-              <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-ms-primary-blue">
-                  <MapPin className="h-5 w-5" />
-                  Mapa interativo
-                </h3>
-                <PassportMap
-                  route={route}
-                  checkpoints={route.checkpoints}
-                  progress={progress}
-                  containerClassName="h-[380px]"
+                <GoogleMyMapsEmbed
+                  embedUrl={mapsEmbedUrl}
+                  title={`Mapa — ${route.name}`}
+                  className="h-[380px]"
                 />
                 <Button
                   type="button"
@@ -442,31 +417,17 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={illustrationDialogOpen} onOpenChange={setIllustrationDialogOpen}>
-        <DialogContent className="max-w-5xl border-0 p-2 sm:p-4">
-          {route.map_image_url && (
-            <img
-              src={route.map_image_url}
-              alt={`Mapa ilustrativo — ${route.name}`}
-              className="max-h-[85vh] w-full rounded-lg object-contain"
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={mapExpandedOpen} onOpenChange={setMapExpandedOpen}>
         <DialogContent className="max-h-[92vh] w-[95vw] max-w-5xl overflow-y-auto p-3 sm:p-4">
           <h3 className="mb-2 flex items-center gap-2 text-lg font-semibold text-ms-primary-blue">
             <MapPin className="h-5 w-5 shrink-0" />
             Mapa do Roteiro
           </h3>
-          {mapExpandedOpen && route.checkpoints && route.checkpoints.length > 0 && (
-            <PassportMap
-              key="passport-map-expanded"
-              route={route}
-              checkpoints={route.checkpoints}
-              progress={progress}
-              containerClassName="h-[min(72vh,640px)] min-h-[280px]"
+          {mapExpandedOpen && mapsEmbedUrl && (
+            <GoogleMyMapsEmbed
+              embedUrl={mapsEmbedUrl}
+              title={`Mapa — ${route.name}`}
+              className="h-[min(72vh,640px)] min-h-[280px]"
             />
           )}
         </DialogContent>

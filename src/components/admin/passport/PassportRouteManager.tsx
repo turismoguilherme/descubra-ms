@@ -33,6 +33,7 @@ interface Route {
   video_url?: string;
   passport_number_prefix?: string;
   map_image_url?: string;
+  google_maps_embed_url?: string | null;
   image_url?: string | null;
   is_active?: boolean;
   is_published?: boolean;
@@ -80,13 +81,9 @@ const PassportRouteManager: React.FC = () => {
   const [formData, setFormData] = useState({
     video_url: '',
     passport_number_prefix: 'MS',
-    map_image_url: '',
+    google_maps_embed_url: '',
     image_url: '',
   });
-  const [mapImageFile, setMapImageFile] = useState<File | null>(null);
-  const [mapImagePreview, setMapImagePreview] = useState<string | null>(null);
-  const [mapImageRemoved, setMapImageRemoved] = useState(false);
-  const [uploadingMapImage, setUploadingMapImage] = useState(false);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
   const [coverImageRemoved, setCoverImageRemoved] = useState(false);
@@ -508,46 +505,12 @@ const PassportRouteManager: React.FC = () => {
     setFormData({
       video_url: route.video_url || '',
       passport_number_prefix: route.passport_number_prefix || 'MS',
-      map_image_url: route.map_image_url || '',
+      google_maps_embed_url: route.google_maps_embed_url || '',
       image_url: route.image_url || '',
     });
-    setMapImageFile(null);
-    setMapImageRemoved(false);
-    setMapImagePreview(route.map_image_url || null);
     setCoverImageFile(null);
     setCoverImageRemoved(false);
     setCoverImagePreview(route.image_url || null);
-  };
-
-  const handleMapImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Arquivo inválido',
-        description: 'Por favor, selecione uma imagem.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: 'Arquivo muito grande',
-        description: 'A imagem deve ter no máximo 10MB.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setMapImageRemoved(false);
-    setMapImageFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setMapImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleCoverImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -581,60 +544,11 @@ const PassportRouteManager: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const clearMapImage = () => {
-    setMapImageRemoved(true);
-    setMapImageFile(null);
-    setMapImagePreview(null);
-    setFormData((prev) => ({ ...prev, map_image_url: '' }));
-  };
-
   const clearCoverImage = () => {
     setCoverImageRemoved(true);
     setCoverImageFile(null);
     setCoverImagePreview(null);
     setFormData((prev) => ({ ...prev, image_url: '' }));
-  };
-
-  const uploadMapImage = async (routeId: string): Promise<string | null> => {
-    if (!mapImageFile) return formData.map_image_url || null;
-
-    try {
-      setUploadingMapImage(true);
-      const fileExt = mapImageFile.name.split('.').pop();
-      const fileName = `routes/${routeId}/map/${uuidv4()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(fileName, mapImageFile, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) {
-        if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
-          console.warn('⚠️ Bucket não encontrado, continuando sem upload de imagem do mapa');
-          return formData.map_image_url || null;
-        }
-        throw uploadError;
-      }
-
-      const { data: publicUrlData } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(fileName);
-
-      return publicUrlData?.publicUrl || null;
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Erro no upload da imagem do mapa:', err);
-      toast({
-        title: 'Erro no upload',
-        description: `Erro ao fazer upload da imagem do mapa: ${err.message}`,
-        variant: 'destructive',
-      });
-      return formData.map_image_url || null;
-    } finally {
-      setUploadingMapImage(false);
-    }
   };
 
   const uploadCoverImage = async (routeId: string): Promise<string | null> => {
@@ -689,15 +603,7 @@ const PassportRouteManager: React.FC = () => {
     }
 
     try {
-      let mapImageUrl: string | null;
-      if (mapImageFile) {
-        const uploadedUrl = await uploadMapImage(editingRoute.id);
-        mapImageUrl = uploadedUrl ?? null;
-      } else if (mapImageRemoved) {
-        mapImageUrl = null;
-      } else {
-        mapImageUrl = formData.map_image_url?.trim() || null;
-      }
+      const googleMapsEmbedUrl = formData.google_maps_embed_url?.trim() || null;
 
       let heroImageUrl: string | null;
       if (coverImageFile) {
@@ -719,7 +625,7 @@ const PassportRouteManager: React.FC = () => {
         difficulty: dbDifficulty,
         video_url: formData.video_url || null,
         passport_number_prefix: formData.passport_number_prefix || 'MS',
-        map_image_url: mapImageUrl,
+        google_maps_embed_url: googleMapsEmbedUrl,
         image_url: heroImageUrl,
         updated_at: new Date().toISOString(),
       });
@@ -751,9 +657,6 @@ const PassportRouteManager: React.FC = () => {
         description: 'As configurações do passaporte foram salvas.',
       });
       setEditingRoute(null);
-      setMapImageFile(null);
-      setMapImagePreview(null);
-      setMapImageRemoved(false);
       setCoverImageFile(null);
       setCoverImagePreview(null);
       setCoverImageRemoved(false);
@@ -937,16 +840,13 @@ const PassportRouteManager: React.FC = () => {
                 console.log('🔵 [PassportRouteManager] Botão "Nova Rota" clicado');
                 setEditingRoute(null);
                 setEditRouteForm({ name: '', description: '', region: '', difficulty: 'medio' });
-                setMapImageFile(null);
-                setMapImagePreview(null);
-                setMapImageRemoved(false);
                 setCoverImageFile(null);
                 setCoverImagePreview(null);
                 setCoverImageRemoved(false);
                 setFormData({
                   video_url: '',
                   passport_number_prefix: 'MS',
-                  map_image_url: '',
+                  google_maps_embed_url: '',
                   image_url: '',
                 });
                 setCreatingRoute(true);
@@ -1010,8 +910,8 @@ const PassportRouteManager: React.FC = () => {
                             {route.passport_number_prefix || 'MS'}
                           </div>
                           <div className="text-sm">
-                            <span className="font-medium">Mapa:</span>{' '}
-                            {route.map_image_url ? (
+                            <span className="font-medium">Google My Maps:</span>{' '}
+                            {route.google_maps_embed_url ? (
                               <span className="text-green-600">Configurado</span>
                             ) : (
                               <span className="text-muted-foreground">Não configurado</span>
@@ -1222,79 +1122,39 @@ const PassportRouteManager: React.FC = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="map_image">Imagem do Mapa do Roteiro</Label>
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleMapImageSelect}
-                    className="hidden"
-                    id="map_image"
-                  />
-                  <label
-                    htmlFor="map_image"
-                    className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 hover:bg-muted"
-                  >
-                    <MapPin className="h-4 w-4" />
-                    {mapImageFile ? 'Trocar imagem' : 'Selecionar imagem'}
-                  </label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:bg-destructive/10"
-                    disabled={
-                      !mapImageFile &&
-                      !mapImagePreview &&
-                      !(editingRoute?.map_image_url && !mapImageRemoved)
-                    }
-                    onClick={clearMapImage}
-                  >
-                    Remover imagem
-                  </Button>
-                </div>
-                {mapImagePreview && (
-                  <div className="relative mt-2">
-                    <img
-                      src={mapImagePreview}
-                      alt="Preview do mapa"
-                      className="w-full max-w-md rounded-md border"
-                    />
-                  </div>
-                )}
-                {!mapImagePreview && mapImageRemoved && editingRoute?.map_image_url && (
-                  <p className="text-xs text-amber-700">
-                    Imagem do mapa será removida ao salvar.
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Mapa ilustrativo na lateral da rota no passaporte (clique para ampliar).
-                </p>
-              </div>
+              <Label htmlFor="google_maps_embed_url">Link do Google My Maps (incorporar)</Label>
+              <Input
+                id="google_maps_embed_url"
+                value={formData.google_maps_embed_url}
+                onChange={(e) =>
+                  setFormData({ ...formData, google_maps_embed_url: e.target.value })
+                }
+                placeholder="https://www.google.com/maps/d/embed?mid=..."
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                No My Maps: Compartilhar → Incorporar no site → copie a URL do iframe (src).
+                O mapa aparece na tela da rota no passaporte; sem link, o bloco fica oculto.
+              </p>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={uploadingMapImage || uploadingCoverImage}>
-                {(uploadingMapImage || uploadingCoverImage) && (
+              <Button onClick={handleSave} disabled={uploadingCoverImage}>
+                {uploadingCoverImage && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Salvar
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setEditingRoute(null);
                   setEditRouteForm({ name: '', description: '', region: '', difficulty: 'medio' });
-                  setMapImageFile(null);
-                  setMapImagePreview(null);
-                  setMapImageRemoved(false);
                   setCoverImageFile(null);
                   setCoverImagePreview(null);
                   setCoverImageRemoved(false);
                   setFormData({
                     video_url: '',
                     passport_number_prefix: 'MS',
-                    map_image_url: '',
+                    google_maps_embed_url: '',
                     image_url: '',
                   });
                 }}

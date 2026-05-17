@@ -286,12 +286,23 @@ const PassaporteLista = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {routes.map((route) => (
               <Card key={route.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-video bg-gradient-to-br from-ms-primary-blue to-ms-secondary-green relative">
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                    <MapPin className="w-12 h-12 text-white" />
-                  </div>
-                  <Badge 
-                    className={`absolute top-4 right-4 ${getDifficultyColor(route.difficulty)}`}
+                <div className="aspect-video relative overflow-hidden bg-gradient-to-br from-ms-primary-blue to-ms-secondary-green">
+                  {route.image && !route.image.includes('default-route') ? (
+                    <>
+                      <img
+                        src={route.image}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+                    </>
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <MapPin className="w-12 h-12 text-white" />
+                    </div>
+                  )}
+                  <Badge
+                    className={`absolute top-4 right-4 z-10 ${getDifficultyColor(route.difficulty)}`}
                   >
                     {route.difficulty}
                   </Badge>
@@ -353,55 +364,6 @@ const PassaporteLista = () => {
           </div>
           )}
 
-          {/* Stats + Por que usar o Passaporte */}
-          <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-center mb-8">Suas Conquistas</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-ms-primary-blue">
-                    {routes.filter(r => r.completed).length}
-                  </div>
-                  <div className="text-gray-600">Rotas Concluídas</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-ms-accent-orange">
-                    {routes.reduce((sum, r) => sum + r.checkpoints, 0)}
-                  </div>
-                  <div className="text-gray-600">Pontos Totais</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-ms-accent-orange">
-                    {routes.reduce((sum, r) => sum + (r.completed ? r.checkpoints : 0), 0)}
-                  </div>
-                  <div className="text-gray-600">Selos Coletados</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-8">
-              <h2 className="text-2xl font-bold mb-4 text-ms-primary-blue">
-                Por que usar o Passaporte?
-              </h2>
-              <ul className="space-y-3 text-gray-700 text-sm">
-                <li>
-                  <span className="font-semibold">Descontos em parceiros:</span> estabelecimentos
-                  que aceitam o Passaporte oferecem benefícios exclusivos para quem apresenta o
-                  passaporte digital.
-                </li>
-                <li>
-                  <span className="font-semibold">Rotas oficiais e seguras:</span> roteiros
-                  pensados para valorizar a experiência, a segurança e a sustentabilidade no
-                  turismo de Mato Grosso do Sul.
-                </li>
-                <li>
-                  <span className="font-semibold">Campanhas e prêmios locais:</span> prefeituras e
-                  parceiros podem criar campanhas especiais para quem completa rotas e coleciona
-                  selos.
-                </li>
-              </ul>
-            </div>
-          </div>
         </div>
       </main>
     </UniversalLayout>

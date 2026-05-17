@@ -26,7 +26,7 @@ interface CommandDialogProps extends DialogProps {}
 const CommandDialog = ({ children, ...props }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-2xl max-w-2xl rounded-xl">
+      <DialogContent className="overflow-hidden p-0 shadow-2xl max-w-2xl rounded-2xl border-ms-primary-blue/15 gap-0">
         <DialogTitle className="sr-only">Buscar</DialogTitle>
         <DialogDescription className="sr-only">
           Busque destinos, eventos, regiões ou faça uma pergunta para o Guatá

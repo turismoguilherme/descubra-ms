@@ -114,6 +114,8 @@ export interface RouteExtended {
   // Campos adicionais do passaporte
   video_url?: string | null;
   passport_number_prefix?: string | null;
+  google_maps_embed_url?: string | null;
+  map_image_url?: string | null;
   // Relacionamentos
   configuration?: PassportConfiguration | null;
   checkpoints?: RouteCheckpointExtended[];

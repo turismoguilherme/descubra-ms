@@ -454,6 +454,7 @@ class PassportAdminService {
       video_url?: string;
       passport_number_prefix?: string;
       map_image_url?: string | null;
+      google_maps_embed_url?: string | null;
       image_url?: string | null;
       name?: string;
       description?: string | null;
