@@ -2,6 +2,12 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "ignoreCommand": "bash -c 'ONLY=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -v \"^guata-channel/\" || true); test -z \"$ONLY\"'",
+  "functions": {
+    "api/evento/[id].ts": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     {
       "source": "/evento/:id",
@@ -31,6 +37,17 @@
         {
           "type": "host",
           "value": "descubrams.com"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "destination": "/descubrams",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.descubrams.com"
         }
       ]
     }

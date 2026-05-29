@@ -8,6 +8,48 @@
 
 ---
 
+## 0. Vercel vs Guatá Channel (leia primeiro)
+
+| O quê | Onde roda | Precisa 24h? |
+|-------|-----------|--------------|
+| Site Descubra MS + admin | **Vercel** | Não (serverless sob demanda) |
+| Edge Functions (webhook ponte) | **Supabase** | Não (acordam só quando chamadas) |
+| **Guatá Channel (WhatsApp)** | **VPS / Railway / PM2** | **Sim — 24h × 7 dias** |
+
+**Por quê 24h?** O bot usa `whatsapp-web.js`: mantém uma **sessão WhatsApp aberta** o tempo todo (como o WhatsApp Web no navegador). Se o processo parar:
+- usuários que mandam mensagem **não recebem resposta**;
+- aprovação de evento no admin **não gera DM** (Supabase recebe erro 503 no webhook).
+
+**O Vercel NÃO hospeda o Guatá Channel** — a pasta `guata-channel/` está em `.vercelignore`.
+
+### Como saber se está funcionando 24h
+
+1. **Health check** (a cada 5 min, ex. [UptimeRobot](https://uptimerobot.com) gratuito):
+   ```
+   GET https://bot.seudominio.com/health
+   ```
+   Resposta OK:
+   ```json
+   {"ok":true,"whatsapp":"connected","service":"guata-channel"}
+   ```
+   Se `"whatsapp":"pending"` ou timeout → bot offline.
+
+2. **PM2 no servidor** (reinicia se cair):
+   ```bash
+   pm2 status guata-channel
+   pm2 logs guata-channel --lines 50
+   ```
+
+3. **Teste manual semanal:** mandar `oi` no WhatsApp → Guatá responde.
+
+4. **Teste de webhook:** aprovar evento de teste no admin → organizador recebe DM.
+
+5. **Logs Supabase:** Edge Function `notify-guata-channel-event` → status 200 (não `503` nem `skipped: not_configured`).
+
+**Quando o bot cai, o site continua normal** — só WhatsApp/notificações param até subir de novo.
+
+---
+
 ## 1. Arquitetura (entender antes de executar)
 
 ```

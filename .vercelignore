@@ -1,5 +1,13 @@
-# Arquivo para forçar detecção de mudanças pelo Vercel
-# Este arquivo foi criado em 30/12/2025 para forçar novo deployment
-# Última atualização: 2025-01-14 - Trigger deployment para correções de redirecionamento login/cadastro
-# Última atualização: 2025-02-01 - Trigger deployment para correções vídeo mobile, logo e traduções
+# Bot WhatsApp — roda em VPS/Railway, NÃO no Vercel (precisa processo 24h + Puppeteer)
+guata-channel/
 
+# Export legado do chatbot (referência local)
+docs/whatsapp-chatbot-export/
+
+# Edge Functions e migrations — deploy via Supabase CLI
+supabase/
+
+# Docs internos / scripts que não entram no build Vite
+docs/
+*.md
+!README.md
