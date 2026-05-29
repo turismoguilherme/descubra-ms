@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { platformContentService } from '@/services/admin/platformContentService';
@@ -17,42 +18,88 @@ interface LogoEditorProps {
 
 const BUCKET_NAME = 'tourism-images';
 
-const LOGO_CONFIGS = {
-  viajar: {
+type LogoConfig = {
+  id: string;
+  key: string;
+  label: string;
+  description: string;
+  currentPath: string;
+  uploadFolder: string;
+};
+
+const VIAJAR_LOGOS: LogoConfig[] = [
+  {
+    id: 'viajar',
     key: 'viajar_logo_url',
-    label: 'Logo ViajARTur',
-    description: 'Logo principal da plataforma ViajARTur',
+    label: 'Logo Guatá Labs',
+    description: 'Logo principal da landing Guatá Labs',
     currentPath: '/images/logo-viajar.png',
+    uploadFolder: 'logos/viajar',
   },
-  descubra_ms: {
+  {
+    id: 'guata_navbar',
+    key: 'guata_navbar_logo_url',
+    label: 'Logo no header (navbar)',
+    description: 'Exibida na barra de navegação da landing Guatá Labs',
+    currentPath: '/images/logo-viajar.png',
+    uploadFolder: 'guata-labs/logos',
+  },
+  {
+    id: 'guata_hero',
+    key: 'guata_mascot_hero',
+    label: 'Mascote no hero',
+    description: 'Imagem grande ao lado do título na landing Guatá Labs',
+    currentPath: '/guata-mascote.jpg',
+    uploadFolder: 'guata-labs/mascots',
+  },
+  {
+    id: 'guata_avatar',
+    key: 'guata_avatar_url',
+    label: 'Avatar Guatá (chat)',
+    description: 'Avatar do assistente virtual Guatá no chat do Descubra MS',
+    currentPath: '/guata-mascote.jpg',
+    uploadFolder: 'logos/guata',
+  },
+];
+
+const DESCUBRA_MS_LOGOS: LogoConfig[] = [
+  {
+    id: 'descubra_ms',
     key: 'ms_logo_url',
     label: 'Logo Descubra MS',
     description: 'Logo principal da plataforma Descubra Mato Grosso do Sul',
     currentPath: '/images/logo-descubra-ms.png',
+    uploadFolder: 'logos/descubra_ms',
   },
-  guata: {
+  {
+    id: 'guata_avatar',
     key: 'guata_avatar_url',
-    label: 'Avatar Guatá',
-    description: 'Avatar do assistente virtual Guatá',
+    label: 'Avatar Guatá (chat)',
+    description: 'Avatar do assistente virtual Guatá no chat',
     currentPath: '/guata-mascote.jpg',
+    uploadFolder: 'logos/guata',
   },
-};
+];
+
+const BRAND_TEXT_FIELDS = [
+  { key: 'guata_brand_name', label: 'Nome da marca (navbar/footer)', rows: 1 },
+  { key: 'guata_brand_tagline', label: 'Tagline curta', rows: 2 },
+];
 
 export default function LogoEditor({ platform }: LogoEditorProps) {
   const { toast } = useToast();
+  const logoConfigs = platform === 'viajar' ? VIAJAR_LOGOS : DESCUBRA_MS_LOGOS;
   const [logos, setLogos] = useState<Record<string, string>>({});
   const [originalLogos, setOriginalLogos] = useState<Record<string, string>>({});
+  const [brandTexts, setBrandTexts] = useState<Record<string, string>>({});
+  const [originalBrandTexts, setOriginalBrandTexts] = useState<Record<string, string>>({});
   const [imageFiles, setImageFiles] = useState<Record<string, File | null>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [saved, setSaved] = useState<Record<string, boolean>>({});
+  const [savingBrandTexts, setSavingBrandTexts] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Determinar quais logos mostrar baseado na plataforma
-  const logosToShow = platform === 'viajar' 
-    ? ['viajar', 'guata']
-    : ['descubra_ms', 'guata'];
 
   useEffect(() => {
     loadLogos();
@@ -61,17 +108,21 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
   const loadLogos = async () => {
     setLoading(true);
     try {
-      const logoKeys = logosToShow.map(l => LOGO_CONFIGS[l as keyof typeof LOGO_CONFIGS].key);
-      const data = await platformContentService.getContent(logoKeys);
-      
+      const logoKeys = logoConfigs.map((c) => c.key);
+      const textKeys = platform === 'viajar' ? BRAND_TEXT_FIELDS.map((f) => f.key) : [];
+      const data = await platformContentService.getContent([...logoKeys, ...textKeys]);
+
       const logoMap: Record<string, string> = {};
-      data.forEach(item => {
-        logoMap[item.content_key] = item.content_value || '';
+      const textMap: Record<string, string> = {};
+      data.forEach((item) => {
+        if (textKeys.includes(item.content_key)) {
+          textMap[item.content_key] = item.content_value || '';
+        } else {
+          logoMap[item.content_key] = item.content_value || '';
+        }
       });
 
-      // Se não houver no banco, usar caminho padrão
-      logosToShow.forEach(logoKey => {
-        const config = LOGO_CONFIGS[logoKey as keyof typeof LOGO_CONFIGS];
+      logoConfigs.forEach((config) => {
         if (!logoMap[config.key]) {
           logoMap[config.key] = config.currentPath;
         }
@@ -79,6 +130,8 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
 
       setLogos(logoMap);
       setOriginalLogos({ ...logoMap });
+      setBrandTexts(textMap);
+      setOriginalBrandTexts({ ...textMap });
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao carregar logos:', err);
@@ -92,10 +145,11 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
     }
   };
 
-  const handleImageSelect = (logoKey: string, file: File | null) => {
+  const getConfigById = (logoId: string) => logoConfigs.find((c) => c.id === logoId)!;
+
+  const handleImageSelect = (logoId: string, file: File | null) => {
     if (!file) return;
 
-    // Validar tipo
     if (!file.type.startsWith('image/')) {
       toast({
         title: 'Arquivo inválido',
@@ -105,7 +159,6 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
       return;
     }
 
-    // Validar tamanho (máximo 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast({
         title: 'Arquivo muito grande',
@@ -115,29 +168,29 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
       return;
     }
 
-    setImageFiles(prev => ({ ...prev, [logoKey]: file }));
+    setImageFiles((prev) => ({ ...prev, [logoId]: file }));
 
-    // Criar preview
     const reader = new FileReader();
     reader.onload = (e) => {
-      setImagePreviews(prev => ({ ...prev, [logoKey]: e.target?.result as string }));
+      setImagePreviews((prev) => ({ ...prev, [logoId]: e.target?.result as string }));
     };
     reader.readAsDataURL(file);
   };
 
-  const uploadImage = async (logoKey: string): Promise<string | null> => {
-    const file = imageFiles[logoKey];
-    if (!file) return logos[logoKey] || null;
+  const uploadImage = async (logoId: string): Promise<string | null> => {
+    const config = getConfigById(logoId);
+    const file = imageFiles[logoId];
+    if (!file) return logos[config.key] || null;
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `logos/${logoKey}/${uuidv4()}.${fileExt}`;
+      const fileName = `${config.uploadFolder}/${config.key}-${uuidv4()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from(BUCKET_NAME)
         .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
         });
 
       if (uploadError) {
@@ -152,10 +205,7 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
         throw uploadError;
       }
 
-      const { data: publicUrlData } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(fileName);
-
+      const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(fileName);
       return publicUrlData?.publicUrl || null;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -169,26 +219,24 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
     }
   };
 
-  const saveLogo = async (logoKey: string) => {
-    const config = LOGO_CONFIGS[logoKey as keyof typeof LOGO_CONFIGS];
-    setSaving(prev => ({ ...prev, [logoKey]: true }));
+  const saveLogo = async (logoId: string) => {
+    const config = getConfigById(logoId);
+    setSaving((prev) => ({ ...prev, [logoId]: true }));
 
     try {
       let imageUrl = '';
 
-      // Se há arquivo selecionado, fazer upload primeiro
-      if (imageFiles[logoKey]) {
-        setUploading(prev => ({ ...prev, [logoKey]: true }));
+      if (imageFiles[logoId]) {
+        setUploading((prev) => ({ ...prev, [logoId]: true }));
         try {
-          const uploadedUrl = await uploadImage(logoKey);
-          setUploading(prev => ({ ...prev, [logoKey]: false }));
-          
+          const uploadedUrl = await uploadImage(logoId);
+          setUploading((prev) => ({ ...prev, [logoId]: false }));
+
           if (uploadedUrl) {
             imageUrl = uploadedUrl;
-            setLogos(prev => ({ ...prev, [config.key]: uploadedUrl }));
+            setLogos((prev) => ({ ...prev, [config.key]: uploadedUrl }));
           } else {
-            // Se o upload falhou, não continuar
-            setSaving(prev => ({ ...prev, [logoKey]: false }));
+            setSaving((prev) => ({ ...prev, [logoId]: false }));
             toast({
               title: 'Erro no upload',
               description: 'Não foi possível fazer upload da imagem. Tente novamente ou use uma URL.',
@@ -197,19 +245,16 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
             return;
           }
         } catch (uploadError: unknown) {
-          setUploading(prev => ({ ...prev, [logoKey]: false }));
-          setSaving(prev => ({ ...prev, [logoKey]: false }));
+          setUploading((prev) => ({ ...prev, [logoId]: false }));
+          setSaving((prev) => ({ ...prev, [logoId]: false }));
           throw uploadError;
         }
       } else {
-        // Se não há arquivo, usar a URL editada manualmente
         imageUrl = (logos[config.key] || '').trim();
-        console.log('💾 [LogoEditor] Salvando URL manual:', imageUrl);
       }
 
-      // Validar que temos uma URL para salvar
-      if (!imageUrl || imageUrl.trim() === '') {
-        setSaving(prev => ({ ...prev, [logoKey]: false }));
+      if (!imageUrl) {
+        setSaving((prev) => ({ ...prev, [logoId]: false }));
         toast({
           title: 'URL inválida',
           description: 'Por favor, selecione uma imagem ou forneça uma URL válida.',
@@ -218,132 +263,98 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
         return;
       }
 
-      console.log('💾 Salvando logo:', {
-        key: config.key,
-        url: imageUrl.trim(),
-        type: 'image',
-        description: config.description
-      });
+      await platformContentService.upsertContent(
+        config.key,
+        imageUrl.trim(),
+        'image',
+        config.description,
+      );
 
-      // Salvar no banco de dados
-      try {
-        console.log('💾 Tentando salvar logo no banco:', {
-          key: config.key,
-          value: imageUrl.trim(),
-          type: 'image',
-          description: config.description
-        });
-        
-        await platformContentService.upsertContent(
-          config.key,
-          imageUrl.trim(),
-          'image',
-          config.description
-        );
-        
-        console.log('✅ Logo salvo com sucesso no banco');
-        
-        // Verificar se foi salvo corretamente
-        const verification = await platformContentService.getContent([config.key]);
-        console.log('🔍 Verificação após salvar:', verification);
-        
-        if (verification.length === 0 || !verification[0].content_value) {
-          throw new Error('Logo não foi salvo corretamente. Verifique as permissões do banco de dados.');
-        }
-      } catch (upsertError: unknown) {
-        console.error('❌ Erro no upsertContent:', upsertError);
-        console.error('❌ Detalhes do erro:', {
-          message: upsertError.message,
-          code: upsertError.code,
-          details: upsertError.details,
-          hint: upsertError.hint
-        });
-        throw new Error(`Erro ao salvar no banco: ${upsertError.message || upsertError.details || 'Erro desconhecido'}`);
+      const verification = await platformContentService.getContent([config.key]);
+      if (verification.length === 0 || !verification[0].content_value) {
+        throw new Error('Logo não foi salvo corretamente. Verifique as permissões do banco de dados.');
       }
 
-      // Atualizar estados
-      setOriginalLogos(prev => ({ ...prev, [config.key]: imageUrl.trim() }));
-      setSaved(prev => ({ ...prev, [logoKey]: true }));
-      setImageFiles(prev => ({ ...prev, [logoKey]: null }));
-      setImagePreviews(prev => {
+      setOriginalLogos((prev) => ({ ...prev, [config.key]: imageUrl.trim() }));
+      setSaved((prev) => ({ ...prev, [logoId]: true }));
+      setImageFiles((prev) => ({ ...prev, [logoId]: null }));
+      setImagePreviews((prev) => {
         const newPreviews = { ...prev };
-        delete newPreviews[logoKey];
+        delete newPreviews[logoId];
         return newPreviews;
       });
 
-      // Recarregar logos para garantir sincronização
       await loadLogos();
 
-      // Adicionar cache busting timestamp à URL se for do Supabase Storage
-      const logoUrlWithCacheBust = imageUrl.trim().includes('supabase.co') 
+      const logoUrlWithCacheBust = imageUrl.trim().includes('supabase.co')
         ? `${imageUrl.trim()}${imageUrl.trim().includes('?') ? '&' : '?'}t=${Date.now()}`
         : imageUrl.trim();
 
-      // Logs detalhados para rastrear eventos de atualização
-      console.log('📢 [LogoEditor] Logo atualizada com sucesso:', {
-        key: config.key,
-        label: config.label,
-        urlOriginal: imageUrl.trim(),
-        urlComCacheBust: logoUrlWithCacheBust,
-        timestamp: new Date().toISOString(),
-        isSupabaseUrl: imageUrl.trim().includes('supabase.co')
-      });
-
-      // Disparar evento customizado para notificar outros componentes com logs
-      const logoUpdateEvent = new CustomEvent('logo-updated', { 
-        detail: { 
-          key: config.key, 
-          url: logoUrlWithCacheBust,
-          originalUrl: imageUrl.trim(),
-          timestamp: Date.now(),
-          label: config.label
-        } 
-      });
-      
-      console.log('📢 [LogoEditor] Disparando evento logo-updated:', {
-        key: config.key,
-        url: logoUrlWithCacheBust,
-        timestamp: Date.now()
-      });
-      
-      window.dispatchEvent(logoUpdateEvent);
-
-      // Log adicional para verificar se o evento foi capturado
-      setTimeout(() => {
-        console.log('📢 [LogoEditor] Evento logo-updated disparado há 100ms. Verifique se foi capturado pelo BrandContext.');
-      }, 100);
+      window.dispatchEvent(
+        new CustomEvent('logo-updated', {
+          detail: {
+            key: config.key,
+            url: logoUrlWithCacheBust,
+            originalUrl: imageUrl.trim(),
+            timestamp: Date.now(),
+            label: config.label,
+          },
+        }),
+      );
 
       toast({
         title: 'Salvo!',
-        description: `${config.label} foi salvo com sucesso. A mudança aparecerá na plataforma em até 30 segundos, ou recarregue a página para ver imediatamente.`,
+        description: `${config.label} foi salvo com sucesso.`,
       });
 
       setTimeout(() => {
-        setSaved(prev => ({ ...prev, [logoKey]: false }));
+        setSaved((prev) => ({ ...prev, [logoId]: false }));
       }, 2000);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao salvar logo:', err);
       toast({
         title: 'Erro ao salvar',
-        description: err.message || 'Não foi possível salvar o logo. Verifique o console para mais detalhes.',
+        description: err.message || 'Não foi possível salvar o logo.',
         variant: 'destructive',
       });
     } finally {
-      setSaving(prev => ({ ...prev, [logoKey]: false }));
-      setUploading(prev => ({ ...prev, [logoKey]: false }));
+      setSaving((prev) => ({ ...prev, [logoId]: false }));
+      setUploading((prev) => ({ ...prev, [logoId]: false }));
     }
   };
 
-  const hasChanges = (logoKey: string): boolean => {
-    const config = LOGO_CONFIGS[logoKey as keyof typeof LOGO_CONFIGS];
+  const saveBrandTexts = async () => {
+    setSavingBrandTexts(true);
+    try {
+      for (const field of BRAND_TEXT_FIELDS) {
+        await platformContentService.upsertContent(
+          field.key,
+          brandTexts[field.key] ?? '',
+          'text',
+          'Guatá Labs — landing',
+        );
+      }
+      setOriginalBrandTexts({ ...brandTexts });
+      toast({ title: 'Textos da marca salvos' });
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      toast({ title: 'Erro ao salvar textos', description: err.message, variant: 'destructive' });
+    } finally {
+      setSavingBrandTexts(false);
+    }
+  };
+
+  const hasChanges = (logoId: string): boolean => {
+    const config = getConfigById(logoId);
     const current = (logos[config.key] || '').trim();
     const original = (originalLogos[config.key] || '').trim();
-    const hasFile = !!imageFiles[logoKey];
-    const urlChanged = current !== original;
-    
-    return urlChanged || hasFile;
+    return current !== original || !!imageFiles[logoId];
   };
+
+  const brandTextsChanged = BRAND_TEXT_FIELDS.some(
+    (f) => (brandTexts[f.key] ?? '') !== (originalBrandTexts[f.key] ?? ''),
+  );
 
   if (loading) {
     return (
@@ -356,31 +367,30 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          Editar Logos
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Logos e mascote</h2>
         <p className="text-muted-foreground">
-          Faça upload de logos para as plataformas. Formatos aceitos: PNG, JPG, SVG. Tamanho máximo: 2MB.
+          {platform === 'viajar'
+            ? 'Logos, mascote e avatar do Guatá na landing Guatá Labs e no chat.'
+            : 'Logos da plataforma Descubra MS e avatar do Guatá no chat.'}{' '}
+          Formatos: PNG, JPG, WebP. Máximo: 2MB.
         </p>
       </div>
 
-      {logosToShow.map(logoKey => {
-        const config = LOGO_CONFIGS[logoKey as keyof typeof LOGO_CONFIGS];
+      {logoConfigs.map((config) => {
         const currentUrl = logos[config.key] || config.currentPath;
-        const preview = imagePreviews[logoKey] || currentUrl;
-        const isUploading = uploading[logoKey];
-        const isSaving = saving[logoKey];
-        const isSaved = saved[logoKey];
-        const changed = hasChanges(logoKey);
+        const preview = imagePreviews[config.id] || currentUrl;
+        const isUploading = uploading[config.id];
+        const isSaving = saving[config.id];
+        const isSaved = saved[config.id];
+        const changed = hasChanges(config.id);
 
         return (
-          <Card key={logoKey}>
+          <Card key={config.id}>
             <CardHeader>
               <CardTitle>{config.label}</CardTitle>
               <CardDescription>{config.description}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Preview da imagem */}
               <div className="flex items-center gap-4">
                 <div className="relative w-32 h-32 border-2 border-dashed border-muted rounded-lg overflow-hidden bg-muted/50 flex items-center justify-center">
                   {preview ? (
@@ -389,8 +399,7 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
                       alt={config.label}
                       className="w-full h-full object-contain"
                       onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
+                        (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   ) : (
@@ -399,26 +408,20 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
                 </div>
 
                 <div className="flex-1 space-y-2">
-                  <Label htmlFor={`file-${logoKey}`}>Selecionar Imagem</Label>
+                  <Label htmlFor={`file-${config.id}`}>Selecionar imagem</Label>
                   <div className="flex gap-2">
                     <Input
-                      id={`file-${logoKey}`}
+                      id={`file-${config.id}`}
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        handleImageSelect(logoKey, file);
-                      }}
+                      onChange={(e) => handleImageSelect(config.id, e.target.files?.[0] || null)}
                       disabled={isUploading || isSaving}
                       className="flex-1"
                     />
                     <Button
-                      onClick={() => saveLogo(logoKey)}
+                      onClick={() => saveLogo(config.id)}
                       disabled={isUploading || isSaving || !changed}
-                      className={cn(
-                        isSaved && "bg-green-500 hover:bg-green-600",
-                        !changed && "opacity-50 cursor-not-allowed"
-                      )}
+                      className={cn(isSaved && 'bg-green-500 hover:bg-green-600', !changed && 'opacity-50 cursor-not-allowed')}
                     >
                       {isUploading || isSaving ? (
                         <>
@@ -446,36 +449,63 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
                 </div>
               </div>
 
-              {/* Input manual de URL */}
               <div className="space-y-2">
-                <Label htmlFor={`url-${logoKey}`}>Ou cole uma URL</Label>
+                <Label htmlFor={`url-${config.id}`}>Ou cole uma URL</Label>
                 <Input
-                  id={`url-${logoKey}`}
+                  id={`url-${config.id}`}
                   type="url"
                   value={logos[config.key] || ''}
                   onChange={(e) => {
-                    const newValue = e.target.value;
-                    setLogos(prev => ({ ...prev, [config.key]: newValue }));
-                    // Limpar arquivo selecionado quando editar URL manualmente
-                    setImageFiles(prev => ({ ...prev, [logoKey]: null }));
-                    setImagePreviews(prev => {
+                    setLogos((prev) => ({ ...prev, [config.key]: e.target.value }));
+                    setImageFiles((prev) => ({ ...prev, [config.id]: null }));
+                    setImagePreviews((prev) => {
                       const newPreviews = { ...prev };
-                      delete newPreviews[logoKey];
+                      delete newPreviews[config.id];
                       return newPreviews;
                     });
                   }}
                   placeholder="https://exemplo.com/logo.png"
                   disabled={isUploading || isSaving}
                 />
-                <p className="text-xs text-muted-foreground">
-                  {changed && !imageFiles[logoKey] && 'Clique em "Salvar" para salvar a URL editada.'}
-                </p>
               </div>
             </CardContent>
           </Card>
         );
       })}
+
+      {platform === 'viajar' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Textos da marca</CardTitle>
+            <CardDescription>Nome e tagline exibidos na navbar e no rodapé da landing Guatá Labs.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {BRAND_TEXT_FIELDS.map(({ key, label, rows }) => (
+              <div key={key} className="space-y-1">
+                <Label htmlFor={key}>{label}</Label>
+                {rows && rows > 1 ? (
+                  <Textarea
+                    id={key}
+                    rows={rows}
+                    value={brandTexts[key] || ''}
+                    onChange={(e) => setBrandTexts((prev) => ({ ...prev, [key]: e.target.value }))}
+                  />
+                ) : (
+                  <Input
+                    id={key}
+                    value={brandTexts[key] || ''}
+                    onChange={(e) => setBrandTexts((prev) => ({ ...prev, [key]: e.target.value }))}
+                  />
+                )}
+              </div>
+            ))}
+            <Button onClick={saveBrandTexts} disabled={savingBrandTexts || !brandTextsChanged}>
+              {savingBrandTexts ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Salvar textos
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
-

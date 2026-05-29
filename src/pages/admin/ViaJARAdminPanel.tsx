@@ -26,7 +26,6 @@ const PartnersAdminModule = lazy(() => import('@/components/admin/descubra_ms/Pa
 const PartnerTermsAcceptances = lazy(() => import('@/components/admin/descubra_ms/PartnerTermsAcceptances'));
 const PantanalAvatarsManager = lazy(() => import('@/components/admin/descubra_ms/PantanalAvatarsManager'));
 const GuataVideosManager = lazy(() => import('@/components/admin/GuataVideosManager'));
-const CATLocationManager = lazy(() => import('@/components/admin/CATLocationManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const TouristRegionsManager = lazy(() => import('@/components/admin/descubra_ms/TouristRegionsManager'));
 const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
@@ -47,9 +46,7 @@ const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/Pla
 const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
 const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
 const TeamMembersManager = lazy(() => import('@/components/admin/viajar/TeamMembersManager'));
-const EmailDashboard = lazy(() => import('@/components/admin/email/EmailDashboard'));
 const ViaJARSectionManager = lazy(() => import('@/components/admin/viajar/ViaJARSectionManager'));
-const MascotManagerTab = lazy(() => import('@/components/admin/viajar/MascotManagerTab'));
 
 const ADMIN_ROLES = ['admin', 'master_admin', 'tech'] as const;
 
@@ -120,18 +117,8 @@ export default function ViaJARAdminPanel() {
                 <ViaJARSectionManager />
               </Suspense>
             } />
-            <Route path="viajar/mascote-guata" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <MascotManagerTab />
-              </Suspense>
-            } />
             
             {/* Descubra MS Routes */}
-            <Route path="descubra-ms/cats" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <CATLocationManager />
-              </Suspense>
-            } />
             <Route path="descubra-ms/footer" element={
               <Suspense fallback={<LoadingFallback />}>
                 <FooterSettingsManager />
@@ -286,13 +273,6 @@ export default function ViaJARAdminPanel() {
             <Route path="ai/knowledge-base" element={
               <Suspense fallback={<LoadingFallback />}>
                 <KnowledgeBaseAdmin />
-              </Suspense>
-            } />
-
-            {/* Email Management */}
-            <Route path="communication/emails" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <EmailDashboard />
               </Suspense>
             } />
 

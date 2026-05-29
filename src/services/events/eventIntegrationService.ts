@@ -54,6 +54,14 @@ export class EventIntegrationService {
       // 4. Atualizar estatísticas
       await this.updateEventStatistics(eventId);
 
+      // 5. Notificar Guatá Channel (WhatsApp) — não bloqueia se falhar
+      try {
+        const { notifyGuataChannelEventPublished } = await import('@/services/events/guataChannelWebhookService');
+        notifyGuataChannelEventPublished(eventId);
+      } catch (webhookError) {
+        console.warn('Erro ao notificar Guatá Channel (não crítico):', webhookError);
+      }
+
       return {
         event_id: eventId,
         event_title: event.title || event.name || '',

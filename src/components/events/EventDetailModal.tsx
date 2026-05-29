@@ -5,7 +5,7 @@
  * PRIORIDADE DE MÍDIA: 1) Vídeo YouTube 2) Logo do evento 3) Imagem 4) Gradiente com ícone
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { resolveEventTimes, formatEventTimeRange } from '@/utils/eventTimeDisplay';
+import ShareEventModal from '@/components/events/ShareEventModal';
 // Removido optimizeModalImage - usando URLs originais diretamente (já otimizadas no upload)
 
 interface EventItem {
@@ -118,6 +119,8 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
   getTranslatedDescription = (e) => e.description,
   getTranslatedLocation = (e) => e.location
 }) => {
+  const [shareOpen, setShareOpen] = useState(false);
+
   if (!event) return null;
 
   const { start: resolvedStart, end: resolvedEnd } = resolveEventTimes({
@@ -173,25 +176,6 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
       }
     }
     return null;
-  };
-
-  // Compartilhar evento
-  const handleShare = async () => {
-    const shareData = {
-      title: getTranslatedName(event),
-      text: `Confira o evento: ${getTranslatedName(event)} em ${getTranslatedLocation(event)}`,
-      url: window.location.href
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        console.log('Compartilhamento cancelado');
-      }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-    }
   };
 
   // Renderizar mídia do hero
@@ -407,7 +391,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
               <Button
                 variant="outline"
                 size="lg"
-                onClick={handleShare}
+                onClick={() => setShareOpen(true)}
                 className="rounded-xl border-2 flex-1 sm:flex-initial max-w-[200px]"
               >
                 <Share2 className="w-4 h-4 mr-2" />
@@ -417,6 +401,19 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           </div>
         </div>
       </DialogContent>
+
+      <ShareEventModal
+        isOpen={shareOpen}
+        onClose={() => setShareOpen(false)}
+        event={{
+          id: event.id,
+          name: getTranslatedName(event),
+          location: getTranslatedLocation(event),
+          start_date: event.start_date,
+          logo_evento: event.logo_evento,
+          image_url: event.image_url,
+        }}
+      />
     </Dialog>
   );
 };

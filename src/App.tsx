@@ -86,6 +86,7 @@ import Koda from "@/pages/Koda";
 import KodaPrivacy from "@/pages/koda/Privacy";
 import KodaTerms from "@/pages/koda/Terms";
 import EventosMS from "@/pages/ms/EventosMS";
+import EventShareRedirect from "@/pages/EventShareRedirect";
 import PassaporteLista from "@/pages/ms/PassaporteLista";
 import PassportDigital from "@/pages/PassportDigital";
 import RegiaoDetalhes from "@/pages/RegiaoDetalhes";
@@ -193,6 +194,7 @@ function AppRoutes() {
 
                                 {/* Eventos - Página separada no estilo chatguata */}
                                 <Route path="/eventos" element={<Eventos />} />
+                                <Route path="/evento/:eventId" element={<EventShareRedirect />} />
 
                                 {/* Koda - Canadian Travel Guide */}
                                 <Route path="/koda" element={<Koda />} />

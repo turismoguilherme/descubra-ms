@@ -148,20 +148,6 @@ export const PLATFORM_SECTIONS: Record<string, ContentSection[]> = {
         { key: 'viajar_sobre_visao', label: 'Nossa Visão', type: 'textarea', placeholder: 'Ser a plataforma líder em gestão inteligente de turismo no Brasil.' },
       ]
     },
-    {
-      id: 'guata_labs_mascot',
-      name: 'Guatá Labs — Mascote e marca (landing)',
-      fields: [
-        { key: 'guata_navbar_logo_url', label: 'Logo navbar (URL)', type: 'image', placeholder: 'URL pública da logo' },
-        { key: 'guata_mascot_hero', label: 'Imagem hero (URL)', type: 'image' },
-        { key: 'guata_mascot_floating', label: 'Avatar flutuante (URL, reserva)', type: 'image' },
-        { key: 'guata_mascot_about', label: 'Imagem extra (URL, reserva)', type: 'image' },
-        { key: 'guata_mascot_404', label: 'Imagem 404 (URL)', type: 'image' },
-        { key: 'guata_mascot_cta', label: 'Imagem CTA (URL)', type: 'image' },
-        { key: 'guata_brand_name', label: 'Nome da marca', type: 'text', placeholder: 'Guatá Labs' },
-        { key: 'guata_brand_tagline', label: 'Tagline', type: 'textarea' },
-      ],
-    },
   ],
   descubra_ms: [
     {

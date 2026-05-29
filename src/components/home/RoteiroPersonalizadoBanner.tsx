@@ -116,15 +116,18 @@ const RoteiroPersonalizadoBanner = () => {
   }
 
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-r from-green-600 via-green-500 to-teal-600 relative overflow-hidden">
+    <section
+      className="py-12 md:py-16 relative overflow-hidden"
+      style={{ background: 'linear-gradient(90deg, #15803d 0%, #16a34a 45%, #0d9488 100%)' }}
+    >
       <div className="ms-container relative z-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
           {/* Texto e Botão */}
-          <div className="flex-1 text-center md:text-left text-white">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+          <div className="flex-1 text-center md:text-left">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-white drop-shadow-sm">
               Montamos seu roteiro personalizado pelo MS
             </h2>
-            <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto md:mx-0">
+            <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto md:mx-0 text-white/95 drop-shadow-sm">
               Escolha destinos, combine experiências e descubra o melhor de Mato Grosso do Sul com um roteiro feito especialmente para você.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">

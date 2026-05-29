@@ -20,8 +20,8 @@ export default function UnifiedPlatformEditor({ initialPlatform = 'viajar' }: Un
   const platforms = [
     {
       id: 'viajar' as const,
-      name: 'ViaJARTur',
-      description: 'Plataforma SaaS de turismo',
+      name: 'Guatá Labs',
+      description: 'Landing e produtos de IA para turismo',
       icon: Building2,
       color: 'bg-cyan-500',
     },

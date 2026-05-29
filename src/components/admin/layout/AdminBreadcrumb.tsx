@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 const routeLabels: Record<string, string> = {
   '/viajar/admin': 'Dashboard',
-  '/viajar/admin/viajar': 'ViajARTur',
+  '/viajar/admin/viajar': 'Guatá Labs',
   '/viajar/admin/viajar/employees': 'Funcionários',
   '/viajar/admin/viajar/clients': 'Clientes',
   '/viajar/admin/viajar/subscriptions': 'Assinaturas',

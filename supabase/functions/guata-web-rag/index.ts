@@ -31,7 +31,7 @@ function sanitizeInput(input: string, maxLength: number = MAX_QUESTION_LENGTH): 
 }
 
 /**
- * Validate request origin
+ * Validate request origin or internal bot token (Guatá Channel WhatsApp).
  */
 function validateOrigin(origin: string | null): boolean {
   if (!origin) return false;
@@ -52,6 +52,17 @@ function validateOrigin(origin: string | null): boolean {
   
   // Check exact match, Vercel subdomain, or Lovable preview
   return allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.lovable.app');
+}
+
+function isInternalBotRequest(req: Request): boolean {
+  const secret = Deno.env.get('GUATA_BOT_INTERNAL_SECRET') || Deno.env.get('DESCUBRA_WEBHOOK_SECRET');
+  if (!secret) return false;
+  const auth = req.headers.get('Authorization') || '';
+  return auth === `Bearer ${secret}`;
+}
+
+function isAllowedRequest(req: Request, origin: string | null): boolean {
+  return isInternalBotRequest(req) || validateOrigin(origin);
 }
 
 function checkRateLimit(key: string): { ok: boolean; reason?: string } {
@@ -139,8 +150,8 @@ serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
   
-  // Validate origin for security
-  if (req.method !== 'OPTIONS' && !validateOrigin(origin)) {
+  // Validate origin for security (or internal Guatá Channel bot token)
+  if (req.method !== 'OPTIONS' && !isAllowedRequest(req, origin)) {
     console.warn('⚠️ guata-web-rag: Invalid origin:', origin);
     return new Response(
       JSON.stringify({ error: 'Origin not allowed' }),

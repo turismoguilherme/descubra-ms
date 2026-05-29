@@ -39,7 +39,11 @@ import {
   Trash2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { notifyEventApproved, notifyEventRejected } from '@/services/email/notificationEmailService';
+import {
+  notifyGuataChannelEventPublished,
+  notifyGuataChannelEventApproved,
+  notifyGuataChannelEventRejected,
+} from '@/services/events/guataChannelWebhookService';
 import {
   Dialog,
   DialogContent,
@@ -700,26 +704,13 @@ export default function EventsManagement() {
       // Recarregar eventos para atualizar a lista (fazer antes do email)
       await loadEvents();
 
-      // Enviar email de notificação em background (não bloqueia)
-      if (event?.organizador_email) {
-        notifyEventApproved({
-          organizerEmail: event.organizador_email,
-          organizerName: event.organizador_nome,
-          eventName: event.name,
-          eventDate: formatDate(event.start_date),
-          eventLocation: event.location,
-        })
-        .then(result => {
-          if (result.success) {
-            console.log('✅ Email de notificação enviado com sucesso');
-          } else {
-            console.warn('⚠️ Email não foi enviado (não crítico):', result.error);
-          }
-        })
-        .catch(err => {
-          console.warn('⚠️ Erro ao enviar email (não crítico):', err);
-        });
-      }
+      // Notificar Guatá Channel (WhatsApp) em background
+      notifyGuataChannelEventPublished(eventId).catch((err) =>
+        console.warn('Guatá Channel — publicação (não crítico):', err),
+      );
+      notifyGuataChannelEventApproved(eventId).catch((err) =>
+        console.warn('Guatá Channel — aprovação ao organizador (não crítico):', err),
+      );
       
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
@@ -867,26 +858,10 @@ export default function EventsManagement() {
         await loadEvents();
       }, 500);
 
-      // Enviar email de notificação em background (não bloqueia)
-      if (event?.organizador_email) {
-        notifyEventRejected({
-          organizerEmail: event.organizador_email,
-          organizerName: event.organizador_nome,
-          eventName: event.name,
-          reason: reason,
-          eventId: event.id,
-        })
-        .then(result => {
-          if (result.success) {
-            console.log('✅ Email de rejeição enviado com sucesso');
-          } else {
-            console.warn('⚠️ Email não foi enviado (não crítico):', result.error);
-          }
-        })
-        .catch(err => {
-          console.warn('⚠️ Erro ao enviar email (não crítico):', err);
-        });
-      }
+      // Notificar organizador via Guatá Channel (WhatsApp) em background
+      notifyGuataChannelEventRejected(event.id, reason).catch((err) =>
+        console.warn('Guatá Channel — rejeição ao organizador (não crítico):', err),
+      );
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao rejeitar evento:', err);

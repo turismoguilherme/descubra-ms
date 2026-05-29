@@ -570,6 +570,10 @@ Foque em SEO para turismo no Mato Grosso do Sul.`;
           if (!updateError) {
             approvedEvents.push(event);
 
+            import('@/services/events/guataChannelWebhookService')
+              .then(({ notifyGuataChannelEventPublished }) => notifyGuataChannelEventPublished(event.id))
+              .catch((err) => console.warn('Guatá Channel webhook (não crítico):', err));
+
             await supabase.from('ai_auto_approvals').insert({
               event_id: event.id,
               approval_reason: `Evento ${isFree ? 'gratuito' : 'pago'} com data válida e campos obrigatórios preenchidos`,

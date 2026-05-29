@@ -142,7 +142,7 @@ export default function ModernAdminLayout({ children }: ModernAdminLayoutProps) 
                 {currentPlatform === 'viajar' ? (
                   <>
                       <Building2 className="h-4 w-4" />
-                      <span className="text-sm font-medium">ViajARTur</span>
+                      <span className="text-sm font-medium">Guatá Labs</span>
                   </>
                 ) : (
                   <>

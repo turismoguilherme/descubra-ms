@@ -202,9 +202,7 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     { key: 'ms_experience_subtitle', label: 'Subtítulo', type: 'textarea', placeholder: 'Descubra tudo que Mato Grosso do Sul tem para oferecer com experiências únicas e inesquecíveis', section: 'Seção Experiências' },
     { key: 'ms_experience_description', label: 'Descrição', type: 'textarea', placeholder: 'Explore diferentes tipos de experiências turísticas disponíveis na plataforma', section: 'Seção Experiências' },
     
-    // Seção CATs
-    { key: 'ms_cats_title', label: 'Título', type: 'text', placeholder: 'Centros de Atendimento ao Turista', section: 'Seção CATs' },
-    { key: 'ms_cats_description', label: 'Descrição', type: 'textarea', placeholder: 'Os CATs são pontos de apoio onde você encontra informações e orientações para aproveitar ao máximo sua experiência em Mato Grosso do Sul.', section: 'Seção CATs' },
+    // Seção CATs removida — seção não exibida na home
     
     // Footer
     { key: 'ms_footer_about', label: 'Texto Sobre', type: 'textarea', placeholder: 'Sobre o Descubra MS...', section: 'Rodapé' },
@@ -269,9 +267,6 @@ const getHelpText = (key: string, type: string): string => {
     'ms_experience_title': 'Título da seção de experiências',
     'ms_experience_subtitle': 'Subtítulo explicando as experiências disponíveis',
     
-    // Descubra MS - CATs
-    'ms_cats_title': 'Título da seção de Centros de Atendimento ao Turista',
-    'ms_cats_description': 'Descrição explicando o que são os CATs',
   };
   
   // Se houver tooltip específico, retornar

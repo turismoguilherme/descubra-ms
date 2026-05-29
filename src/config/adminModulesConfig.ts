@@ -45,7 +45,6 @@ import {
   TrendingUp,
   MessageCircle,
   Video,
-  Sparkles,
 } from 'lucide-react';
 import { ComponentType } from 'react';
 
@@ -90,7 +89,7 @@ export const adminModulesConfig: AdminModule[] = [
     children: [
       {
         id: 'viajar',
-        label: 'ViajARTur',
+        label: 'Guatá Labs',
         icon: Building2,
         permission: 'viajar',
         platform: 'viajar',
@@ -103,8 +102,8 @@ export const adminModulesConfig: AdminModule[] = [
             permission: 'viajar',
             platform: 'viajar',
             title: 'Conteúdo e Menu',
-            description: 'Gerencie o conteúdo e menus da plataforma ViajARTur',
-            helpText: 'Edite textos, imagens e configure os menus de navegação da plataforma ViajARTur.',
+            description: 'Gerencie o conteúdo e menus da plataforma Guatá Labs',
+            helpText: 'Edite textos, imagens e configure os menus de navegação da landing Guatá Labs.',
           },
           {
             id: 'viajar-plans',
@@ -114,7 +113,7 @@ export const adminModulesConfig: AdminModule[] = [
             permission: 'viajar',
             platform: 'viajar',
             title: 'Configuração de Planos',
-            description: 'Configure os planos de assinatura da plataforma ViajARTur',
+            description: 'Configure os planos de assinatura da plataforma Guatá Labs',
             helpText: 'Gerencie planos, preços e recursos disponíveis para cada tipo de assinatura.',
           },
           {
@@ -125,19 +124,8 @@ export const adminModulesConfig: AdminModule[] = [
             permission: 'viajar',
             platform: 'viajar',
             title: 'Membros da Equipe',
-            description: 'Gerencie os membros da equipe ViajARTur',
-            helpText: 'Adicione, edite ou remova membros da equipe e configure suas permissões.',
-          },
-          {
-            id: 'viajar-mascote-guata',
-            label: 'Mascote Guatá',
-            icon: Sparkles,
-            path: '/viajar/admin/viajar/mascote-guata',
-            permission: 'viajar',
-            platform: 'viajar',
-            title: 'Mascote Guatá Labs',
-            description: 'Imagens e mensagens do mascote na landing pública',
-            helpText: 'Envie imagens para o hero, avatar flutuante e edite os textos dos balões.',
+            description: 'Gerencie os membros da equipe Guatá Labs',
+            helpText: 'Adicione, edite ou remova membros da equipe exibidos na página Sobre.',
           },
         ],
       },
@@ -158,17 +146,6 @@ export const adminModulesConfig: AdminModule[] = [
             title: 'Regiões Turísticas',
             description: 'Defina as regiões turísticas e seus destinos associados',
             helpText: 'Defina as regiões turísticas e seus destinos associados. Configure informações, imagens e destinos de cada região.',
-          },
-          {
-            id: 'cats',
-            label: 'CATs',
-            icon: MapPin,
-            path: '/viajar/admin/descubra-ms/cats',
-            permission: 'content',
-            platform: 'descubra-ms',
-            title: 'Gerenciamento de CATs',
-            description: 'Cadastre e gerencie os Centros de Atendimento ao Turista',
-            helpText: 'Cadastre e gerencie os Centros de Atendimento ao Turista. Configure localização, horários e informações de contato.',
           },
           {
             id: 'footer',
@@ -446,14 +423,6 @@ export const adminModulesConfig: AdminModule[] = [
     permission: 'system',
     platform: 'system',
     children: [
-      {
-        id: 'emails',
-        label: 'Gestão de Emails',
-        icon: Mail,
-        path: '/viajar/admin/communication/emails',
-        permission: 'communication',
-        platform: 'system',
-      },
       {
         id: 'system-monitoring',
         label: 'Monitoramento',
