@@ -149,14 +149,15 @@ const RoteiroPersonalizadoBanner = () => {
                 <Button
                   onClick={handleExternalLinkClick}
                   size="lg"
-                  variant={hasWhatsApp ? "outline" : "default"}
-                  className={hasWhatsApp 
-                    ? "border-2 border-white text-white hover:bg-white hover:text-green-700 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-                    : "bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-gray-900 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                  variant="default"
+                  className={
+                    hasWhatsApp
+                      ? "bg-white text-green-800 hover:bg-green-50 hover:text-green-900 border-2 border-white font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                      : "bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-gray-900 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                   }
                 >
                   <ExternalLink className="mr-2 h-5 w-5" />
-                  {externalLinkText}
+                  {externalLinkText?.trim() || 'Acessar Site'}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               )}
