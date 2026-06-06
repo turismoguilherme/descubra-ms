@@ -1,104 +1,49 @@
-## Rebrand: ViaJARTur → Guatá Labs
+## Objetivo
 
-Aplicado **somente na landing pública ViaJAR** (`/viajar` e páginas do mesmo grupo: ViaJARSaaS, navbar, footer, termos, privacidade, cookies). Dashboards internos, Descubra MS e admin permanecem como estão.
+Aplicar três ajustes no Guatá (todas as rotas: `/guata`, `/chatguata`, `/descubrams/chatguata`):
 
----
+1. Remover botão "Ver mais/Ver menos" das mensagens.
+2. Encurtar as respostas do Guatá (~4-6 frases, máx ~800 caracteres).
+3. Transformar as sugestões de pergunta em **carrossel horizontal de chips** em mobile/tablet/totem, mantendo a coluna lateral em desktop.
 
-### 1. Nova identidade visual
+## O que será alterado
 
-**Paleta (da logo Guatá Labs):**
-- Verde floresta `#1F4D2C` → `--guata-forest`
-- Verde profundo `#143820` → `--guata-deep`
-- Dourado `#C9A24C` → `--guata-gold`
-- Bege papel `#F2EBDD` → `--guata-paper`
-- Off-white textura `#FAF6EC` → `--guata-cream`
+### 1. Remover "Ver mais" — `src/components/guata/ChatMessage.tsx`
+- Remover lógica de truncamento (`expanded`, `MAX_PREVIEW_CHARS`, botão toggle).
+- Renderizar o texto/markdown completo sempre.
 
-**Tipografia:** manter sans-serif atual; títulos em peso black/extrabold (referência da logo arredondada e robusta). Considerar Fraunces ou Outfit para headings.
+### 2. Encurtar respostas — `supabase/functions/guata-web-rag/index.ts`
+- `maxOutputTokens`: 2048 → **600**.
+- Adicionar bloco no system prompt (nos dois caminhos, com e sem contexto):
+  - "Responda em no máximo 4-6 frases ou ~800 caracteres."
+  - "Use bullets curtos quando listar mais de 2 itens."
+  - "Vá direto ao ponto: 1 frase de resposta + 2-3 detalhes específicos + 1 pergunta de acompanhamento opcional."
+- Remover instruções redundantes que estimulam respostas longas ("seja DETALHADO", "extraia TODOS os detalhes"), mantendo "seja ESPECÍFICO".
+- Re-deploy da edge function.
 
-**Tokens:** adicionar em `src/index.css` e `tailwind.config.ts` namespace `guata-*` (sem remover `viajar-*` legados imediatamente — manter alias para evitar quebras durante migração).
+### 3. Carrossel de sugestões — `src/components/guata/SuggestionQuestions.tsx`
+- Detectar breakpoint: abaixo de `lg` (1024px) renderiza como **carrossel horizontal de chips** scrollável (sem barra visível, com snap), acima de `lg` mantém o card vertical atual.
+- Chips compactos: padding pequeno, `rounded-full`, borda translúcida, ícone opcional.
+- Em `ChatGuata.tsx` e `Guata.tsx`, mover o `<SuggestionQuestions />` para **dentro/acima do chat** quando em mobile (renderiza logo acima do `ChatInput`); em desktop continua na coluna lateral direita.
+- Implementação: o próprio `SuggestionQuestions` exporta duas variantes via prop `variant="sidebar" | "carousel"`. Cada página decide com `useMediaQuery('(min-width: 1024px)')` ou passa `carousel` por padrão e o CSS esconde em desktop quando a coluna lateral existir — vamos usar a primeira abordagem (prop explícita) para clareza.
 
-**Substituições nos componentes da landing:**
-- `ViaJARNavbar`, `ViaJARFooter`: logo Guatá Labs (anexada), trocar nome "ViaJARTur" por "Guatá Labs"
-- `TravelTechHero`, `BenefitsSection`, `WhatViajARTurDoesSection`, `SuccessCasesSection`, `PlatformInActionSection`, `KodaMarketingSection`, `HowItWorksSection`: reskin com paleta verde/dourado/bege, fundos bege papel ao invés de slate-950
-- `ViaJARSaaS.tsx`: substituir referências `bg-viajar-slate`, `viajar-cyan` etc. por novos tokens
-- Páginas `viajar/TermosUso`, `Privacidade`, `Cookies`: mesmo reskin
+### Sobre a base de conhecimento (informativo, sem mudança)
+Confirmado: o Guatá usa sim a base do admin. Fluxo:
+- `guataTrueApiService` → `guataIntelligentTourismService` → `guataKnowledgeBaseService` consulta `guata_knowledge_base` (gerenciada no admin).
+- Se a KB não responde, cai no `guata-web-rag` (Gemini + Google Search).
 
-**Logo:** copiar `user-uploads://image-27.png` para `src/assets/guata-labs-logo.png`.
+## Arquivos tocados
 
----
+- `src/components/guata/ChatMessage.tsx` — remover "Ver mais".
+- `src/components/guata/SuggestionQuestions.tsx` — adicionar variante `carousel`.
+- `src/pages/ChatGuata.tsx` — renderizar carrossel acima do chat em mobile.
+- `src/pages/Guata.tsx` — idem.
+- `supabase/functions/guata-web-rag/index.ts` — encurtar prompts + reduzir `maxOutputTokens`.
 
-### 2. Mascote Capivara (Guatá) — papel completo
+## Fora do escopo
 
-O personagem (estilo 3D Pixar das imagens 28-30) aparecerá em 3 camadas:
+- Não mexer no `guata_knowledge_base` nem no admin.
+- Não alterar a personalidade/voz do Guatá (capivara, emojis, tom acolhedor).
+- Não tocar no design da rota desktop além da inclusão condicional do carrossel.
 
-**A. Decorativo no Hero**
-- Imagem grande do Guatá (selfie/safari/pôr do sol) como elemento principal do hero, ao lado do título
-- Variação aleatória ou por horário (manhã/tarde/noite)
-
-**B. Tooltips/balões em seções estratégicas**
-- Pequeno avatar circular do Guatá com balão de fala curto em: "O que fazemos", "Casos de sucesso", "Como funciona", final de página antes do CTA
-- Texto editável via admin (ex.: `guata_tip_hero`, `guata_tip_benefits`...)
-
-**C. Mascote flutuante persistente**
-- Componente `<GuataFloatingMascot />` renderizado em todas as páginas da landing
-- Botão fixo bottom-right com avatar do Guatá
-- Ao clicar, abre balão com mensagem contextual (varia por rota: home, casos, contato)
-- Animação sutil de "respirar" / piscar
-- Pode ser fechado/minimizado (sessionStorage)
-- **Sem chat real** — apenas mensagens curtas pré-configuradas + CTA "Solicitar demonstração"
-
----
-
-### 3. Admin — gestão de imagens e mensagens do mascote
-
-Reusar **`src/pages/admin/ViaJARAdminPanel.tsx`** (mesmo lugar que já edita conteúdos da ViaJARTur). Adicionar nova aba **"Mascote Guatá"** com:
-
-**Uploads de imagem (Supabase Storage bucket existente):**
-- `guata_mascot_hero` — imagem principal do hero
-- `guata_mascot_floating` — avatar do botão flutuante
-- `guata_mascot_about` — seção sobre/benefícios
-- `guata_mascot_404` — página de erro
-- `guata_mascot_cta` — antes do CTA final
-
-**Textos editáveis (mensagens do mascote):**
-- `guata_msg_floating_home` / `guata_msg_floating_casos` / `guata_msg_floating_contato`
-- `guata_tip_benefits` / `guata_tip_how_it_works` / `guata_tip_success`
-- `guata_brand_name` (default: "Guatá Labs")
-- `guata_brand_tagline`
-
-Tudo persistido via `platformContentService` (CMS unificado já existente — padrão `usePlatformContent`).
-
-**Seed inicial:** migration insere as 4 imagens anexadas (image-27 a image-30) em Storage e popula as chaves com URLs públicas + mensagens default em PT-BR.
-
----
-
-### 4. Detalhes técnicos
-
-- **Componentes novos:**
-  - `src/components/guata-labs/GuataFloatingMascot.tsx`
-  - `src/components/guata-labs/GuataTooltipBubble.tsx`
-  - `src/components/guata-labs/GuataHeroMascot.tsx`
-  - `src/components/admin/viajar/MascotManagerTab.tsx`
-- **Hook:** `src/hooks/useGuataLabsContent.ts` — busca chaves `guata_*` do `platformContentService`, com cache e fallback para assets locais (image-27..30)
-- **Rotas afetadas:** `/viajar`, `/viajar/termos`, `/viajar/privacidade`, `/viajar/cookies` e qualquer rota que use `ViaJARNavbar`/`ViaJARFooter`
-- **Migração de tokens:** adicionar tokens novos sem remover os antigos; alias `viajar-cyan` → `guata-gold` etc. para componentes não migrados
-- **Memória do projeto:** atualizar `mem://design/viajar-premium-identity` e `mem://brand/viajar-b2b-positioning` com a nova marca, ou criar `mem://brand/guata-labs-identity`
-
----
-
-### 5. Fora do escopo (confirmado)
-
-- Descubra MS permanece com identidade própria
-- Dashboards internos de parceiros, admin master, financeiro: sem mudança visual
-- Emails transacionais: sem mudança nesta fase
-- Sem chat real do mascote (Guatá AI continua restrito a `/ms/guata`)
-
----
-
-### Próximas perguntas antes de implementar (rápidas, no chat)
-
-1. Confirmar copiar as 4 imagens anexadas como defaults iniciais do mascote? ✅/✏️
-2. O mascote flutuante deve ter som/animação ao aparecer ou totalmente silencioso?
-3. Manter "ViaJARTur" no domínio/URLs (`/viajar`) ou também renomear futuramente para `/guata-labs`?
-
-Após sua aprovação deste plano, eu confirmo essas 3 e parto para implementação.
+Posso implementar?
