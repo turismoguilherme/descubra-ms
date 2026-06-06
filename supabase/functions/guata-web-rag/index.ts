@@ -769,6 +769,73 @@ function buildContext(results: SearchResult[]): string {
   ).join('\n\n');
 }
 
+type GuataResponseDepth = 'compact' | 'standard' | 'deep'
+
+function inferGuataResponseDepth(question: string): GuataResponseDepth {
+  const q = question.toLowerCase().trim()
+  if (!q) return 'compact'
+
+  if (/^(oi|olá|ola|hey|bom dia|boa tarde|boa noite|obrigad[oa]|valeu|tchau|ok|okay|sim|não|nao)[\s!.,?]*$/i.test(q)) {
+    return 'compact'
+  }
+  if (q.length < 30 && /^(oi|olá|ola|hey|bom dia|boa tarde|boa noite|obrigad)/i.test(q)) {
+    return 'compact'
+  }
+
+  const deepMarkers = [
+    'roteiro', 'itinerário', 'itinerario', 'história', 'historia',
+    'conte sobre', 'me explica', 'detalhad', 'em detalhes', 'planejar', 'planejamento',
+    'quantos dias', ' dias em ', 'viagem de ', 'cronograma', 'passo a passo',
+    'monta um', 'montar um', 'planeje',
+  ]
+  if (deepMarkers.some((m) => q.includes(m))) return 'deep'
+
+  const standardMarkers = [
+    'o que fazer', 'onde comer', 'onde ficar', 'quais são', 'quais os', 'quais parques',
+    'restaurante', 'hotel', 'hospedagem', 'passeio', 'parque', 'pontos turísticos',
+    'pontos turisticos', 'atrações', 'atracoes', 'visitar', 'conhecer', 'gastronomia',
+    'mais o que', 'e mais', 'o que mais', 'continua', 'me fala mais', 'tem mais',
+  ]
+  if (standardMarkers.some((m) => q.includes(m))) return 'standard'
+
+  return q.length > 12 ? 'standard' : 'compact'
+}
+
+function guataResponseDepthMaxTokens(depth: GuataResponseDepth): number {
+  switch (depth) {
+    case 'compact': return 400
+    case 'standard':
+    case 'deep':
+      return 2048
+  }
+}
+
+const GUATA_FINISH_SENTENCE_RULE = `- NUNCA corte a resposta no meio de uma frase ou de um item de lista — sempre finalize com frase completa`
+
+function guataResponseDepthFormatBlock(depth: GuataResponseDepth): string {
+  switch (depth) {
+    case 'compact':
+      return `📏 FORMATO (COMPACTO):
+- Máximo 2 a 3 frases curtas
+- Responda direto, sem listas longas
+- Use no máximo 1 emoji
+${GUATA_FINISH_SENTENCE_RULE}`
+    case 'standard':
+      return `📏 FORMATO (PADRÃO):
+- 1 frase de abertura curta + lista de 4 a 6 itens (• ou numerados, 1 linha cada) + 1 pergunta de continuidade
+- Útil e completo, sem parágrafos longos de "encanto"; extraia nomes e lugares do contexto
+- NÃO use formatação markdown (sem **negrito**, sem *itálico*)
+${GUATA_FINISH_SENTENCE_RULE}`
+    case 'deep':
+      return `📏 FORMATO (DETALHADO):
+- Resposta completa: parágrafos, cronograma por dias ou explicações amplas quando fizer sentido
+- Seja ESPECÍFICO e DETALHADO — use todo o contexto relevante
+- Encerre com pergunta de acompanhamento natural
+- NÃO use formatação markdown (sem **negrito**, sem *itálico*)
+${GUATA_FINISH_SENTENCE_RULE}`
+  }
+}
+
 /** Respostas longas (história, roteiros) + turistas em outros idiomas */
 const GUATA_RESPONSE_LANGUAGE_RULE = `
 🌐 IDIOMA DA RESPOSTA (OBRIGATÓRIO):
@@ -780,6 +847,9 @@ const GUATA_RESPONSE_LANGUAGE_RULE = `
 async function generateResponse(question: string, context: string, sources: SearchResult[]): Promise<GenerateResponseResult> {
   const hasWebContent = context && context.length > 50 && context !== 'NO_CONTEXT'
   const hasContext = hasWebContent && context !== 'NO_CONTEXT'
+  const responseDepth = inferGuataResponseDepth(question)
+  const formatBlock = guataResponseDepthFormatBlock(responseDepth)
+  const maxOutputTokens = guataResponseDepthMaxTokens(responseDepth)
 
   // SEMPRE chamar Gemini, mesmo sem contexto - ele tem conhecimento local sobre MS
   const prompt = hasContext 
@@ -791,11 +861,7 @@ PERSONALIDADE HUMANA:
 - Use emojis ocasionalmente (🦦 🌊 🏙️ 🎉)
 - Seja ESPECÍFICO: extraia nomes, lugares e dados concretos do contexto
 
-📏 FORMATO OBRIGATÓRIO DA RESPOSTA:
-- Máximo de 4 a 6 frases curtas OU ~800 caracteres no total
-- Estrutura: 1 frase respondendo direto + 2 a 3 detalhes específicos + (opcional) 1 pergunta de acompanhamento curta
-- Use bullets curtos (•) quando listar 3 ou mais itens — uma linha por item, sem parágrafos longos
-- NÃO escreva introduções longas, NÃO repita a pergunta, NÃO encha de adjetivos
+${formatBlock}
 ${GUATA_RESPONSE_LANGUAGE_RULE}
 ⚠️⚠️⚠️ INSTRUÇÕES CRÍTICAS SOBRE O CONTEXTO FORNECIDO:
 
@@ -847,11 +913,7 @@ PERSONALIDADE HUMANA:
 - Use emojis ocasionalmente (🦦 🌊 🏙️ 🎉)
 - Seja ESPECÍFICO: mencione lugares, atrações e dados reais
 
-📏 FORMATO OBRIGATÓRIO DA RESPOSTA:
-- Máximo de 4 a 6 frases curtas OU ~800 caracteres no total
-- Estrutura: 1 frase respondendo direto + 2 a 3 detalhes específicos + (opcional) 1 pergunta de acompanhamento curta
-- Use bullets curtos (•) quando listar 3 ou mais itens — uma linha por item, sem parágrafos longos
-- NÃO escreva introduções longas, NÃO repita a pergunta, NÃO encha de adjetivos
+${formatBlock}
 ${GUATA_RESPONSE_LANGUAGE_RULE}
 🚫🚫🚫 PROIBIÇÃO ABSOLUTA - NUNCA FAÇA ISSO:
 - NUNCA diga "Não encontrei informações específicas sobre isso agora"
@@ -915,6 +977,7 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
     console.log('🔑 Gemini API Key:', Deno.env.get('GEMINI_API_KEY') ? '✅ Configurada' : '❌ Não configurada')
     console.log('📝 Prompt length:', prompt.length)
     console.log('📝 Has context:', hasContext)
+    console.log('📝 Response depth:', responseDepth, '| maxOutputTokens:', maxOutputTokens)
     console.log('📝 Prompt preview (first 500 chars):', prompt.substring(0, 500))
     
     const apiKey = Deno.env.get('GEMINI_API_KEY')
@@ -935,7 +998,7 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: hasContext ? 0.3 : 0.5, // Mais criatividade quando não há contexto
-        maxOutputTokens: 600,
+        maxOutputTokens,
         topP: 0.95,
         topK: 40
       }

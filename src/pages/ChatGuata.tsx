@@ -230,15 +230,6 @@ const ChatGuata = () => {
         <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mt-4">
             <div className="lg:col-span-2 flex flex-col min-h-0">
-              {/* Carrossel de sugestões (mobile/tablet/totem) — fica acima do chat */}
-              <div className="lg:hidden mb-3">
-                <SuggestionQuestions
-                  variant="carousel"
-                  onSuggestionClick={handleSuggestionClick}
-                  suggestionsOverride={isChatGuataRoute ? CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS : undefined}
-                />
-              </div>
-
               <GuataChat
                 mensagens={mensagens}
                 inputMensagem={inputMensagem}
@@ -252,6 +243,9 @@ const ChatGuata = () => {
                 connectionChecking={connectionChecking}
                 handleKeyDown={handleKeyDown}
                 enviarFeedback={enviarFeedback}
+                onSuggestionClick={handleSuggestionClick}
+                suggestionsOverride={isChatGuataRoute ? CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS : undefined}
+                showInlineSuggestions={mensagens.filter((m) => m.isUser).length === 0 && !isLoading}
               />
             </div>
 

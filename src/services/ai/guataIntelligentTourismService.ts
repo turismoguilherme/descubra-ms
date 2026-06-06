@@ -7,6 +7,7 @@
 
 import { guataRealWebSearchService, RealWebSearchQuery, RealWebSearchResponse, TourismData } from './guataRealWebSearchService';
 import { guataMLService, LearningInteraction } from './ml/guataMLService';
+import { inferGuataResponseDepth, type GuataResponseDepth } from './guataResponseDepth';
 
 export interface IntelligentTourismQuery {
   question: string;
@@ -1154,16 +1155,8 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     return 'general';
   }
 
-  /** Roteiros/história = resposta pode ser longa; demais = curta (alinhado ao Gemini max tokens). */
-  private inferResponseDepth(question: string): 'quick' | 'deep' {
-    const q = question.toLowerCase();
-    const deepMarkers = [
-      'roteiro', 'itinerário', 'itinerario', 'história', 'historia',
-      'conte sobre', 'me explica', 'detalhad', 'planejar', 'planejamento',
-      'quantos dias', ' dias em ', 'viagem de ', 'cronograma', 'passo a passo'
-    ];
-    if (deepMarkers.some((m) => q.includes(m))) return 'deep';
-    return 'quick';
+  private inferResponseDepth(question: string): GuataResponseDepth {
+    return inferGuataResponseDepth(question);
   }
 
   /** True se há resultados claramente vindos de busca na internet (Google/PSE/híbrido), não só FTS do banco. */
@@ -1593,7 +1586,7 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     }
     
     if (lowerQuestion.includes('hotel') || lowerQuestion.includes('hospedagem')) {
-      return this.formatHotelResponse(results);
+      return this.formatHotelResponse(results, question);
     }
     
     if (lowerQuestion.includes('evento') || lowerQuestion.includes('festa')) {
@@ -1617,7 +1610,7 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     }
     
     // Formatação geral
-    return this.formatGeneralResponse(results);
+    return this.formatGeneralResponse(results, question);
   }
 
   /**
@@ -1668,11 +1661,10 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
   /**
    * Formata resposta para hotéis
    */
-  private formatHotelResponse(results: any[]): string {
+  private formatHotelResponse(results: any[], question: string): string {
     let response = "🦦 Que alegria te ajudar com hospedagem! 🏨\n\n";
     
-    // Extrair informações principais dos resultados da pesquisa web
-    const mainInfo = this.extractMainInformation(results);
+    const mainInfo = this.extractMainInformation(results, question);
     
     if (mainInfo) {
       response += mainInfo;
@@ -1707,11 +1699,9 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
                     lowerQuestion.includes('corumbá') || lowerQuestion.includes('corumba') ||
                     lowerQuestion.includes('dourados');
     
-    // Extrair informações principais dos resultados da pesquisa web
-    const mainInfo = this.extractMainInformation(results);
+    const mainInfo = this.extractMainInformation(results, question);
     
     if (mainInfo && results.length > 0) {
-      // Usar informações da pesquisa web
       response += mainInfo;
       
       // Adicionar informações específicas dos resultados
@@ -1992,48 +1982,50 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
   /**
    * Formata resposta específica para perguntas sobre aquário
    */
+  private isAquarioQuestion(question: string): boolean {
+    const q = question.toLowerCase();
+    return (
+      q.includes('aquário') || q.includes('aquario') || q.includes('bioparque')
+    ) && (
+      q.includes('água doce') || q.includes('agua doce') || q.includes('maior') ||
+      q.includes('aquário') || q.includes('aquario') || q.includes('bioparque')
+    );
+  }
+
   private formatAquarioResponse(results: any[], question: string): string {
-    // Procurar informações sobre Bioparque Pantanal nos resultados
-    const bioparqueResult = results.find(r => 
+    const bioparqueResult = results.find(r =>
       (r.title?.toLowerCase().includes('bioparque') || r.snippet?.toLowerCase().includes('bioparque')) ||
       (r.title?.toLowerCase().includes('aquário') && (r.snippet?.toLowerCase().includes('água doce') || r.snippet?.toLowerCase().includes('agua doce')))
     );
-    
-    if (bioparqueResult) {
-      const snippet = bioparqueResult.snippet || bioparqueResult.description || '';
-      let response = "🦦 Que pergunta incrível! 🐠\n\n";
-      response += "**O maior aquário de água doce do mundo é o Bioparque Pantanal, localizado em Campo Grande, Mato Grosso do Sul!**\n\n";
-      
-      if (snippet.length > 50) {
-        // Extrair informações relevantes do snippet
-        const relevantInfo = snippet.substring(0, 300);
-        response += `${relevantInfo}...\n\n`;
-      } else {
-        response += "É um complexo impressionante com dezenove mil metros quadrados que abriga peixes de água doce de todos os continentes! Você vai ver espécies do Pantanal, da Amazônia, de rios da África, Ásia e muito mais! 🐟\n\n";
-      }
-      
-      response += "📍 **Localização:** Campo Grande, MS\n";
-      response += "🌐 É uma experiência única que você não pode perder quando visitar nossa capital!\n\n";
-      response += "Quer saber mais sobre o Bioparque Pantanal ou sobre outras atrações de Campo Grande?";
-      
-      return response;
+
+    const snippet = bioparqueResult?.snippet || bioparqueResult?.description || '';
+    let response = "🦦 O maior aquário de água doce do mundo é o Bioparque Pantanal, em Campo Grande!\n\n";
+
+    if (snippet.length > 50) {
+      response += `${snippet.replace(/\.\.\./g, '').substring(0, 280).trim()}...\n\n`;
+    } else {
+      response += "O complexo abriga espécies de água doce do Pantanal, da Amazônia e de rios de vários continentes.\n\n";
     }
-    
-    // Se não encontrou nos resultados, usar conhecimento local
-    return "🦦 Que pergunta incrível! 🐠\n\n**O maior aquário de água doce do mundo é o Bioparque Pantanal, localizado em Campo Grande, Mato Grosso do Sul!**\n\nÉ um complexo impressionante com dezenove mil metros quadrados que abriga peixes de água doce de todos os continentes! Você vai ver espécies do Pantanal, da Amazônia, de rios da África, Ásia e muito mais! É uma experiência única que você não pode perder quando visitar nossa capital! 🌟\n\nQuer saber mais sobre o Bioparque Pantanal ou sobre outras atrações de Campo Grande?";
+
+    response += "📍 Campo Grande, MS\n\n";
+    response += "Quer saber horários, ingressos ou outras atrações da capital?";
+    return response;
   }
 
   /**
    * Formatação geral para outras perguntas
    */
-  private formatGeneralResponse(results: any[]): string {
+  private formatGeneralResponse(results: any[], question: string): string {
     let response = "🦦 ";
     
-    // Extrair informações principais dos resultados
-    const mainInfo = this.extractMainInformation(results);
+    const mainInfo = this.extractMainInformation(results, question);
     
     if (mainInfo) {
-      response += mainInfo;
+      if (mainInfo.startsWith('🦦')) {
+        return `${mainInfo}\n\nQuer que eu detalhe algo mais?`;
+      }
+      response += `${mainInfo}\n\nQuer que eu detalhe algo mais?`;
+      return response;
     } else if (results.length > 0) {
       // Se temos resultados mas não conseguimos extrair info específica, usar o primeiro resultado de forma conversacional
       const firstResult = results[0];
@@ -2076,107 +2068,29 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
   }
 
   /**
-   * Extrai informações principais dos resultados da pesquisa
+   * Resume o melhor resultado da busca sem forçar templates por palavras do snippet.
    */
-  private extractMainInformation(results: any[]): string {
+  private extractMainInformation(results: any[], question: string): string {
     if (results.length === 0) return "";
-    
+
+    if (this.isAquarioQuestion(question)) {
+      return this.formatAquarioResponse(results, question);
+    }
+
     const firstResult = results[0];
-    const snippet = firstResult.snippet || "";
+    const snippet = (firstResult.snippet || firstResult.description || "").replace(/\.\.\./g, "").trim();
     const title = firstResult.title || "";
-    
-    // Detectar perguntas sobre aquário PRIMEIRO
-    if ((snippet.toLowerCase().includes('aquário') || snippet.toLowerCase().includes('aquario') || title.toLowerCase().includes('aquário') || title.toLowerCase().includes('aquario')) && 
-        (snippet.toLowerCase().includes('água doce') || snippet.toLowerCase().includes('agua doce') || snippet.toLowerCase().includes('maior') || snippet.toLowerCase().includes('bioparque') || title.toLowerCase().includes('bioparque'))) {
-      return `🦦 Que pergunta incrível! 🐠\n\n**O maior aquário de água doce do mundo é o Bioparque Pantanal, localizado em Campo Grande, Mato Grosso do Sul!**\n\n${snippet.substring(0, 300)}...\n\n📍 **Localização:** Campo Grande, MS\n🌐 É uma experiência única que você não pode perder quando visitar nossa capital!\n\nQuer saber mais sobre o Bioparque Pantanal ou sobre outras atrações de Campo Grande?`;
-    }
-    
-    // Detectar se é sobre Porto Murtinho e Rota Bioceânica
-    if (snippet.toLowerCase().includes('porto murtinho') && snippet.toLowerCase().includes('rota bioceânica')) {
-      return `Sim! Porto Murtinho será sim uma das portas de entrada da Rota Bioceânica no Brasil. 
 
-Porto Murtinho está se preparando para ser um hub logístico importante, com a Ponte Internacional da Rota Bioceânica já atingindo 75% de execução e prevista para ser entregue no segundo semestre de 2026.
+    if (snippet.length > 50) {
+      const excerpt = snippet.substring(0, 320).trim();
+      return `${excerpt}${snippet.length > 320 ? "..." : ""}`;
+    }
 
-A cidade está recebendo investimentos públicos, privados e internacionais para se tornar uma nova porta de entrada e saída para o comércio exterior brasileiro com o Pacífico. É uma transformação incrível para a região!`;
+    if (title) {
+      return `Encontrei informações sobre ${title}. Quer que eu detalhe algo específico?`;
     }
-    
-    // Detectar perguntas específicas sobre Porto Murtinho como porta de entrada
-    if (snippet.toLowerCase().includes('porto murtinho') || snippet.toLowerCase().includes('porta de entrada')) {
-      return `Sim! Porto Murtinho será sim uma das portas de entrada da Rota Bioceânica no Brasil. A cidade está se preparando para ser um hub logístico importante, com a Ponte Internacional da Rota Bioceânica já atingindo 75% de execução e prevista para ser entregue no segundo semestre de 2026. É uma transformação incrível para a região!`;
-    }
-    
-    // Detectar outras informações específicas sobre Rota Bioceânica
-    if (snippet.toLowerCase().includes('ponte') && snippet.toLowerCase().includes('internacional')) {
-      return `A Ponte Internacional da Rota Bioceânica está em construção e já atingiu 75% de execução! A previsão é de entrega no segundo semestre de 2026, transformando Porto Murtinho em uma porta de entrada estratégica para o comércio com o Pacífico.`;
-    }
-    
-    // Detectar informações sobre eventos ou festivais
-    if (snippet.toLowerCase().includes('evento') || snippet.toLowerCase().includes('festival') || snippet.toLowerCase().includes('festa')) {
-      return `Sobre eventos em Mato Grosso do Sul: ${snippet.substring(0, 200)}... É sempre bom saber sobre as atividades culturais e festivais que movimentam nosso estado!`;
-    }
-    
-    // Detectar informações sobre turismo
-    if (snippet.toLowerCase().includes('turismo') || snippet.toLowerCase().includes('passeio') || snippet.toLowerCase().includes('atração')) {
-      return `Sobre turismo em MS: ${snippet.substring(0, 200)}... Nossa região tem tantas opções incríveis para explorar!`;
-    }
-    
-    // Detectar informações sobre gastronomia e restaurantes
-    if (snippet.toLowerCase().includes('comida') || snippet.toLowerCase().includes('gastronomia') || 
-        snippet.toLowerCase().includes('restaurante') || snippet.toLowerCase().includes('comer')) {
-      // Extrair informações específicas de restaurantes
-      const restaurantInfo = this.extractRestaurantInfo(snippet, title);
-      if (restaurantInfo) {
-        return restaurantInfo;
-      }
-      return `Sobre gastronomia em MS: ${snippet.substring(0, 200)}... A culinária sul-mato-grossense é uma verdadeira delícia!`;
-    }
-    
-    // Detectar informações sobre guias de turismo, tours, passeios
-    if (snippet.toLowerCase().includes('guia') || snippet.toLowerCase().includes('tour') || 
-        snippet.toLowerCase().includes('passeio') || snippet.toLowerCase().includes('atração') ||
-        snippet.toLowerCase().includes('ponto turístico') || snippet.toLowerCase().includes('ponto turistico')) {
-      return `Sobre turismo em MS: ${snippet.substring(0, 250)}... Nossa região tem opções incríveis para explorar!`;
-    }
-    
-    // Detectar perguntas sobre roteiros
-    if (snippet.toLowerCase().includes('roteiro') || snippet.toLowerCase().includes('itinerário') || snippet.toLowerCase().includes('dias')) {
-      return this.formatItineraryResponse(snippet, title);
-    }
-    
-    // Detectar perguntas sobre distâncias e localização
-    if (snippet.toLowerCase().includes('km') || snippet.toLowerCase().includes('distância') || snippet.toLowerCase().includes('distancia')) {
-      return this.formatDistanceResponse(snippet, title);
-    }
-    
-    // Formatação geral inteligente - sempre transformar em resposta conversacional
-    let info = "";
-    if (snippet && snippet.length > 50) {
-      // Extrair informações úteis do snippet e transformar em resposta natural
-      const cleanSnippet = snippet.replace(/\.\.\./g, '').substring(0, 200);
-      
-      // Transformar dados brutos em resposta conversacional
-      if (cleanSnippet.includes('Municípios') || cleanSnippet.includes('Fronteira')) {
-        info = `Sobre a região de fronteira, posso te contar que é uma área estratégica para o desenvolvimento do Mato Grosso do Sul. A localização geográfica é fundamental para o comércio e turismo.`;
-      } else if (cleanSnippet.includes('km') || cleanSnippet.includes('distância')) {
-        info = `A distância é um fator importante para planejar sua viagem. Posso te ajudar com informações mais específicas sobre o trajeto e sugestões de paradas.`;
-      } else if (cleanSnippet.includes('Março') || cleanSnippet.includes('2015')) {
-        info = `Essas são informações históricas importantes sobre a região. Posso te contar mais sobre como a área se desenvolveu ao longo dos anos.`;
-      } else {
-        // Resposta específica para Porto Murtinho e Rota Bioceânica
-        if (cleanSnippet.toLowerCase().includes('porto murtinho') || cleanSnippet.toLowerCase().includes('rota bioceânica') || cleanSnippet.toLowerCase().includes('rota bioceanica')) {
-          info = `Sim! Porto Murtinho será sim uma das portas de entrada da Rota Bioceânica no Brasil. A cidade está se preparando para ser um hub logístico importante, com a Ponte Internacional da Rota Bioceânica já atingindo 75% de execução e prevista para ser entregue no segundo semestre de 2026. É uma transformação incrível para a região!`;
-        } else {
-          // Resposta genérica inteligente - usar informações da pesquisa web
-          info = `${cleanSnippet}... Com base nas informações encontradas, posso te ajudar com mais detalhes específicos sobre sua pergunta. O que você gostaria de saber mais?`;
-        }
-      }
-    } else if (title) {
-      info = `Sobre ${title.toLowerCase()}, encontrei informações relevantes sobre nossa região. Que detalhes específicos você gostaria de saber?`;
-    } else {
-      info = "Encontrei algumas informações relevantes sobre sua pergunta. Posso te ajudar com mais detalhes específicos!";
-    }
-    
-    return info;
+
+    return "";
   }
 
   /**

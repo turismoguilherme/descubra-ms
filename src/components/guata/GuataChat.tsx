@@ -3,6 +3,7 @@ import React from "react";
 import GuataProfile from "./GuataProfile";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
+import SuggestionQuestions from "./SuggestionQuestions";
 
 interface GuataChatProps {
   mensagens: unknown[];
@@ -17,6 +18,9 @@ interface GuataChatProps {
   connectionChecking: boolean;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   enviarFeedback: (positivo: boolean) => void;
+  onSuggestionClick?: (suggestion: string) => void;
+  suggestionsOverride?: string[];
+  showInlineSuggestions?: boolean;
 }
 
 const GuataChat = ({
@@ -31,7 +35,10 @@ const GuataChat = ({
   connectionChecking,
   handleKeyDown,
   enviarFeedback,
-  onClearConversation
+  onClearConversation,
+  onSuggestionClick,
+  suggestionsOverride,
+  showInlineSuggestions = false,
 }: GuataChatProps) => {
   return (
     <div className="bg-black bg-opacity-20 rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
@@ -52,6 +59,16 @@ const GuataChat = ({
           }
         }} 
       />
+
+      {showInlineSuggestions && onSuggestionClick && (
+        <div className="px-4 pb-3 lg:hidden border-t border-white/10">
+          <SuggestionQuestions
+            variant="inline"
+            onSuggestionClick={onSuggestionClick}
+            suggestionsOverride={suggestionsOverride}
+          />
+        </div>
+      )}
       
       <ChatInput
         inputMensagem={inputMensagem}

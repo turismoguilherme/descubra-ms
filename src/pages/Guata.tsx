@@ -317,14 +317,6 @@ const Guata = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
               <div className="lg:col-span-2">
-                {/* Carrossel de sugestões (mobile/tablet) — fica acima do chat */}
-                <div className="lg:hidden mb-3">
-                  <SuggestionQuestions
-                    variant="carousel"
-                    onSuggestionClick={handleSuggestionClick}
-                  />
-                </div>
-
                 <GuataChat
                   mensagens={mensagens}
                   inputMensagem={inputMensagem}
@@ -338,6 +330,8 @@ const Guata = () => {
                   connectionChecking={connectionChecking}
                   handleKeyDown={handleKeyDown}
                   enviarFeedback={enviarFeedback}
+                  onSuggestionClick={handleSuggestionClick}
+                  showInlineSuggestions={mensagens.filter((m) => m.isUser).length === 0 && !isLoading}
                 />
               </div>
 

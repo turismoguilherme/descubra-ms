@@ -12,10 +12,14 @@ import { guataResponseCacheService } from "./cache/guataResponseCacheService";
 import { getErrorMessage } from "@/utils/errorUtils";
 import { aiPromptAdminService } from "@/services/admin/aiPromptAdminService";
 import { GUATA_DEFAULT_SUGGESTION_QUESTIONS } from "@/components/guata/guataSuggestionDefaults";
+import {
+  type GuataResponseDepth,
+  guataResponseDepthMaxTokens,
+} from "@/services/ai/guataResponseDepth";
 
 /** Política de transparência (parceiros vs web) e tamanho da resposta — preenchido pelo fluxo Guatá. */
 export interface GuataGeminiPolicy {
-  responseDepth: 'quick' | 'deep';
+  responseDepth: GuataResponseDepth;
   isServiceQuestion: boolean;
   partnersCount: number;
   webResultsCount: number;
@@ -1125,11 +1129,14 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
 
     let block = `\n\n🤝 POLÍTICA DE RESPOSTA (OBRIGATÓRIO — PREVALE SOBRE INSTRUÇÕES GENÉRICAS DO PROMPT):\n`;
 
-    if (pol.responseDepth === 'quick') {
-      block += `- Modo breve: no máximo ~10–14 linhas úteis (intro mínima + até 3 itens numerados com 1–2 linhas cada, se for lista + 1 pergunta de continuidade). Sem parágrafos longos de “encanto”.\n`;
+    if (pol.responseDepth === 'compact') {
+      block += `- Modo compacto: máximo 2–3 frases curtas; sem listas; direto ao ponto.\n`;
+    } else if (pol.responseDepth === 'standard') {
+      block += `- Modo padrão: 1 frase de abertura + 4–6 itens (1 linha cada, numerados ou •) + 1 pergunta de continuidade. Completo, sem textão.\n`;
     } else {
-      block += `- Modo detalhado: pode ser mais completo (roteiros, história, explicações), sem redundância.\n`;
+      block += `- Modo detalhado: resposta completa (roteiros, cronograma, história, explicações amplas), sem redundância.\n`;
     }
+    block += `- NUNCA corte a resposta no meio de uma frase. NÃO use markdown (**negrito**, *itálico*).\n`;
 
     const pc = pol.partnersCount;
     const wc = pol.webResultsCount;
@@ -1162,7 +1169,8 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
 
   private async callGeminiAPI(prompt: string, query?: GeminiQuery): Promise<string> {
     const isDev = import.meta.env.DEV;
-    const maxOutputTokens = query?.guataPolicy?.responseDepth === 'quick' ? 900 : 2048;
+    const depth = query?.guataPolicy?.responseDepth ?? 'standard';
+    const maxOutputTokens = guataResponseDepthMaxTokens(depth);
 
     // NOVO: Tentar usar Edge Function primeiro (chaves protegidas no servidor)
     try {

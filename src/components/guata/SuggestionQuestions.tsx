@@ -9,9 +9,10 @@ interface SuggestionQuestionsProps {
   suggestionsOverride?: string[];
   /**
    * sidebar: grade vertical (desktop, coluna lateral).
-   * carousel: chips horizontais com scroll lateral (mobile/totem, acima do input).
+   * carousel: chips horizontais com scroll lateral (legado).
+   * inline: grade 2x3 dentro do painel do chat (mobile/totem).
    */
-  variant?: "sidebar" | "carousel";
+  variant?: "sidebar" | "carousel" | "inline";
 }
 
 function parseSuggestionJson(raw: string | null | undefined): string[] {
@@ -66,6 +67,18 @@ const SuggestionQuestions = ({
   }, [hasOverride, suggestionsOverride]);
 
   if (loading) {
+    if (variant === "inline") {
+      return (
+        <div className="w-full animate-pulse">
+          <div className="h-3 w-40 bg-white/20 rounded mb-2" />
+          <div className="grid grid-cols-2 gap-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-12 rounded-lg bg-white/20" />
+            ))}
+          </div>
+        </div>
+      );
+    }
     if (variant === "carousel") {
       return (
         <div className="w-full overflow-x-auto scrollbar-none">
@@ -115,6 +128,32 @@ const SuggestionQuestions = ({
                 "px-4 py-2 text-sm text-white whitespace-nowrap",
                 "hover:bg-white/20 hover:border-white/50 active:scale-95",
                 "transition-all"
+              )}
+            >
+              {text}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === "inline") {
+    const displayItems = items.slice(0, 6);
+    return (
+      <div className="w-full" aria-label="Sugestões de perguntas">
+        <p className="text-xs text-gray-400 mb-2 px-1">Sugestões de perguntas:</p>
+        <div className="grid grid-cols-2 gap-2">
+          {displayItems.map((text, idx) => (
+            <button
+              key={`${idx}-${text.slice(0, 24)}`}
+              type="button"
+              onClick={() => onSuggestionClick(text)}
+              className={cn(
+                "rounded-lg border border-white/20 bg-white/10 backdrop-blur",
+                "px-3 py-2.5 text-sm text-white text-left leading-snug",
+                "hover:bg-white/20 hover:border-white/40 active:scale-[0.98]",
+                "transition-all min-h-[3rem]"
               )}
             >
               {text}
