@@ -2,10 +2,16 @@
 import React, { useEffect, useState } from "react";
 import { platformContentService } from "@/services/admin/platformContentService";
 import { GUATA_DEFAULT_SUGGESTION_QUESTIONS } from "@/components/guata/guataSuggestionDefaults";
+import { cn } from "@/lib/utils";
 
 interface SuggestionQuestionsProps {
   onSuggestionClick: (suggestion: string) => void;
   suggestionsOverride?: string[];
+  /**
+   * sidebar: grade vertical (desktop, coluna lateral).
+   * carousel: chips horizontais com scroll lateral (mobile/totem, acima do input).
+   */
+  variant?: "sidebar" | "carousel";
 }
 
 function parseSuggestionJson(raw: string | null | undefined): string[] {
@@ -21,7 +27,11 @@ function parseSuggestionJson(raw: string | null | undefined): string[] {
   }
 }
 
-const SuggestionQuestions = ({ onSuggestionClick, suggestionsOverride }: SuggestionQuestionsProps) => {
+const SuggestionQuestions = ({
+  onSuggestionClick,
+  suggestionsOverride,
+  variant = "sidebar",
+}: SuggestionQuestionsProps) => {
   const hasOverride = Array.isArray(suggestionsOverride) && suggestionsOverride.length > 0;
   const [items, setItems] = useState<string[]>(
     hasOverride ? suggestionsOverride : GUATA_DEFAULT_SUGGESTION_QUESTIONS
@@ -56,6 +66,17 @@ const SuggestionQuestions = ({ onSuggestionClick, suggestionsOverride }: Suggest
   }, [hasOverride, suggestionsOverride]);
 
   if (loading) {
+    if (variant === "carousel") {
+      return (
+        <div className="w-full overflow-x-auto scrollbar-none">
+          <div className="flex gap-2 px-1 py-2 animate-pulse">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-9 w-48 flex-shrink-0 rounded-full bg-white/20" />
+            ))}
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="max-w-3xl mx-auto mt-8">
         <h3 className="text-xl font-semibold text-white mb-4">Sugestões de perguntas:</h3>
@@ -70,6 +91,38 @@ const SuggestionQuestions = ({ onSuggestionClick, suggestionsOverride }: Suggest
 
   if (items.length === 0) {
     return null;
+  }
+
+  if (variant === "carousel") {
+    return (
+      <div
+        className="w-full overflow-x-auto overscroll-x-contain snap-x snap-mandatory scrollbar-none"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        aria-label="Sugestões de perguntas"
+      >
+        <style>{`
+          .guata-chip-carousel::-webkit-scrollbar { display: none; }
+        `}</style>
+        <div className="guata-chip-carousel flex gap-2 px-1 py-2 w-max">
+          {items.map((text, idx) => (
+            <button
+              key={`${idx}-${text.slice(0, 24)}`}
+              type="button"
+              onClick={() => onSuggestionClick(text)}
+              className={cn(
+                "snap-start flex-shrink-0 max-w-[18rem]",
+                "rounded-full border border-white/30 bg-white/10 backdrop-blur",
+                "px-4 py-2 text-sm text-white whitespace-nowrap",
+                "hover:bg-white/20 hover:border-white/50 active:scale-95",
+                "transition-all"
+              )}
+            >
+              {text}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
