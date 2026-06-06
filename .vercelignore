@@ -4,8 +4,8 @@ guata-channel/
 # Export legado do chatbot (referência local)
 docs/whatsapp-chatbot-export/
 
-# Edge Functions e migrations — deploy via Supabase CLI
-supabase/
+# Edge Functions e migrations — deploy via Supabase CLI (só a pasta raiz, não src/integrations/supabase/)
+/supabase/
 
 # Docs internos / scripts que não entram no build Vite
 docs/
