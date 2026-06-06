@@ -1969,6 +1969,7 @@ export type Database = {
           is_visible: boolean | null
           link_inscricao: string | null
           local: string | null
+          logo_evento: string | null
           moderated_at: string | null
           moderation_decision_source: string | null
           organizador: string | null
@@ -2020,6 +2021,7 @@ export type Database = {
           is_visible?: boolean | null
           link_inscricao?: string | null
           local?: string | null
+          logo_evento?: string | null
           moderated_at?: string | null
           moderation_decision_source?: string | null
           organizador?: string | null
@@ -2071,6 +2073,7 @@ export type Database = {
           is_visible?: boolean | null
           link_inscricao?: string | null
           local?: string | null
+          logo_evento?: string | null
           moderated_at?: string | null
           moderation_decision_source?: string | null
           organizador?: string | null
@@ -6499,6 +6502,7 @@ export type Database = {
           difficulty: string | null
           distance_km: number | null
           estimated_duration: string | null
+          google_maps_embed_url: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -6521,6 +6525,7 @@ export type Database = {
           difficulty?: string | null
           distance_km?: number | null
           estimated_duration?: string | null
+          google_maps_embed_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -6543,6 +6548,7 @@ export type Database = {
           difficulty?: string | null
           distance_km?: number | null
           estimated_duration?: string | null
+          google_maps_embed_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -8066,6 +8072,7 @@ export type Database = {
           is_visible: boolean | null
           link_inscricao: string | null
           local: string | null
+          logo_evento: string | null
           organizador: string | null
           processado_por_ia: boolean | null
           publico_alvo: string | null
@@ -8101,6 +8108,7 @@ export type Database = {
           is_visible?: boolean | null
           link_inscricao?: string | null
           local?: string | null
+          logo_evento?: string | null
           organizador?: string | null
           processado_por_ia?: boolean | null
           publico_alvo?: string | null
@@ -8136,6 +8144,7 @@ export type Database = {
           is_visible?: boolean | null
           link_inscricao?: string | null
           local?: string | null
+          logo_evento?: string | null
           organizador?: string | null
           processado_por_ia?: boolean | null
           publico_alvo?: string | null
