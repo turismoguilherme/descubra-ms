@@ -86,7 +86,6 @@ const msConfig: BrandConfig = {
     { name: 'Início', path: '/descubrams' },
     { name: 'Destinos', path: '/descubrams/destinos' },
     { name: 'Eventos', path: '/descubrams/eventos' },
-    { name: 'Roteiros', path: '/descubrams/roteiros' },
     { name: 'Sobre', path: '/descubrams/sobre' }
   ],
   authenticatedNavigation: [
@@ -103,7 +102,7 @@ const msConfig: BrandConfig = {
     subtitle: 'A beleza natural do Pantanal e muito mais',
     buttons: {
       primary: { text: 'Explorar Destinos', path: '/descubrams/destinos' },
-      secondary: { text: 'Ver Roteiros', path: '/descubrams/roteiros' },
+      secondary: { text: 'Converse com o Guatá', path: '/descubrams/guata' },
       tertiary: { text: 'Criar Conta', path: '/descubrams/register' }
     }
   }

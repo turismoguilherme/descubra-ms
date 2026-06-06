@@ -27,5 +27,8 @@ export function stripChatMarkdown(text: string): string {
   s = s.replace(/\*\*/g, "");
   s = s.replace(/__/g, "");
 
+  // Asteriscos órfãos (ex.: "🏰 *" ou listas mal formatadas pelo modelo)
+  s = s.replace(/\*/g, "");
+
   return s.trimEnd();
 }

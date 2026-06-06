@@ -91,11 +91,6 @@ const RestoredNavbar = () => {
                 }`}>
                   Eventos
                 </Link>
-                <Link to="/descubrams/roteiros" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
-                  isActivePath('/descubrams/roteiros') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
-                }`}>
-                  Roteiros
-                </Link>
                 <Link to="/descubrams/parceiros" className={`text-sm font-medium transition-colors hover:text-blue-600 ${
                   isActivePath('/descubrams/parceiros') ? "text-blue-600 border-b-2 border-blue-600 pb-1" : "text-gray-700"
                 }`}>
@@ -255,11 +250,6 @@ const RestoredNavbar = () => {
                     isActivePath('/descubrams/eventos') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                   }`} onClick={() => setIsOpen(false)}>
                     Eventos
-                  </Link>
-                  <Link to="/descubrams/roteiros" className={`block px-3 py-2 text-base font-medium transition-colors ${
-                    isActivePath('/descubrams/roteiros') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
-                  }`} onClick={() => setIsOpen(false)}>
-                    Roteiros
                   </Link>
                   <Link to="/descubrams/parceiros" className={`block px-3 py-2 text-base font-medium transition-colors ${
                     isActivePath('/descubrams/parceiros') ? "text-blue-600 bg-blue-50" : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"

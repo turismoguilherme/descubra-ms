@@ -92,9 +92,7 @@ const msConfig: BrandConfig = {
     { name: 'Guatá IA', path: '/descubrams/guata' },
     { name: 'Passaporte Digital', path: '/descubrams/passaporte' },
   ],
-  authenticatedNavigation: [
-    { name: 'Roteiros', path: '/descubrams/roteiros-personalizados' },
-  ],
+  authenticatedNavigation: [],
   cta: {
     primary: 'Cadastrar',
     secondary: 'Entrar'

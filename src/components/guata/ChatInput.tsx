@@ -53,7 +53,11 @@ const ChatInput = ({
         >
           <input
             type="text"
-            placeholder="Pergunte ao Guatá sobre o MS..."
+            placeholder={
+              isGravandoAudio
+                ? "Ouvindo... fale agora"
+                : "Pergunte ao Guatá sobre o MS..."
+            }
             className={cn(
               "w-full bg-white/10 text-white placeholder:text-gray-400 rounded-full px-4 py-2 pr-10",
               "focus:outline-none focus:ring-2 focus:ring-ms-guavira-purple focus:bg-white/20",
@@ -95,7 +99,11 @@ const ChatInput = ({
               <span className="inline-block w-2 h-2 bg-ms-guavira-purple rounded-full animate-pulse"></span>
               Processando sua pergunta...
             </span>
-          ) : "Converse com o Guatá sobre destinos, eventos ou atrações"}
+          ) : isGravandoAudio ? (
+            "Falando... toque no microfone para parar"
+          ) : (
+            "Converse com o Guatá sobre destinos, eventos ou atrações"
+          )}
         </p>
         {mensagens.length > 0 && (
           <motion.div

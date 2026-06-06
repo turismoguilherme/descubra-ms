@@ -52,8 +52,6 @@ const ViaJARUnifiedDashboard = lazy(() => import("@/pages/ViaJARUnifiedDashboard
 const ViaJARLogin = lazy(() => import("@/pages/OverflowOneLogin"));
 const ViaJARRegister = lazy(() => import("@/pages/OverflowOneRegister"));
 const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
-const IARoutePaymentSuccess = lazy(() => import("@/pages/IARoutePaymentSuccess"));
-const IARoutesPage = lazy(() => import("@/pages/IARoutesPage"));
 const ViaJARForgotPassword = lazy(() => import("@/pages/OverflowOneForgotPassword"));
 const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
 const ViaJARInventory = lazy(() => import("@/pages/OverflowOneInventory"));
@@ -339,9 +337,6 @@ function AppRoutes() {
                                 <Route path="/descubrams/passaporte" element={<PassaporteLista />} />
                                 <Route path="/descubrams/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
                                 <Route path="/descubrams/profile" element={<ProfilePageFixed />} />
-                                <Route path="/descubrams/roteiros-personalizados" element={<Suspense fallback={<LoadingFallback />}><IARoutesPage /></Suspense>} />
-                                <Route path="/descubrams/roteiros-ia/success" element={<Suspense fallback={<LoadingFallback />}><IARoutePaymentSuccess /></Suspense>} />
-
                                 {/* Descubra MS Auth Routes */}
                                 <Route path="/descubrams/login" element={<AuthPage />} />
                                 <Route path="/descubrams/register" element={<Register />} />

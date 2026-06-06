@@ -102,7 +102,22 @@ class GuataPartnersService {
             if ((lowerQuestion.includes('restaurante') || lowerQuestion.includes('comida') || lowerQuestion.includes('gastronomia')) && segment.includes('gastronomia')) {
               isRelevant = true;
             }
-            if ((lowerQuestion.includes('passeio') || lowerQuestion.includes('turismo') || lowerQuestion.includes('roteiro')) && segment.includes('operadora')) {
+            if (
+              (lowerQuestion.includes('passeio') ||
+                lowerQuestion.includes('turismo') ||
+                lowerQuestion.includes('roteiro') ||
+                lowerQuestion.includes('agência') ||
+                lowerQuestion.includes('agencia') ||
+                lowerQuestion.includes('operadora') ||
+                lowerQuestion.includes('pacote')) &&
+              (segment.includes('operadora') || segment.includes('agência') || segment.includes('agencia'))
+            ) {
+              isRelevant = true;
+            }
+            if (
+              (lowerQuestion.includes('agência') || lowerQuestion.includes('agencia') || lowerQuestion.includes('operadora')) &&
+              partner.partner_type === 'agencia_turismo'
+            ) {
               isRelevant = true;
             }
           }

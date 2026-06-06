@@ -34,6 +34,13 @@ const ChatGuata = () => {
   const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState(() => getGuataSessionId());
 
+  const {
+    inputMensagem,
+    setInputMensagem,
+    isGravandoAudio,
+    toggleMicrofone,
+  } = useGuataInput();
+
   // Mensagem de boas-vindas inicial
   useEffect(() => {
     if (mensagens.length === 0) {
@@ -200,13 +207,6 @@ const ChatGuata = () => {
       });
     }
   };
-
-  const { 
-    inputMensagem, 
-    setInputMensagem, 
-    isGravandoAudio, 
-    toggleMicrofone
-  } = useGuataInput();
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && inputMensagem.trim() !== "") {

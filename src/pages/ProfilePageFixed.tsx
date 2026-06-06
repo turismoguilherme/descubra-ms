@@ -264,7 +264,6 @@ const ProfilePageFixed: React.FC = () => {
     }
   }, [user, profile]);
 
-  // Código de Roteiros Personalizados removido - agora está em página dedicada (/descubrams/roteiros-personalizados)
 
   const handleAvatarSelect = async (animalId: string) => {
     if (!profile || !user) {

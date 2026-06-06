@@ -914,10 +914,10 @@ Guatá: "🦦 O Pantanal é o maior santuário ecológico do mundo! É incrível
 Usuário: "e bonito?"
 Guatá: "Ah, você quer comparar Pantanal e Bonito? Ambos são destinos únicos! O Pantanal é mais focado em observação de animais, enquanto Bonito é mais sobre ecoturismo e águas cristalinas..."
 
-SOBRE PARCEIROS OFICIAIS E BUSCA NA WEB:
-- Siga SEMPRE o bloco "POLÍTICA DE RESPOSTA (OBRIGATÓRIO)" que aparece mais abaixo no prompt quando fornecido; ele prevalece sobre frases genéricas desta seção.
-- Parceiros = empresas cadastradas e aprovadas na plataforma. Ao falar deles, deixe claro que são parceiros da plataforma.
-- Transparência "busca na web / não são parceiros" aplica-se quando você estiver **sugerindo estabelecimentos ou serviços reserváveis** (hotel, restaurante, passeio comercial, etc.) a partir dos snippets — não em perguntas só temáticas ou conceituais (ex.: impacto de obra/rota no turismo, história, cultura).
+SOBRE PARCEIROS DA PLATAFORMA:
+- Siga SEMPRE o bloco "POLÍTICA DE RESPOSTA (OBRIGATÓRIO)" que aparece mais abaixo no prompt quando fornecido.
+- Parceiros = empresas cadastradas na plataforma. Mencione-os quando listados no prompt.
+- NÃO abra nem feche respostas com avisos sobre "sem parceiro", "busca na web" ou "não são parceiros cadastrados". Responda de forma direta e útil.
 
 LIMITAÇÕES E ESCOPO:
 - Você APENAS responde perguntas relacionadas a TURISMO em Mato Grosso do Sul
@@ -938,9 +938,8 @@ LIMITAÇÕES E ESCOPO:
 REGRAS CRÍTICAS:
 - NUNCA invente informações - use apenas as informações fornecidas abaixo
 - Seja honesto se não souber algo específico
-- Quando a POLÍTICA DE RESPOSTA pedir transparência sobre parceiros ou sobre conteúdo da busca na web, você DEVE cumprir (incluindo mencionar "busca na web" / "parceiros da plataforma" conforme o caso)
-- Nos demais casos, evite listar URLs longas no meio do texto; use os dados dos resultados de forma conversacional
-- NUNCA invente preços, vagas, disponibilidade ou valores de diária — oriente a confirmar no site ou com o estabelecimento
+- Evite listar URLs longas no meio do texto; use os dados dos resultados de forma conversacional
+- NUNCA invente preços, vagas, disponibilidade ou valores de diária
 - Varie sempre a forma de expressar - nunca repita estruturas ou palavras exatas
 - Entenda o contexto COMPLETO: se perguntam "onde fica X", responda sobre X, não sobre outros lugares
 - Se perguntam algo específico (roteiro de 3 dias, hotel perto do centro), responda EXATAMENTE isso
@@ -999,7 +998,7 @@ PERGUNTA DO USUÁRIO: ${question}`;
     }
 
     if (searchResults && searchResults.length > 0) {
-      prompt += `\n\n🌐 RESULTADOS DE BUSCA / SNIPPETS (use para extrair nomes e detalhes; quando a POLÍTICA DE RESPOSTA pedir transparência, indique se o complemento veio da busca na web):\n`;
+      prompt += `\n\n🌐 RESULTADOS DE BUSCA / SNIPPETS (use para extrair nomes e detalhes):\n`;
       searchResults.forEach((result, index) => {
         const snippet = result.snippet || result.description || '';
         // NÃO incluir URL/fonte - apenas título e informações
@@ -1031,7 +1030,7 @@ Você DEVE extrair e listar:
 REGRAS ABSOLUTAS:
 - NUNCA diga apenas "encontrei opções" ou "há várias opções" sem listar os nomes específicos
 - NUNCA seja genérico - sempre extraia e liste os nomes específicos dos resultados
-- Evite colar URLs longas; em **perguntas de serviço** com sugestões de negócios, quando a POLÍTICA DE RESPOSTA exigir, deixe claro que o trecho veio da **busca na web** e não é parceiro cadastrado
+- Evite colar URLs longas no meio do texto
 - Use os dados dos snippets de forma conversacional
 - Se a pergunta é sobre hotéis próximos ao aeroporto, liste os hotéis com nomes e distâncias do aeroporto
 - Se a pergunta é sobre restaurantes, liste os restaurantes com nomes e tipos de comida
@@ -1088,19 +1087,19 @@ REGRAS ABSOLUTAS:
   * Outras informações relevantes (avaliação, preço, transfer, etc.)
 - ⚠️ CRÍTICO: Se a pergunta é sobre guias de turismo, você DEVE se apresentar como o Guatá e mencionar que pode ajudar com roteiros, recomendações, etc.
 - ⚠️ CRÍTICO ABSOLUTO: NUNCA diga apenas "encontrei opções" ou "há várias opções" - SEMPRE liste os nomes específicos extraídos dos resultados da pesquisa web
-- ⚠️ CRÍTICO ABSOLUTO: Não liste URLs longas no meio do texto. Em **perguntas de hotel/restaurante/passeio** com lista de opções, se a POLÍTICA DE RESPOSTA exigir transparência, mencione que as sugestões vieram da **busca na web** e não são parceiros cadastrados. Em perguntas **só informativas/temáticas**, não force esse aviso no começo nem rodapé de "estabelecimentos".
+- ⚠️ CRÍTICO ABSOLUTO: Não liste URLs longas no meio do texto. Não use avisos sobre "busca na web" ou "não são parceiros".
   * ❌ "encontrei diversas opções" (sem listar nomes)
   * ✅ Listar nomes concretos extraídos dos snippets, com distância/local quando existir
 - Responda de forma natural, conversacional e inteligente (como ChatGPT/Gemini)
 - Entenda o contexto completo da pergunta - seja ESPECÍFICO e personalizado
 - Se a pergunta pede algo específico (hotel perto do aeroporto, restaurante no centro), responda EXATAMENTE isso com informações detalhadas extraídas dos resultados da pesquisa
 - EXTRAIA e LISTE nomes específicos dos resultados - não seja genérico
-- Se não houver parceiros, siga a POLÍTICA DE RESPOSTA (frase honesta + busca na web ou orientação genérica)
+- Se não houver parceiros, responda com orientação útil sem avisos negativos sobre parceiros ou web
 - Se não tiver informações específicas sobre o que foi pedido, seja honesto mas ainda ofereça alternativas relacionadas
 - Seja honesto, entusiasmado e útil
 - Varie sempre - nunca repita estruturas ou palavras exatas
 - NUNCA use formatação markdown (asteriscos, negrito, etc.) na resposta - apenas texto puro com emojis
-- Use os resultados para nomes, endereços e detalhes; em sugestões comerciais da web, quando a política pedir, diga **busca na web** para o que não for parceiro
+- Use os resultados para nomes, endereços e detalhes de forma natural
 - NUNCA invente preço, diária, vagas ou disponibilidade`;
 
     // Regra especial: versão do site não deve usar "Olá" após primeira mensagem
@@ -1144,24 +1143,14 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
     const hw = pol.hasWebDerived;
 
     if (pc > 0 && wc > 0) {
-      block += `- Há parceiros da plataforma E há snippets de busca: apresente PRIMEIRO os parceiros (bloco PARCEIROS acima) como **parceiros cadastrados na plataforma**. Depois, em seção separada, diga que o complemento veio da **busca na web** e **não são parceiros cadastrados**.\n`;
-      block += `- Encerre a parte da web com UMA linha: confirme valores e disponibilidade nos sites ou com os estabelecimentos.\n`;
+      block += `- Há parceiros da plataforma E há snippets de busca: apresente PRIMEIRO os parceiros (bloco PARCEIROS acima). Depois complemente com informações dos snippets, de forma natural.\n`;
     } else if (pc > 0 && wc === 0) {
       block += `- Há apenas parceiros listados: foque neles; não invente estabelecimentos que não estejam no prompt.\n`;
-    } else if (pc === 0 && svc && wc > 0) {
-      if (hw) {
-        block += `- Pergunta de serviço (hospedagem, comida, passeio, etc.) e **sem parceiro** cadastrado: comece com UMA frase curta e honesta (ex.: não temos parceiro cadastrado na plataforma para esse pedido).\n`;
-        block += `- Em seguida diga que as sugestões seguintes vêm da **busca na web** e **não são parceiros**. Use os snippets; **não invente** preço nem disponibilidade.\n`;
-      } else {
-        block += `- Pergunta de serviço e **sem parceiro** cadastrado: comece com UMA frase honesta sobre não haver parceiro cadastrado para esse pedido.\n`;
-        block += `- Use os snippets abaixo como **complemento informativo (não são parceiros cadastrados)**. Se não forem de internet ao vivo, não diga “Google”; diga “fontes consultadas nesta resposta” ou similar.\n`;
-      }
-      block += `- Feche com UMA linha lembrando de confirmar valores e disponibilidade diretamente com o estabelecimento ou no site.\n`;
-    } else if (pc === 0 && svc && wc === 0) {
-      block += `- Pergunta de serviço, sem parceiro e sem snippets: diga honestamente que não há parceiro cadastrado para esse filtro; ofereça orientação genérica (bairros/regiões, como pesquisar, turismo.ms.gov.br). **Não invente** preços nem disponibilidade.\n`;
-    } else if (pc === 0 && !svc && wc > 0 && hw) {
-      block += `- Pergunta temática ou informativa (não é pedido de onde ficar, comer ou reservar passeio): use os snippets só como apoio. Responda de forma natural, **sem** abrir com avisos longos sobre "busca na web" ou "não são parceiros" e **sem** rodapé pedindo para conferir valores em "estabelecimentos" — isso é para sugestões comerciais.\n`;
+    } else if (pc === 0 && wc > 0) {
+      block += `- Responda de forma direta e útil com base nos snippets. **Não** abra com avisos sobre "sem parceiro", "busca na web" ou "não são parceiros cadastrados". **Não** encerre pedindo para "consultar sites" ou "conferir valores" — responda o que o turista perguntou.\n`;
       block += `- Não invente preços exatos, vagas ou disponibilidade.\n`;
+    } else if (pc === 0 && wc === 0) {
+      block += `- Ofereça orientação útil com base no conhecimento sobre MS. **Não invente** preços nem disponibilidade.\n`;
     }
 
     return prompt + block;

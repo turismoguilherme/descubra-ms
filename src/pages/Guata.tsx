@@ -29,6 +29,14 @@ const Guata = () => {
   const [learningInsights, setLearningInsights] = useState<any[]>([]);
   const [sessionId, setSessionId] = useState(() => getGuataSessionId());
 
+  const {
+    inputMensagem,
+    setInputMensagem,
+    isGravandoAudio,
+    toggleMicrofone,
+    handleKeyDown: handleKeyDownBase,
+  } = useGuataInput();
+
   // Carrega a base de conhecimento e informações do usuário
   const knowledgeBase = getInitialKnowledgeBase();
   const usuarioInfo = getDefaultUserInfo(user);
@@ -211,14 +219,6 @@ const Guata = () => {
   const enviarFeedback = (positivo: boolean) => {
     console.log("Feedback:", positivo ? "positivo" : "negativo");
   };
-
-  const { 
-    inputMensagem, 
-    setInputMensagem, 
-    isGravandoAudio, 
-    toggleMicrofone,
-    handleKeyDown: handleKeyDownBase
-  } = useGuataInput();
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && inputMensagem.trim() !== "") {
