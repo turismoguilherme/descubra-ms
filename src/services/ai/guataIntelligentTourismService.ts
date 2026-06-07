@@ -208,13 +208,18 @@ class GuataIntelligentTourismService {
       try {
         console.log('📚 Buscando no banco de dados primeiro via guata-web-rag...');
         const { supabase } = await import('@/integrations/supabase/client');
+        const ragBody: Record<string, unknown> = {
+          question: question,
+          state_code: 'MS',
+          max_results: 5,
+          include_sources: true,
+        };
+        if (this.isAgencyOrRoteiroQuestion(question)) {
+          const gv = await this.resolveGuataViagensInfo();
+          if (gv) ragBody.guata_viagens_whatsapp_url = gv.whatsappUrl;
+        }
         const { data: ragData, error: ragError } = await supabase.functions.invoke("guata-web-rag", {
-          body: {
-            question: question,
-            state_code: 'MS',
-            max_results: 5,
-            include_sources: true
-          }
+          body: ragBody,
         });
 
         if (!ragError && ragData) {
@@ -1197,8 +1202,29 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
       'planejar minha viagem',
       'agências de turismo',
       'agencias de turismo',
+      'planejar viagem',
+      'montar roteiro',
+      'montar um roteiro',
+      'montar minha viagem',
+      'quero viajar',
+      'pacote turístico',
+      'pacote turistico',
     ];
     return keywords.some((k) => q.includes(k));
+  }
+
+  private async resolveGuataViagensInfo(): Promise<{
+    name: string;
+    whatsappUrl: string;
+  } | null> {
+    const phone = await this.getGuataViagensWhatsApp();
+    if (!phone) return null;
+    const digits = phone.replace(/\D/g, '');
+    if (!digits) return null;
+    return {
+      name: 'Guata Viagens e Turismo',
+      whatsappUrl: `https://wa.me/55${digits}`,
+    };
   }
 
   private async getGuataViagensWhatsApp(): Promise<string | null> {
@@ -1234,31 +1260,21 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     }
   }
 
-  private async buildGuataViagensCta(): Promise<string> {
-    const phone = await this.getGuataViagensWhatsApp();
-    if (!phone) return '';
-
-    const digits = phone.replace(/\D/g, '');
-    if (!digits) return '';
-
-    return (
-      '🦦 A Guata Viagens e Turismo, nossa agência no Descubra MS, monta roteiros personalizados pelo estado. ' +
-      `Fale conosco no WhatsApp: https://wa.me/55${digits}\n\n`
-    );
-  }
-
+  /** Fallback B: só no final se a IA/RAG não citou a agência. */
   private async finalizeAnswer(question: string, answer: string): Promise<string> {
     const text = String(answer || '').trim();
     if (!text) return text;
 
-    if (this.isAgencyOrRoteiroQuestion(question)) {
-      const cta = await this.buildGuataViagensCta();
-      if (cta && !text.includes('Guata Viagens e Turismo')) {
-        return `${cta}${text}`;
-      }
-    }
+    if (!this.isAgencyOrRoteiroQuestion(question)) return text;
+    if (/guata\s+viagens/i.test(text)) return text;
 
-    return text;
+    const info = await this.resolveGuataViagensInfo();
+    if (!info) return text;
+
+    return (
+      `${text}\n\n` +
+      `Se quiser um roteiro personalizado, a ${info.name}, nossa agência no Descubra MS, atende pelo WhatsApp: ${info.whatsappUrl}`
+    );
   }
 
   /**
@@ -1305,6 +1321,9 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
         }
         
         const isSvc = this.isServiceRelatedQuestion(question);
+        const guataViagensInfo = this.isAgencyOrRoteiroQuestion(question)
+          ? await this.resolveGuataViagensInfo()
+          : null;
         const geminiQuery: any = {
           question,
           context: `Localização: Mato Grosso do Sul`,
@@ -1319,7 +1338,8 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
             partnersCount: partnersResult?.partnersFound?.length ?? 0,
             webResultsCount: webSearchResponse.results.length,
             hasWebDerived: this.hasWebDerivedResults(webSearchResponse)
-          }
+          },
+          ...(guataViagensInfo ? { guataViagensInfo } : {}),
         };
         
         // Passar informações de parceiros para o Gemini

@@ -26,6 +26,11 @@ export interface GuataGeminiPolicy {
   hasWebDerived: boolean;
 }
 
+export interface GuataViagensInfo {
+  name: string;
+  whatsappUrl: string;
+}
+
 export interface GeminiQuery {
   question: string;
   context?: string;
@@ -36,6 +41,8 @@ export interface GeminiQuery {
   isFirstUserMessage?: boolean;
   /** Metadados para instruções obrigatórias de parceiro/web e brevidade */
   guataPolicy?: GuataGeminiPolicy;
+  /** Agência da plataforma (banner) — menção integrada na resposta */
+  guataViagensInfo?: GuataViagensInfo;
 }
 
 export interface GeminiResponse {
@@ -976,6 +983,18 @@ PERGUNTA DO USUÁRIO: ${question}`;
 
     if (context) {
       prompt += `\n\n📋 CONTEXTO ADICIONAL: ${context}`;
+    }
+
+    const guataViagensInfo = query.guataViagensInfo;
+    if (guataViagensInfo?.whatsappUrl) {
+      prompt += `\n\n🏢 AGÊNCIA DA PLATAFORMA DESCUBRA MS:\n`;
+      prompt += `- Nome: ${guataViagensInfo.name}\n`;
+      prompt += `- WhatsApp: ${guataViagensInfo.whatsappUrl}\n`;
+      prompt += `- Monta roteiros personalizados pelo Mato Grosso do Sul\n`;
+      prompt += `\n⚠️ MENÇÃO OBRIGATÓRIA (integrada, não em bloco separado no início):\n`;
+      prompt += `- Inclua UMA frase natural sobre a ${guataViagensInfo.name} NO MEIO ou NO FINAL da resposta — NÃO abra a resposta com propaganda da agência.\n`;
+      prompt += `- Integre ao que você já explica (destinos, dicas, regiões); pode citar roteiros personalizados e o WhatsApp de forma conversacional.\n`;
+      prompt += `- Varie o texto; não copie sempre a mesma frase.\n`;
     }
 
     // Adicionar informações sobre parceiros PRIMEIRO (se disponíveis)

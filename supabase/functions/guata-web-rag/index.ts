@@ -96,6 +96,8 @@ interface RAGQuery {
   user_id?: string
   session_id?: string
   location?: string
+  /** WhatsApp wa.me da Guata Viagens (enviado pelo cliente em perguntas de agência/roteiro) */
+  guata_viagens_whatsapp_url?: string
 }
 
 interface SearchResult {
@@ -269,7 +271,12 @@ serve(async (req) => {
     if (quickAgenda) {
       response = `${quickAgenda}\n\nQuer que eu detalhe horários ou como chegar?`
     } else {
-      const gen = await generateResponse(question, context, topResults)
+      const gen = await generateResponse(
+        question,
+        context,
+        topResults,
+        body.guata_viagens_whatsapp_url
+      )
       response = gen.answer
       guataAiMeta = gen.meta
     }
@@ -844,12 +851,35 @@ const GUATA_RESPONSE_LANGUAGE_RULE = `
 - O tema continua sendo turismo e Mato Grosso do Sul; nomes de lugares podem ficar como costumam ser escritos.
 `
 
-async function generateResponse(question: string, context: string, sources: SearchResult[]): Promise<GenerateResponseResult> {
+function buildGuataViagensPromptBlock(whatsappUrl: string): string {
+  return `
+🏢 AGÊNCIA DA PLATAFORMA DESCUBRA MS:
+- Nome: Guata Viagens e Turismo (nossa agência no Descubra MS)
+- WhatsApp: ${whatsappUrl}
+- Monta roteiros personalizados pelo Mato Grosso do Sul
+
+MENÇÃO OBRIGATÓRIA (integrada na resposta, não em bloco separado no início):
+- Inclua UMA frase natural sobre a Guata Viagens e Turismo NO MEIO ou NO FINAL da resposta — NÃO abra com propaganda da agência.
+- Integre ao que você já explica (destinos, regiões, dicas); pode citar roteiros personalizados e o WhatsApp de forma conversacional.
+- Varie o texto; não repita sempre a mesma frase.
+`
+}
+
+async function generateResponse(
+  question: string,
+  context: string,
+  sources: SearchResult[],
+  guataViagensWhatsappUrl?: string
+): Promise<GenerateResponseResult> {
   const hasWebContent = context && context.length > 50 && context !== 'NO_CONTEXT'
   const hasContext = hasWebContent && context !== 'NO_CONTEXT'
   const responseDepth = inferGuataResponseDepth(question)
   const formatBlock = guataResponseDepthFormatBlock(responseDepth)
   const maxOutputTokens = guataResponseDepthMaxTokens(responseDepth)
+  const guataViagensBlock =
+    guataViagensWhatsappUrl && guataViagensWhatsappUrl.startsWith('https://')
+      ? buildGuataViagensPromptBlock(guataViagensWhatsappUrl)
+      : ''
 
   // SEMPRE chamar Gemini, mesmo sem contexto - ele tem conhecimento local sobre MS
   const prompt = hasContext 
@@ -862,6 +892,7 @@ PERSONALIDADE HUMANA:
 - Seja ESPECÍFICO: extraia nomes, lugares e dados concretos do contexto
 
 ${formatBlock}
+${guataViagensBlock}
 ${GUATA_RESPONSE_LANGUAGE_RULE}
 ⚠️⚠️⚠️ INSTRUÇÕES CRÍTICAS SOBRE O CONTEXTO FORNECIDO:
 
@@ -914,6 +945,7 @@ PERSONALIDADE HUMANA:
 - Seja ESPECÍFICO: mencione lugares, atrações e dados reais
 
 ${formatBlock}
+${guataViagensBlock}
 ${GUATA_RESPONSE_LANGUAGE_RULE}
 🚫🚫🚫 PROIBIÇÃO ABSOLUTA - NUNCA FAÇA ISSO:
 - NUNCA diga "Não encontrei informações específicas sobre isso agora"
