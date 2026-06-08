@@ -250,7 +250,7 @@ const ChatGuata = () => {
             </div>
 
             {/* Coluna lateral de sugestões (desktop apenas) */}
-            <div className="hidden lg:flex flex-col min-h-0">
+            <div className="hidden lg:flex flex-col min-h-0 h-full">
               <SuggestionQuestions
                 variant="sidebar"
                 onSuggestionClick={handleSuggestionClick}
