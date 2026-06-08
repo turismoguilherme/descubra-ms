@@ -290,12 +290,12 @@ const Guata = () => {
   return (
     <UniversalLayout>
       <div 
-        className="min-h-screen bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green"
+        className="h-[calc(100vh-4rem)] flex flex-col bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green overflow-hidden"
         data-testid="guata-container"
       >
         {/* Indicador de modo convidado */}
         {forceLoad && !user && (
-          <div className="bg-yellow-500/90 text-white text-center py-2 px-4">
+          <div className="bg-yellow-500/90 text-white text-center py-2 px-4 flex-shrink-0">
             <p className="text-sm">
               🎭 Modo Convidado - 
               <button 
@@ -308,15 +308,17 @@ const Guata = () => {
           </div>
         )}
         
-        <main className="flex-grow py-8">
-          <div className="ms-container max-w-4xl mx-auto">
-            <GuataHeader 
-              onClearConversation={handleLimparConversa}
-              mensagens={mensagens}
-            />
+        <main className="flex-1 flex flex-col py-4 md:py-8 min-h-0">
+          <div className="ms-container max-w-4xl mx-auto flex-1 flex flex-col min-h-0 w-full">
+            <div className="flex-shrink-0">
+              <GuataHeader 
+                onClearConversation={handleLimparConversa}
+                mensagens={mensagens}
+              />
+            </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-              <div className="lg:col-span-2">
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4 md:mt-8 min-h-0">
+              <div className="lg:col-span-2 flex flex-col min-h-0 h-full">
                 <GuataChat
                   mensagens={mensagens}
                   inputMensagem={inputMensagem}
@@ -336,7 +338,7 @@ const Guata = () => {
               </div>
 
               {/* Coluna lateral de sugestões (desktop apenas) */}
-              <div className="hidden lg:block">
+              <div className="hidden lg:flex flex-col min-h-0 h-full">
                 <SuggestionQuestions
                   variant="sidebar"
                   onSuggestionClick={handleSuggestionClick}
