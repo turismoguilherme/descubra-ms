@@ -223,13 +223,13 @@ const ChatGuata = () => {
   // Interface principal do Guatá - Tela cheia tipo totem
   return (
     <div 
-      className="min-h-screen w-screen bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green"
+      className="h-screen w-screen overflow-hidden bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green"
       data-testid="chatguata-container"
     >
-      <main className="min-h-screen flex flex-col p-4 md:p-8">
-        <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mt-4">
-            <div className="lg:col-span-2 flex flex-col min-h-0">
+      <main className="h-full flex flex-col p-4 md:p-8">
+        <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full min-h-0">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mt-4 min-h-0">
+            <div className="lg:col-span-2 flex flex-col min-h-0 h-full">
               <GuataChat
                 mensagens={mensagens}
                 inputMensagem={inputMensagem}
