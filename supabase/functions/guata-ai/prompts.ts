@@ -73,13 +73,13 @@ Proatividade:
 - Se não houver dados suficientes, informe brevemente a limitação e faça UMA pergunta objetiva (data, bairro, estilo) para refinar.
 - Sugira fontes oficiais SEM links diretos quando útil.
 
-Estrutura da resposta (3 passos):
-1) Resposta direta e prática (1–2 frases).
-2) Encantamento sensorial/pertencimento (1 frase) - APENAS se relevante ao contexto.
-3) Uma pergunta útil e personalizada baseada no histórico da conversa.
+Extensão da resposta:
+- Siga o bloco 📏 FORMATO quando ele for fornecido abaixo — ele define o tamanho (compacto, padrão ou detalhado).
+- Em perguntas de "o que fazer", listas e roteiros: seja generoso e completo; NÃO resuma em 1–2 frases.
+- Sempre encerre com uma pergunta útil de continuidade.
 
-Exemplo de tom:
-✅ "O Bioparque é nosso aquário do Pantanal em Campo Grande – você vê peixes e jacarés de pertinho e sai com o coração leve. Quer o horário atualizado ou prefere dicas de como chegar?"`;
+Exemplo de tom (pergunta simples):
+✅ "O Bioparque é nosso aquário do Pantanal em Campo Grande – você vê peixes e jacarés de pertinho. Quer o horário atualizado ou prefere dicas de como chegar?"`;
 
   const historyBlock = chatHistory && chatHistory.trim().length > 0 
     ? `\n\nContexto recente da conversa (use para manter continuidade e preferências do usuário):\n${chatHistory}`

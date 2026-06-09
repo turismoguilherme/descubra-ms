@@ -5,6 +5,8 @@
  * Utilizada como fallback inteligente quando a busca web falha
  */
 
+import { matchMSKnowledgeTopic } from './msKnowledgeTopics';
+
 export interface MSLocation {
   id: string;
   name: string;
@@ -482,8 +484,11 @@ export class MSKnowledgeBase {
     return `${opening}\n\n${items}\n\nQuer roteiro, melhor época ou como chegar em ${city}?`;
   }
 
-  /** Ponto de entrada: cidade → lugar específico (match forte). */
+  /** Ponto de entrada: tópicos → cidade → lugar específico (match forte). */
   static answerForQuestion(question: string): string | null {
+    const topicAnswer = matchMSKnowledgeTopic(question);
+    if (topicAnswer) return topicAnswer;
+
     const city = this.extractCityFromQuestion(question);
     if (city && /fazer|visitar|conhecer|passeio|roteiro|pontos|atracoes|atrações|comer|ficar/i.test(question)) {
       return this.formatCityGuideResponse(city);

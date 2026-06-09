@@ -1,9 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders } from "../_shared/cors.ts"
+import { generateTouristPrompt } from "../guata-ai/prompts.ts"
+import { callGeminiGenerate } from "../_shared/guataGeminiCall.ts"
+import {
+  inferGuataResponseDepth,
+  guataResponseDepthMaxTokens,
+  guataResponseDepthFormatBlock,
+} from "../_shared/guataResponseDepth.ts"
 
 // Limites (plano gratuito) - mais restritivos para segurança
-const RATE_LIMIT_PER_MIN = parseInt(Deno.env.get('RATE_LIMIT_PER_MIN') ?? '5') // Reduzido de 8 para 5
+const RATE_LIMIT_PER_MIN = parseInt(Deno.env.get('RATE_LIMIT_PER_MIN') ?? '12')
 const DAILY_BUDGET_CALLS = parseInt(Deno.env.get('DAILY_BUDGET_CALLS') ?? '100') // Reduzido de 200 para 100
 const MAX_QUESTION_LENGTH = 5000 // Limite de caracteres para perguntas
 
@@ -98,8 +105,10 @@ interface RAGQuery {
   location?: string
   /** WhatsApp wa.me da Guata Viagens (enviado pelo cliente em perguntas de agência/roteiro) */
   guata_viagens_whatsapp_url?: string
-  /** Só retorna fontes do banco/PSE — não chama Gemini (economiza quota; resposta no guata-gemini-proxy) */
+  /** Só retorna fontes do banco/PSE — não chama Gemini (legado; evitar no fluxo principal) */
   sources_only?: boolean
+  /** Histórico recente da conversa para continuidade */
+  conversation_history?: string[]
 }
 
 interface SearchResult {
@@ -278,11 +287,15 @@ serve(async (req) => {
     } else if (quickAgenda) {
       response = `${quickAgenda}\n\nQuer que eu detalhe horários ou como chegar?`
     } else {
+      const chatHistory = Array.isArray(body.conversation_history)
+        ? body.conversation_history.slice(-6).join('\n')
+        : ''
       const gen = await generateResponse(
         question,
         context,
         topResults,
-        body.guata_viagens_whatsapp_url
+        body.guata_viagens_whatsapp_url,
+        chatHistory
       )
       response = gen.answer
       guataAiMeta = gen.meta
@@ -565,13 +578,17 @@ const queries = [
   ...variants.slice(0, 3)
 ]
 
-const limitedQueries = queries.slice(0, 6)
+const limitedQueries = queries.slice(0, 3)
 
     const fetchQuery = async (q: string) => {
       try {
         const url = `https://www.googleapis.com/customsearch/v1?key=${pseApiKey}&cx=${pseCx}&q=${encodeURIComponent(q)}&num=5`;
         const response = await fetch(url)
-        if (!response.ok) return [] as SearchResult[]
+        if (!response.ok) {
+          const errBody = await response.text().catch(() => '')
+          console.warn(`🌐 PSE HTTP ${response.status} para query "${q.slice(0, 80)}":`, errBody.slice(0, 200))
+          return [] as SearchResult[]
+        }
         const data = await response.json()
         const results = (data.items || []).map((item: any) => ({
               title: item.title,
@@ -785,73 +802,6 @@ function buildContext(results: SearchResult[]): string {
   ).join('\n\n');
 }
 
-type GuataResponseDepth = 'compact' | 'standard' | 'deep'
-
-function inferGuataResponseDepth(question: string): GuataResponseDepth {
-  const q = question.toLowerCase().trim()
-  if (!q) return 'compact'
-
-  if (/^(oi|olá|ola|hey|bom dia|boa tarde|boa noite|obrigad[oa]|valeu|tchau|ok|okay|sim|não|nao)[\s!.,?]*$/i.test(q)) {
-    return 'compact'
-  }
-  if (q.length < 30 && /^(oi|olá|ola|hey|bom dia|boa tarde|boa noite|obrigad)/i.test(q)) {
-    return 'compact'
-  }
-
-  const deepMarkers = [
-    'roteiro', 'itinerário', 'itinerario', 'história', 'historia',
-    'conte sobre', 'me explica', 'detalhad', 'em detalhes', 'planejar', 'planejamento',
-    'quantos dias', ' dias em ', 'viagem de ', 'cronograma', 'passo a passo',
-    'monta um', 'montar um', 'planeje',
-  ]
-  if (deepMarkers.some((m) => q.includes(m))) return 'deep'
-
-  const standardMarkers = [
-    'o que fazer', 'onde comer', 'onde ficar', 'quais são', 'quais os', 'quais parques',
-    'restaurante', 'hotel', 'hospedagem', 'passeio', 'parque', 'pontos turísticos',
-    'pontos turisticos', 'atrações', 'atracoes', 'visitar', 'conhecer', 'gastronomia',
-    'mais o que', 'e mais', 'o que mais', 'continua', 'me fala mais', 'tem mais',
-  ]
-  if (standardMarkers.some((m) => q.includes(m))) return 'standard'
-
-  return q.length > 12 ? 'standard' : 'compact'
-}
-
-function guataResponseDepthMaxTokens(depth: GuataResponseDepth): number {
-  switch (depth) {
-    case 'compact': return 400
-    case 'standard':
-    case 'deep':
-      return 2048
-  }
-}
-
-const GUATA_FINISH_SENTENCE_RULE = `- NUNCA corte a resposta no meio de uma frase ou de um item de lista — sempre finalize com frase completa`
-
-function guataResponseDepthFormatBlock(depth: GuataResponseDepth): string {
-  switch (depth) {
-    case 'compact':
-      return `📏 FORMATO (COMPACTO):
-- Máximo 2 a 3 frases curtas
-- Responda direto, sem listas longas
-- Use no máximo 1 emoji
-${GUATA_FINISH_SENTENCE_RULE}`
-    case 'standard':
-      return `📏 FORMATO (PADRÃO):
-- 1 frase de abertura curta + lista de 4 a 6 itens (• ou numerados, 1 linha cada) + 1 pergunta de continuidade
-- Útil e completo, sem parágrafos longos de "encanto"; extraia nomes e lugares do contexto
-- NÃO use formatação markdown (sem **negrito**, sem *itálico*)
-${GUATA_FINISH_SENTENCE_RULE}`
-    case 'deep':
-      return `📏 FORMATO (DETALHADO):
-- Resposta completa: parágrafos, cronograma por dias ou explicações amplas quando fizer sentido
-- Seja ESPECÍFICO e DETALHADO — use todo o contexto relevante
-- Encerre com pergunta de acompanhamento natural
-- NÃO use formatação markdown (sem **negrito**, sem *itálico*)
-${GUATA_FINISH_SENTENCE_RULE}`
-  }
-}
-
 /** Respostas longas (história, roteiros) + turistas em outros idiomas */
 const GUATA_RESPONSE_LANGUAGE_RULE = `
 🌐 IDIOMA DA RESPOSTA (OBRIGATÓRIO):
@@ -878,10 +828,10 @@ async function generateResponse(
   question: string,
   context: string,
   sources: SearchResult[],
-  guataViagensWhatsappUrl?: string
+  guataViagensWhatsappUrl?: string,
+  chatHistory = ''
 ): Promise<GenerateResponseResult> {
-  const hasWebContent = context && context.length > 50 && context !== 'NO_CONTEXT'
-  const hasContext = hasWebContent && context !== 'NO_CONTEXT'
+  const hasContext = context && context.length > 50 && context !== 'NO_CONTEXT'
   const responseDepth = inferGuataResponseDepth(question)
   const formatBlock = guataResponseDepthFormatBlock(responseDepth)
   const maxOutputTokens = guataResponseDepthMaxTokens(responseDepth)
@@ -890,129 +840,21 @@ async function generateResponse(
       ? buildGuataViagensPromptBlock(guataViagensWhatsappUrl)
       : ''
 
-  // SEMPRE chamar Gemini, mesmo sem contexto - ele tem conhecimento local sobre MS
-  const prompt = hasContext 
-    ? `Você é o Guatá, uma capivara guia de turismo de Mato Grosso do Sul. 
+  const contextForPrompt = hasContext
+    ? context
+    : 'Não encontrei informações adicionais para esta pergunta no momento.'
 
-PERSONALIDADE HUMANA:
-- Fale como um humano real, não como um chatbot
-- Seja conversacional, caloroso e acolhedor
-- Use emojis ocasionalmente (🦦 🌊 🏙️ 🎉)
-- Seja ESPECÍFICO: extraia nomes, lugares e dados concretos do contexto
+  const basePrompt = generateTouristPrompt(contextForPrompt, '', chatHistory)
+
+  const prompt = `${basePrompt}
 
 ${formatBlock}
 ${guataViagensBlock}
 ${GUATA_RESPONSE_LANGUAGE_RULE}
-⚠️⚠️⚠️ INSTRUÇÕES CRÍTICAS SOBRE O CONTEXTO FORNECIDO:
-
-1. LEIA ATENTAMENTE todo o CONTEXTO abaixo - ele contém informações REAIS encontradas na web e no banco de dados
-2. EXTRAIA informações ESPECÍFICAS do contexto: nomes, lugares, datas, números, detalhes
-3. USE essas informações para responder de forma DETALHADA e ESPECÍFICA
-4. NUNCA diga "não encontrei" ou "não tenho informações" se há contexto disponível acima
-5. Se o contexto menciona algo relacionado à pergunta, USE essa informação na resposta
-6. Seja ESPECÍFICO: mencione nomes, lugares, detalhes extraídos do contexto
-7. NUNCA seja genérico - sempre extraia e use informações concretas do contexto
-
-EXEMPLO DE COMO USAR O CONTEXTO:
-Se a pergunta é "quem é Lidia Baís" e o contexto contém:
-"Fonte: Lidia Baís - Artista
-Informação: Lidia Baís foi uma artista plástica de Campo Grande, nascida em 1919..."
-
-Você DEVE responder:
-"🦦 Que alegria te contar sobre Lidia Baís! Ela foi uma artista plástica de Campo Grande, nascida em 1919. [mais detalhes do contexto]"
-
-NÃO responda:
-"🦦 Não encontrei informações específicas sobre isso agora..."
-
-REGRAS ABSOLUTAS:
-- Se há CONTEXTO acima, você DEVE usar essas informações na resposta
-- EXTRAIA nomes, lugares, datas, detalhes do contexto
-- Seja ESPECÍFICO e DETALHADO
-- NUNCA diga "não encontrei" se há contexto disponível
-- NUNCA seja genérico - sempre use informações do contexto
-- NUNCA mencione sites, URLs ou fontes - responda diretamente com as informações
-- Se não souber algo específico que NÃO está no contexto, seja honesto mas útil
-- Faça perguntas de acompanhamento relevantes
-- Mantenha o tom conversacional e amigável
-- NÃO se apresente como chatbot
-- NÃO mostre fontes ou links
 
 Pergunta do usuário: "${question}"
 
-CONTEXTO ATUALIZADO DA WEB E BANCO DE DADOS (USE ESTAS INFORMAÇÕES):
-${context}
-
-⚠️ LEMBRE-SE: O contexto acima contém informações REAIS. USE essas informações para responder de forma ESPECÍFICA e DETALHADA. NUNCA diga "não encontrei" se há informações no contexto acima.
-
-Responda como o Guatá de forma natural e humana, usando as informações do contexto acima:`
-    : `Você é o Guatá, uma capivara guia de turismo de Mato Grosso do Sul. 
-
-PERSONALIDADE HUMANA:
-- Fale como um humano real, não como um chatbot
-- Seja conversacional, caloroso e acolhedor
-- Use emojis ocasionalmente (🦦 🌊 🏙️ 🎉)
-- Seja ESPECÍFICO: mencione lugares, atrações e dados reais
-
-${formatBlock}
-${guataViagensBlock}
-${GUATA_RESPONSE_LANGUAGE_RULE}
-🚫🚫🚫 PROIBIÇÃO ABSOLUTA - NUNCA FAÇA ISSO:
-- NUNCA diga "Não encontrei informações específicas sobre isso agora"
-- NUNCA diga "não tenho informações" ou "não sei"
-- NUNCA sugira "falarmos sobre destinos como Bonito, Pantanal ou Campo Grande" como resposta principal
-- NUNCA seja genérico quando você TEM conhecimento sobre o assunto
-
-✅✅✅ OBRIGAÇÃO ABSOLUTA - SEMPRE FAÇA ISSO:
-- SEMPRE use seu conhecimento sobre Mato Grosso do Sul para responder
-- SEMPRE seja ESPECÍFICO: mencione lugares, atrações, características reais
-- SEMPRE responda com informações concretas, mesmo que não sejam da web
-- SEMPRE use o conhecimento local abaixo para responder
-
-CONHECIMENTO LOCAL MS (USE ESTAS INFORMAÇÕES PARA RESPONDER):
-- Bonito: Capital do Ecoturismo, águas cristalinas, Rio Sucuri, Gruta do Lago Azul, Balneário Municipal, Aquário Natural, flutuação, mergulho
-- Pantanal: Maior área úmida do planeta, biodiversidade, jacarés, onças-pintadas, pesca esportiva, safáris fotográficos, pousadas pantaneiras
-- Campo Grande: Cidade Morena, Feira Central, Parque das Nações Indígenas, Museu das Culturas Dom Bosco, Morada dos Baís, Bioparque Pantanal, Aeroporto Internacional de Campo Grande (CGR)
-- Corumbá: Capital do Pantanal, Forte Coimbra, Porto Geral, Casa do Artesão, pesca esportiva
-- Aquidauana: Portal do Pantanal, rio Aquidauana, pesca esportiva, turismo rural
-- Dourados: segunda maior cidade, cultura indígena, gastronomia, universidades
-- Três Lagoas: energia, rio Paraná, pesca, turismo náutico
-- Jaraguari: município próximo a Campo Grande, turismo rural, produção agrícola
-- Gastronomia: Sopa paraguaia, sobá, tereré, chipa, pacu assado, arroz carreteiro, caldo de piranha
-- Cultura: Festa de São João, Festival de Inverno de Bonito, Encontro de Motociclistas, cultura indígena Terena e Guarani-Kaiowá
-- Turismo de base comunitária: comunidades indígenas, assentamentos rurais, turismo rural, artesanato local
-- Transporte: Aeroporto Internacional de Campo Grande (CGR), rodovias BR-163, BR-262, transporte público em Campo Grande
-
-EXEMPLOS DE COMO RESPONDER:
-
-Pergunta: "como chegar ao aeroporto de Campo Grande"
-Resposta CORRETA: "🦦 O Aeroporto Internacional de Campo Grande (CGR) fica na região sul da cidade. Você pode chegar de carro pela BR-163 ou BR-262, ou usar transporte público. Há linhas de ônibus que passam próximo ao aeroporto. Se estiver vindo do centro, é cerca de 15-20 minutos de carro. Quer que eu detalhe alguma rota específica?"
-
-Resposta ERRADA: "Não encontrei informações específicas sobre isso agora, mas posso te ajudar com outras informações sobre Mato Grosso do Sul! Que tal falarmos sobre destinos como Bonito, Pantanal ou Campo Grande?"
-
-Pergunta: "Jaraguari"
-Resposta CORRETA: "🦦 Jaraguari é um município próximo a Campo Grande, conhecido pelo turismo rural e produção agrícola. É uma região tranquila, ideal para quem busca contato com a natureza e a vida no campo. Quer saber mais sobre o que fazer por lá?"
-
-Resposta ERRADA: "Não encontrei informações específicas sobre isso agora..."
-
-REGRAS ABSOLUTAS:
-- SEMPRE responda com informações específicas sobre MS
-- NUNCA diga "não encontrei" - use seu conhecimento local
-- Seja ESPECÍFICO: mencione nomes de lugares, atrações, características
-- Se não souber algo específico, seja honesto mas útil - sugira alternativas
-- Faça perguntas de acompanhamento relevantes
-- Mantenha o tom conversacional e amigável
-- NÃO se apresente como chatbot
-- NÃO mostre fontes ou links
-
-Pergunta do usuário: "${question}"
-
-⚠️⚠️⚠️ CRÍTICO: Você TEM conhecimento sobre Mato Grosso do Sul. USE esse conhecimento para responder de forma ESPECÍFICA e ÚTIL. 
-- Se a pergunta é sobre algo que você conhece de MS, responda com DETALHES
-- Se não souber algo específico, seja honesto mas útil - sugira alternativas relacionadas
-- NUNCA diga "não encontrei" - sempre responda com o que você sabe sobre MS
-- NUNCA use a frase "Não encontrei informações específicas sobre isso agora, mas posso te ajudar com outras informações sobre Mato Grosso do Sul! Que tal falarmos sobre destinos como Bonito, Pantanal ou Campo Grande?"
-
-Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre Mato Grosso do Sul:`
+Responda como o Guatá de forma natural e humana:`
 
   try {
     console.log('🔑 Gemini API Key:', Deno.env.get('GEMINI_API_KEY') ? '✅ Configurada' : '❌ Não configurada')
@@ -1031,70 +873,27 @@ Responda como o Guatá de forma natural e humana, usando seu conhecimento sobre 
       }
     }
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`
-    console.log('📤 Gemini model:', GEMINI_MODEL)
-    console.log('📤 URL da API:', url.replace(apiKey, 'API_KEY_HIDDEN'))
-    
-    const requestBody = {
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: hasContext ? 0.3 : 0.5, // Mais criatividade quando não há contexto
-        maxOutputTokens,
-        topP: 0.95,
-        topK: 40
-      }
-    }
-    
-    console.log('📤 Request body config:', {
-      temperature: requestBody.generationConfig.temperature,
-      maxOutputTokens: requestBody.generationConfig.maxOutputTokens,
-      hasContext,
-      promptLength: prompt.length
+    console.log('📤 Gemini model (primário):', GEMINI_MODEL)
+    console.log('📤 Request config:', { maxOutputTokens, hasContext, promptLength: prompt.length })
+
+    const geminiResult = await callGeminiGenerate(prompt, {
+      temperature: parseFloat(Deno.env.get('GEMINI_TEMPERATURE') ?? '0.7'),
+      maxOutputTokens,
     })
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-        // REMOVIDO: Authorization Bearer token
-      },
-      body: JSON.stringify(requestBody)
-    })
-    
-    console.log('📡 Gemini Response Status:', response.status)
-    console.log('📡 Gemini Response OK:', response.ok)
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.log('❌ Gemini Error response:', errorText)
-      let hint = ''
-      try {
-        const errJson = JSON.parse(errorText) as { error?: { message?: string } }
-        if (errJson?.error?.message) hint = ` Detalhe: ${errJson.error.message}`
-      } catch {
-        /* ignore */
-      }
-      const friendlyMessage = response.status === 429
-        ? '🦦 Estou com muitas consultas no momento. Tente novamente em alguns instantes!'
-        : '🦦 Estou com dificuldades técnicas no momento. Enquanto isso, consulte turismo.ms.gov.br para informações oficiais.'
+
+    if (!geminiResult.text) {
+      console.warn(`⚠️ Gemini indisponível (HTTP ${geminiResult.httpStatus}) — client fará fallback`)
       return {
-        answer: friendlyMessage,
-        meta: { gemini_status: 'http_error', gemini_http_status: response.status },
+        answer: '',
+        meta: {
+          gemini_status: 'http_error',
+          gemini_http_status: geminiResult.httpStatus,
+        },
       }
     }
-    
-    const data = await response.json()
-    console.log('📡 Gemini Response Status:', response.status)
-    console.log('📡 Gemini Response OK:', response.ok)
-    console.log('📡 Gemini Response Data (simplified):', {
-      hasCandidates: !!data.candidates,
-      candidatesCount: data.candidates?.length || 0,
-      hasText: !!data.candidates?.[0]?.content?.parts?.[0]?.text,
-      finishReason: data.candidates?.[0]?.finishReason
-    })
-    
-    const parts = (data.candidates?.[0]?.content?.parts ?? []) as Array<{ text?: string }>
-    const generatedText = parts.map((p) => p.text ?? '').join('').trim() || undefined
+
+    const generatedText = geminiResult.text
+    console.log(`✅ Gemini OK (${geminiResult.modelUsed})`)
     
     // Verificar se a resposta é genérica (não desejada)
     const isGenericResponse = generatedText?.toLowerCase().includes('não encontrei informações específicas') ||

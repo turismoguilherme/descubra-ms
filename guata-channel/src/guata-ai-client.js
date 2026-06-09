@@ -21,6 +21,11 @@ async function askGuata(question, sessionId) {
     headers.Authorization = `Bearer ${botSecret}`;
   }
 
+  const history = sessionHistory.get(sessionId) || [];
+  const conversation_history = history.map((m) =>
+    m.role === 'user' ? `Usuário: ${m.text}` : `Guatá: ${m.text}`,
+  );
+
   const res = await fetch(`${supabaseUrl}/functions/v1/guata-web-rag`, {
     method: 'POST',
     headers: {
@@ -32,27 +37,32 @@ async function askGuata(question, sessionId) {
       state_code: 'MS',
       session_id: sessionId,
       location: 'Mato Grosso do Sul',
+      conversation_history,
     }),
   });
 
   if (!res.ok) {
     const errText = await res.text();
     console.warn('[guata-ai] guata-web-rag falhou, tentando guata-ai:', res.status, errText.slice(0, 200));
-    return askGuataFallback(question, headers, supabaseUrl);
+    return askGuataFallback(question, headers, supabaseUrl, conversation_history.join('\n'));
   }
 
   const data = await res.json();
   const answer = data.answer || data.response || data.message;
-  if (answer && typeof answer === 'string') return answer.trim();
+  const geminiFailed = data.guata_ai_meta?.gemini_status && data.guata_ai_meta.gemini_status !== 'ok';
+  const isRateLimitMsg = answer && /muitas consultas|dificuldades técnicas/i.test(String(answer));
+  if (answer && typeof answer === 'string' && !geminiFailed && !isRateLimitMsg) {
+    return answer.trim();
+  }
 
-  return askGuataFallback(question, headers, supabaseUrl);
+  return askGuataFallback(question, headers, supabaseUrl, conversation_history.join('\n'));
 }
 
-async function askGuataFallback(question, headers, supabaseUrl) {
+async function askGuataFallback(question, headers, supabaseUrl, chatHistory = '') {
   const res = await fetch(`${supabaseUrl}/functions/v1/guata-ai`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ prompt: question }),
+    body: JSON.stringify({ prompt: question, chatHistory, mode: 'tourist' }),
   });
 
   if (!res.ok) {

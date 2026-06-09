@@ -67,7 +67,8 @@ const ChatGuata = () => {
     };
     
     setMensagens(prev => [...prev, novaMensagemUsuario]);
-    setConversationHistory(prev => [...prev, mensagemParaEnviar]);
+    const historyForApi = [...conversationHistory, mensagemParaEnviar];
+    setConversationHistory(historyForApi);
     setIsLoading(true);
     
     try {
@@ -80,7 +81,7 @@ const ChatGuata = () => {
         sessionId,
         userLocation: 'Mato Grosso do Sul',
         // Enviar histórico completo (perguntas e respostas) para melhor contexto
-        conversationHistory: conversationHistory,
+        conversationHistory: historyForApi,
         userPreferences: userPreferences,
         isTotemVersion: isChatGuataRoute, // true = /chatguata (não mencionar "Descubra Mato Grosso do Sul")
         isFirstUserMessage: mensagens.length === 1 // primeira mensagem do usuário após boas-vindas

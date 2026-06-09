@@ -26,6 +26,9 @@ import { guataUltraFastService, UltraFastQuery, UltraFastResponse } from "./guat
 // NOVO: Guatá Web Search - Sempre pesquisa na web para informações reais
 import { guataTrueApiService, TrueApiQuery, TrueApiResponse } from "./guataTrueApiService";
 
+// Arquitetura original: web-rag → guata-ai
+import { guataSimpleEdgeService } from "./guataSimpleEdgeService";
+
 // NOVO: Guatá Intelligent - Chatbot verdadeiramente inteligente e interativo
 import { guataIntelligentService, IntelligentQuery, IntelligentResponse } from "./guataIntelligentService";
 
@@ -221,6 +224,7 @@ export { guataFallbackService };
 export { guataSimpleService };
 export { guataUltraFastService };
 export { guataTrueApiService };
+export { guataSimpleEdgeService };
 export { guataIntelligentService };
 export { guataUltraFastIntelligentService };
 export { guataSmartHybridService };
