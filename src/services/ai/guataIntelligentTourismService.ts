@@ -8,6 +8,7 @@
 import { guataRealWebSearchService, RealWebSearchQuery, RealWebSearchResponse, TourismData } from './guataRealWebSearchService';
 import { guataMLService, LearningInteraction } from './ml/guataMLService';
 import { inferGuataResponseDepth, type GuataResponseDepth } from './guataResponseDepth';
+import { MSKnowledgeBase } from './search/msKnowledgeBase';
 
 export interface IntelligentTourismQuery {
   question: string;
@@ -142,6 +143,45 @@ class GuataIntelligentTourismService {
         return this.generateClarificationResponse(question, needsClarification);
       }
 
+      // 1.65. Base local MS — cidade ("o que fazer em Corumbá?") ou lugar específico
+      const msKbEarlyAnswer = MSKnowledgeBase.answerForQuestion(question);
+      if (msKbEarlyAnswer) {
+        const msKbCity = MSKnowledgeBase.extractCityFromQuestion(question);
+        console.log(
+          msKbCity && /fazer|visitar|conhecer/i.test(question)
+            ? `✅ [MS KB] Guia de cidade: ${msKbCity}`
+            : '✅ [MS KB] Match local forte — resposta sem web/Gemini',
+        );
+        return {
+            answer: msKbEarlyAnswer,
+            confidence: 0.9,
+            sources: ['ms_knowledge_base'],
+            processingTime: Date.now() - startTime,
+            webSearchResults: [],
+            tourismData: {},
+            usedRealSearch: false,
+            searchMethod: 'ms_knowledge_base',
+            personality: this.personality.name,
+            emotionalState: 'helpful',
+            followUpQuestions: this.generateFollowUpQuestions(question, {}),
+            learningInsights: {
+              questionType: this.detectQuestionCategory(question),
+              userIntent: 'information_seeking',
+              knowledgeSource: 'ms_kb',
+            },
+            adaptiveImprovements: [],
+            memoryUpdates: this.generateMemoryUpdates(question, {
+              results: [],
+              tourismData: {},
+              confidence: 0.9,
+              sources: ['ms_knowledge_base'],
+              processingTime: 0,
+              usedRealSearch: false,
+              searchMethod: 'ms_knowledge_base',
+            }),
+        };
+      }
+
       // 1.7. CONSULTAR KNOWLEDGE BASE PERSISTENTE (antes de web search)
       try {
         const { guataKnowledgeBaseService } = await import('./guataKnowledgeBaseService');
@@ -213,6 +253,8 @@ class GuataIntelligentTourismService {
           state_code: 'MS',
           max_results: 5,
           include_sources: true,
+          /** Evita 2ª chamada Gemini no RAG — resposta final vai pelo guata-gemini-proxy */
+          sources_only: true,
         };
         if (this.isAgencyOrRoteiroQuestion(question)) {
           const gv = await this.resolveGuataViagensInfo();
@@ -230,7 +272,10 @@ class GuataIntelligentTourismService {
             console.info('[Guatá RAG] Estado do Gemini na Edge:', meta);
           }
           // Não exibir ao usuário o texto de fallback de erro do RAG: deixa o fluxo usar Gemini no cliente / pesquisa.
-          const ragGeminiOk = !meta?.gemini_status || meta.gemini_status === 'ok';
+          const ragGeminiOk =
+            !meta?.gemini_status ||
+            meta.gemini_status === 'ok' ||
+            meta.gemini_status === 'skipped_sources_only';
           if (!ragGeminiOk) {
             webRagAnswer = null;
           }
@@ -246,9 +291,11 @@ class GuataIntelligentTourismService {
             timestamp: new Date()
           }));
           webSearchResponse.sources = webRagResults.map((r: any) => r.source || 'database');
-          webSearchResponse.confidence = 0.9;
-          webSearchResponse.usedRealSearch = true;
-          webSearchResponse.searchMethod = 'database';
+          webSearchResponse.confidence = webRagResults.length > 0 ? 0.9 : 0;
+          if (webRagResults.length > 0) {
+            webSearchResponse.usedRealSearch = true;
+            webSearchResponse.searchMethod = 'database';
+          }
         } else {
           console.warn('⚠️ guata-web-rag não retornou resultados ou teve erro:', ragError);
         }
@@ -256,26 +303,34 @@ class GuataIntelligentTourismService {
         console.warn('⚠️ Erro ao buscar no banco via guata-web-rag:', webRagError);
       }
 
-      // 4. SE não encontrou no banco ou precisa de mais informações, usar Google Search
-      if (webRagResults.length === 0 || webRagResults.length < 3) {
-        console.log('🔍 Banco não retornou resultados suficientes, usando Google Search...');
+      // 4. Busca web externa quando RAG insuficiente (modo antigo: sempre complementar com Google)
+      if (webRagResults.length < 3) {
+        console.log(
+          webRagResults.length === 0
+            ? '🔍 Sem RAG: buscando na web via search-proxy...'
+            : '🔍 RAG parcial — complementando com Google Search...',
+        );
         const webSearchQuery: RealWebSearchQuery = {
           question: question,
           location: query.userLocation || 'Mato Grosso do Sul',
           category: category,
-          maxResults: 5
+          maxResults: 5,
         };
-        
+
         const googleSearchResponse = await guataRealWebSearchService.searchRealTime(webSearchQuery);
-        
-        // Combinar resultados: priorizar banco, adicionar Google Search
+
         if (googleSearchResponse.results.length > 0) {
           webSearchResponse.results = [...webSearchResponse.results, ...googleSearchResponse.results];
           webSearchResponse.sources = [...webSearchResponse.sources, ...googleSearchResponse.sources];
           webSearchResponse.tourismData = googleSearchResponse.tourismData;
-          webSearchResponse.usedRealSearch = googleSearchResponse.usedRealSearch || webSearchResponse.usedRealSearch;
-          webSearchResponse.searchMethod = webRagResults.length > 0 ? 'hybrid' : googleSearchResponse.searchMethod;
-          webSearchResponse.confidence = Math.max(webSearchResponse.confidence, googleSearchResponse.confidence);
+          webSearchResponse.usedRealSearch =
+            googleSearchResponse.usedRealSearch || webSearchResponse.usedRealSearch;
+          webSearchResponse.searchMethod =
+            webRagResults.length > 0 ? 'hybrid' : (googleSearchResponse.searchMethod || 'google');
+          webSearchResponse.confidence = Math.max(
+            webSearchResponse.confidence,
+            googleSearchResponse.confidence,
+          );
         }
       }
       
@@ -1163,14 +1218,42 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
     return inferGuataResponseDepth(question);
   }
 
+  private isRealWebSearchResult(result: { source?: string; url?: string }): boolean {
+    const s = String(result.source || '').toLowerCase();
+    if (
+      s === 'local_knowledge' ||
+      s === 'local_fallback' ||
+      s === 'tourism_apis' ||
+      s === 'database' ||
+      s === 'embedding' ||
+      s === 'fts'
+    ) {
+      return false;
+    }
+    if (s === 'pse' || s === 'google' || s.includes('google') || s.includes('vertex') || s.includes('gemini')) {
+      return true;
+    }
+    return Boolean(result.url?.trim());
+  }
+
+  /** Resultados reais da internet — exclui fallback local genérico. */
+  private filterRealWebResults<T extends { source?: string; url?: string }>(results: T[]): T[] {
+    return (results || []).filter((r) => this.isRealWebSearchResult(r));
+  }
+
+  /** Busca na web ao vivo só para agenda, preços, horários — economiza quota Gemini. */
+  private questionNeedsLiveWeb(question: string): boolean {
+    const q = question.toLowerCase();
+    return /evento|agenda|festival|show|ingresso|pre[çc]o|quanto custa|valor|hor[aá]rio|funciona|aberto|hoje|amanh[ãa]|fim de semana|pr[oó]xim[oa]|acontecendo|programa[çc][aã]o/.test(
+      q,
+    );
+  }
+
   /** True se há resultados claramente vindos de busca na internet (Google/PSE/híbrido), não só FTS do banco. */
   private hasWebDerivedResults(webSearchResponse: RealWebSearchResponse): boolean {
     const m = webSearchResponse.searchMethod;
     if (m === 'google' || m === 'hybrid' || m === 'serpapi') return true;
-    return (webSearchResponse.results || []).some((r: any) => {
-      const s = String(r.source || '').toLowerCase();
-      return s === 'pse' || s === 'google' || s.includes('google');
-    });
+    return this.filterRealWebResults(webSearchResponse.results || []).length > 0;
   }
 
   /** Combina resposta do RAG com parceiros, sem avisos de "sem parceiro" ou "busca na web". */
@@ -1324,20 +1407,24 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
         const guataViagensInfo = this.isAgencyOrRoteiroQuestion(question)
           ? await this.resolveGuataViagensInfo()
           : null;
+        const realWebResults = this.filterRealWebResults(webSearchResponse.results || []);
+        const hasWebDerived = realWebResults.length > 0;
         const geminiQuery: any = {
           question,
           context: `Localização: Mato Grosso do Sul`,
           userLocation: 'Mato Grosso do Sul',
-          searchResults: webSearchResponse.results,
+          searchResults: realWebResults,
           conversationHistory: conversationHistory,
           isTotemVersion: isTotemVersion ?? true,
           isFirstUserMessage: isFirstUserMessage ?? false,
+          // Modo antigo: google_search no Gemini quando o search-proxy não trouxe resultados
+          enableGoogleSearch: !hasWebDerived,
           guataPolicy: {
             responseDepth: this.inferResponseDepth(question),
             isServiceQuestion: isSvc,
             partnersCount: partnersResult?.partnersFound?.length ?? 0,
-            webResultsCount: webSearchResponse.results.length,
-            hasWebDerived: this.hasWebDerivedResults(webSearchResponse)
+            webResultsCount: realWebResults.length,
+            hasWebDerived,
           },
           ...(guataViagensInfo ? { guataViagensInfo } : {}),
         };
@@ -1360,16 +1447,14 @@ Posso te montar um roteiro detalhado dia a dia! Quer que eu organize por temas (
         if (sessionId) geminiQuery.sessionId = sessionId;
         
         const geminiResponse = await guataGeminiService.processQuestion(geminiQuery);
-        
-        if (geminiResponse.usedGemini) {
-          const isDev = import.meta.env.DEV;
-          if (isDev) {
+
+        if (geminiResponse.answer?.trim()) {
+          if (geminiResponse.usedGemini && isDev) {
             console.log('[Guatá] Gemini gerou resposta com pesquisa web');
           }
           answer = geminiResponse.answer;
         } else {
           // Fallback: usar pesquisa web formatada de forma inteligente
-          // SEMPRE usar os resultados da pesquisa web quando Gemini não está disponível
           if (webSearchResponse.results && webSearchResponse.results.length > 0) {
             // Priorizar parceiros se houver
             if (partnersResult && partnersResult.partnersFound && partnersResult.partnersFound.length > 0) {
@@ -2276,6 +2361,9 @@ Com essas informações, vou montar um roteiro perfeito para você! 🚀`;
    * Gera resposta com conhecimento local
    */
   private generateLocalKnowledgeResponse(question: string): string {
+    const kbAnswer = MSKnowledgeBase.answerForQuestion(question);
+    if (kbAnswer) return kbAnswer;
+
     const lowerQuestion = question.toLowerCase();
     
     if (lowerQuestion.includes('bonito')) {

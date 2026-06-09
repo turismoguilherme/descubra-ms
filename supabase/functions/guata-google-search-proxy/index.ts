@@ -233,19 +233,23 @@ serve(async (req) => {
     const vertexServingConfigId = Deno.env.get('VERTEX_SEARCH_SERVING_CONFIG_ID') ||
       undefined;
     const geminiModel =
-      Deno.env.get('GUATA_WEB_SEARCH_GEMINI_MODEL') || 'gemini-2.5-flash';
+      Deno.env.get('GUATA_WEB_SEARCH_GEMINI_MODEL') || 'gemini-2.5-flash-lite';
     const vertexMin = Math.max(
       1,
       Math.min(
         10,
-        Number(Deno.env.get('GUATA_WEB_SEARCH_VERTEX_MIN_BEFORE_GEMINI') || '3') || 3,
+        Number(Deno.env.get('GUATA_WEB_SEARCH_VERTEX_MIN_BEFORE_GEMINI') || '1') || 1,
       ),
     );
 
     const legacyApiKey =
-      Deno.env.get('GOOGLE_SEARCH_API_KEY') || Deno.env.get('GOOGLE_API_KEY');
+      Deno.env.get('GOOGLE_SEARCH_API_KEY') ||
+      Deno.env.get('PSE_API_KEY') ||
+      Deno.env.get('GOOGLE_API_KEY');
     const legacyEngineId =
-      Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') || Deno.env.get('GOOGLE_CSE_ID');
+      Deno.env.get('GOOGLE_SEARCH_ENGINE_ID') ||
+      Deno.env.get('PSE_CX') ||
+      Deno.env.get('GOOGLE_CSE_ID');
 
     console.log('🔵 guata-google-search-proxy: provedores');
     console.log('   GEMINI_API_KEY:', geminiKey ? 'present' : 'missing');

@@ -1,6 +1,27 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { getDailyBudgetMax, tryConsumeGeminiBudget } from "../_shared/guataGeminiBudget.ts";
+import {
+  persistSharedGuataCache,
+  proxyMemoryCacheGet,
+  proxyMemoryCacheKey,
+  proxyMemoryCacheSet,
+} from "../_shared/guataGeminiProxyCache.ts";
+
+const RATE_LIMIT_PER_MIN = parseInt(Deno.env.get("GUATA_GEMINI_RATE_PER_MIN") ?? "6");
+const minuteWindow = new Map<string, { count: number; ts: number }>();
+
+function checkMinuteRateLimit(key: string): boolean {
+  const currentMinute = Math.floor(Date.now() / 60000);
+  const entry = minuteWindow.get(key);
+  if (!entry || entry.ts !== currentMinute) {
+    minuteWindow.set(key, { count: 1, ts: currentMinute });
+    return true;
+  }
+  entry.count += 1;
+  return entry.count <= RATE_LIMIT_PER_MIN;
+}
 
 /**
  * Sanitize input to prevent injection attacks
@@ -59,6 +80,11 @@ interface GeminiRequest {
   userLocation?: string;
   isTotemVersion?: boolean;
   isFirstUserMessage?: boolean;
+  /** Quando true, ativa Google Search grounding no Gemini (fallback se busca web falhou). */
+  enableGoogleSearch?: boolean;
+  /** Pergunta original do usuário (para cache compartilhado). */
+  cacheQuestion?: string;
+  sessionId?: string;
 }
 
 serve(async (req) => {
@@ -106,7 +132,16 @@ serve(async (req) => {
       );
     }
 
-    const { prompt: rawPrompt, model = 'gemini-2.5-flash', temperature = 0.3, maxOutputTokens = 2048 } = body;
+    const {
+      prompt: rawPrompt,
+      model = 'gemini-2.5-flash',
+      temperature = 0.3,
+      maxOutputTokens = 2048,
+      enableGoogleSearch = false,
+      userLocation,
+      cacheQuestion,
+      sessionId,
+    } = body;
     
     if (!rawPrompt) {
       console.error('❌ guata-gemini-proxy: Missing prompt field');
@@ -179,13 +214,60 @@ serve(async (req) => {
       );
     }
 
-    console.log("🔵 guata-gemini-proxy: calling Gemini API with model:", safeModel, "prompt length:", prompt.length);
+    const useGoogleSearch = Boolean(enableGoogleSearch);
+    const cacheQ = cacheQuestion ? sanitizeInput(String(cacheQuestion), 500) : "";
+    const memKey = cacheQ
+      ? proxyMemoryCacheKey(cacheQ, safeModel, useGoogleSearch)
+      : "";
+
+    if (memKey) {
+      const cached = proxyMemoryCacheGet(memKey);
+      if (cached) {
+        console.log("🔄 guata-gemini-proxy: memory cache hit");
+        return new Response(cached, {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const budget = await tryConsumeGeminiBudget();
+    if (!budget.ok) {
+      console.warn("⛔ guata-gemini-proxy: daily budget exceeded", budget);
+      return new Response(
+        JSON.stringify({
+          error: "DAILY_BUDGET_EXCEEDED",
+          message:
+            "O Guatá atingiu o limite de consultas com IA de hoje. Tente amanhã ou veja turismo.ms.gov.br e o mapa de destinos no Descubra MS.",
+          success: false,
+          budget: { count: budget.count, max: budget.max ?? getDailyBudgetMax() },
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    console.log(
+      "🔵 guata-gemini-proxy: calling Gemini API with model:",
+      safeModel,
+      "prompt length:",
+      prompt.length,
+      "google_search:",
+      useGoogleSearch,
+      "budget:",
+      `${budget.count}/${budget.max}`,
+    );
 
     // Call Gemini API
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${safeModel}:generateContent?key=${apiKey}`;
+
+    const locationHint = userLocation
+      ? sanitizeInput(String(userLocation), 100)
+      : "Mato Grosso do Sul";
+    const groundedPrompt = useGoogleSearch
+      ? `Contexto: turismo em ${locationHint}, Brasil. Use pesquisa na web para informações atualizadas e cite fontes confiáveis (.gov.br quando existir).\n\n${prompt}`
+      : prompt;
     
-    const requestBody = {
-      contents: [{ parts: [{ text: prompt }] }],
+    const requestBody: Record<string, unknown> = {
+      contents: [{ parts: [{ text: groundedPrompt }] }],
       generationConfig: {
         temperature: safeTemperature,
         maxOutputTokens: safeMaxOutputTokens,
@@ -193,6 +275,10 @@ serve(async (req) => {
         topK: 40
       }
     };
+
+    if (useGoogleSearch) {
+      requestBody.tools = [{ google_search: {} }];
+    }
 
     const response = await fetch(url, {
       method: 'POST',
@@ -265,20 +351,44 @@ serve(async (req) => {
       );
     }
 
-    console.log('✅ Gemini response generated:', generatedText.substring(0, 100) + '...');
+    const groundingChunks = (
+      data.candidates?.[0]?.groundingMetadata?.groundingChunks ?? []
+    ) as Array<{ web?: { uri?: string; title?: string } }>;
+    const webSourcesUsed = groundingChunks
+      .map((c) => c.web?.uri)
+      .filter((uri): uri is string => Boolean(uri));
+
+    console.log(
+      '✅ Gemini response generated:',
+      generatedText.substring(0, 100) + '...',
+      useGoogleSearch ? `| web sources: ${webSourcesUsed.length}` : '',
+    );
     
     // Sanitize response before sending
     const sanitizedText = sanitizeInput(generatedText, 50000);
     
-    return new Response(
-      JSON.stringify({ 
-        text: sanitizedText,
-        model: safeModel,
-        usage: data.usageMetadata || {},
-        success: true
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    const payload = JSON.stringify({
+      text: sanitizedText,
+      model: safeModel,
+      usage: data.usageMetadata || {},
+      success: true,
+      ...(useGoogleSearch
+        ? { usedGoogleSearch: true, webSourcesUsed }
+        : {}),
+    });
+
+    if (memKey) {
+      proxyMemoryCacheSet(memKey, payload);
+    }
+    if (cacheQ) {
+      persistSharedGuataCache(cacheQ, sanitizedText).catch((e) =>
+        console.warn("guata-gemini-proxy: cache persist failed", e)
+      );
+    }
+
+    return new Response(payload, {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
 
   } catch (error: any) {
     console.error('❌ guata-gemini-proxy: handler error:', { 
@@ -290,6 +400,7 @@ serve(async (req) => {
     
     const errorDetails = {
       error: 'Internal server error',
+      message: error?.message ?? String(error),
       success: false,
     };
     

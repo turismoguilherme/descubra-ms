@@ -12,6 +12,8 @@ import { guataResponseCacheService } from "./cache/guataResponseCacheService";
 import { getErrorMessage } from "@/utils/errorUtils";
 import { aiPromptAdminService } from "@/services/admin/aiPromptAdminService";
 import { GUATA_DEFAULT_SUGGESTION_QUESTIONS } from "@/components/guata/guataSuggestionDefaults";
+import { normalizeGuataUserId } from "@/utils/guataGuestUser";
+import { MSKnowledgeBase } from "@/services/ai/search/msKnowledgeBase";
 import {
   type GuataResponseDepth,
   guataResponseDepthMaxTokens,
@@ -43,6 +45,10 @@ export interface GeminiQuery {
   guataPolicy?: GuataGeminiPolicy;
   /** Agência da plataforma (banner) — menção integrada na resposta */
   guataViagensInfo?: GuataViagensInfo;
+  /** Ativa Google Search grounding na Edge quando não há snippets reais da web */
+  enableGoogleSearch?: boolean;
+  sessionId?: string;
+  userId?: string;
 }
 
 export interface GeminiResponse {
@@ -127,7 +133,7 @@ class GuataGeminiService {
     }
     
     // 1. VERIFICAR CACHE PERSISTENTE COMPARTILHADO (perguntas comuns)
-    const userId = (query as any).userId;
+    const userId = normalizeGuataUserId((query as any).userId);
     const sessionId = (query as any).sessionId || 'anonymous';
     const isSuggestion = this.isSuggestionQuestion(query.question);
     
@@ -291,6 +297,34 @@ class GuataGeminiService {
         if (errorObj?.message?.includes('API_KEY_EXPIRED_USE_FALLBACK')) {
           logger.dev('[Guatá] API Key expirada, usando fallback');
           return this.generateFallbackResponse(query);
+        }
+
+        if (err.message?.includes('QUOTA_EXCEEDED')) {
+          return this.generateQuotaExceededResponse(query);
+        }
+
+        if (err.message?.includes('DAILY_BUDGET_EXCEEDED')) {
+          return {
+            answer:
+              '🦦 O Guatá já respondeu muitas consultas com IA hoje. Tente amanhã ou explore turismo.ms.gov.br e o mapa de destinos no Descubra MS.',
+            confidence: 0.5,
+            processingTime: 0,
+            usedGemini: false,
+            personality: 'Guatá',
+            emotionalState: 'helpful',
+          };
+        }
+
+        if (err.message?.includes('RATE_LIMIT')) {
+          return {
+            answer:
+              '🦦 Calma aí! Muitas perguntas seguidas — aguarde alguns segundos e tente de novo.',
+            confidence: 0.5,
+            processingTime: 0,
+            usedGemini: false,
+            personality: 'Guatá',
+            emotionalState: 'helpful',
+          };
         }
         
         // Outros erros: logar apenas em desenvolvimento
@@ -708,38 +742,80 @@ class GuataGeminiService {
     }
   }
 
+  /** Prompt enxuto quando a busca na web é feita pelo Gemini na Edge (economiza quota/tokens). */
+  private buildCompactGroundedPrompt(query: GeminiQuery): string {
+    const depth = query.guataPolicy?.responseDepth ?? 'standard';
+    const depthHint =
+      depth === 'compact'
+        ? 'Resposta curta: 2–3 frases.'
+        : depth === 'deep'
+          ? 'Resposta completa e detalhada.'
+          : 'Resposta objetiva: abertura + 4–6 itens + pergunta de continuidade.';
+
+    let prompt = `Você é o Guatá, capivara guia de turismo em Mato Grosso do Sul, Brasil.
+Tom: caloroso, humano, específico. Use emojis com moderação (🦦).
+${depthHint}
+NÃO use markdown (**negrito**). NÃO diga "não encontrei".
+${query.enableGoogleSearch
+  ? "Use a busca na web integrada para dados atualizados."
+  : "Use seu conhecimento sobre turismo em MS; seja específico sobre lugares e atrações."}
+Não invente preços nem disponibilidade.
+Localização do turista: ${query.userLocation || 'Mato Grosso do Sul'}.`;
+
+    if (query.guataViagensInfo) {
+      prompt += `\nSe couber, mencione ${query.guataViagensInfo.name} (WhatsApp: ${query.guataViagensInfo.whatsappUrl}) no meio ou fim da resposta.`;
+    }
+
+    if (query.searchResults?.length) {
+      prompt += `\n\nSNIPPETS DE CONTEXTO (use se úteis):\n`;
+      query.searchResults.slice(0, 5).forEach((r: any, i: number) => {
+        prompt += `${i + 1}. ${r.title || 'Fonte'}: ${(r.snippet || r.description || '').slice(0, 400)}\n`;
+      });
+    }
+
+    if (query.conversationHistory?.length) {
+      prompt += `\n\nHISTÓRICO RECENTE:\n${query.conversationHistory.slice(-4).join('\n')}`;
+    }
+
+    prompt += `\n\nPERGUNTA: ${query.question}`;
+    return this.appendGuataPolicyBlock(prompt, query);
+  }
+
   private async buildPrompt(query: GeminiQuery): Promise<string> {
-    const { question, context, userLocation, searchResults } = query;
-    
-    // Tentar buscar prompts do banco primeiro
-    const dbPrompts = await this.getPromptFromDatabase();
-    
-    // Se não houver prompts no banco, usar código (fallback)
-    if (!dbPrompts) {
-      return await this.buildPromptFromCode(query);
+    const webCount =
+      query.guataPolicy?.webResultsCount ?? (query.searchResults?.length ?? 0);
+    const hasWebContext = webCount > 0;
+
+    // Modo antigo: prompt completo com snippets quando há resultados de busca web
+    if (hasWebContext && !query.enableGoogleSearch) {
+      const dbPrompts = await this.getPromptFromDatabase();
+
+      if (!dbPrompts) {
+        return await this.buildPromptFromCode(query);
+      }
+
+      let prompt =
+        dbPrompts.system ||
+        `Você é o Guatá, um GUIA INTELIGENTE DE TURISMO DE MATO GROSSO DO SUL.`;
+
+      if (dbPrompts.personality) {
+        prompt += `\n\n${dbPrompts.personality}`;
+      }
+      if (dbPrompts.instructions) {
+        prompt += `\n\n${dbPrompts.instructions}`;
+      }
+      if (dbPrompts.rules) {
+        prompt += `\n\n${dbPrompts.rules}`;
+      }
+      if (dbPrompts.disclaimer) {
+        prompt += `\n\n${dbPrompts.disclaimer}`;
+      }
+
+      return await this.addDynamicContext(prompt, query);
     }
 
-    // Construir prompt usando prompts do banco
-    let prompt = dbPrompts.system || `Você é o Guatá, um GUIA INTELIGENTE DE TURISMO DE MATO GROSSO DO SUL.`;
-    
-    if (dbPrompts.personality) {
-      prompt += `\n\n${dbPrompts.personality}`;
-    }
-    
-    if (dbPrompts.instructions) {
-      prompt += `\n\n${dbPrompts.instructions}`;
-    }
-    
-    if (dbPrompts.rules) {
-      prompt += `\n\n${dbPrompts.rules}`;
-    }
-    
-    if (dbPrompts.disclaimer) {
-      prompt += `\n\n${dbPrompts.disclaimer}`;
-    }
-
-    // Adicionar contexto dinâmico (histórico, localização, parceiros, pesquisa, idioma)
-    return await this.addDynamicContext(prompt, query);
+    // Sem contexto web: prompt compacto (com google_search se enableGoogleSearch)
+    return this.buildCompactGroundedPrompt(query);
   }
 
   /** Prompts do admin (banco) + mesmos blocos dinâmicos de buildPromptFromCode */
@@ -1169,7 +1245,12 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
       block += `- Responda de forma direta e útil com base nos snippets. **Não** abra com avisos sobre "sem parceiro", "busca na web" ou "não são parceiros cadastrados". **Não** encerre pedindo para "consultar sites" ou "conferir valores" — responda o que o turista perguntou.\n`;
       block += `- Não invente preços exatos, vagas ou disponibilidade.\n`;
     } else if (pc === 0 && wc === 0) {
-      block += `- Ofereça orientação útil com base no conhecimento sobre MS. **Não invente** preços nem disponibilidade.\n`;
+      if (query.enableGoogleSearch) {
+        block += `- Não há snippets locais confiáveis: USE a busca na web integrada para responder sobre "${query.question}" em Mato Grosso do Sul com informações atualizadas e específicas.\n`;
+        block += `- Seja ESPECÍFICO (nome do lugar, localização, o que fazer). **Não** diga que "não encontrou" se a busca trouxer dados.\n`;
+      } else {
+        block += `- Ofereça orientação útil com base no conhecimento sobre MS. **Não invente** preços nem disponibilidade.\n`;
+      }
     }
 
     return prompt + block;
@@ -1186,16 +1267,48 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
         console.log('[Guatá] Tentando usar Edge Function (chaves protegidas)...');
       }
       
+      const enableGoogleSearch = Boolean(query?.enableGoogleSearch);
+      const model = 'gemini-2.5-flash-lite';
       const { data, error } = await supabase.functions.invoke('guata-gemini-proxy', {
         body: {
           prompt,
-          model: 'gemini-2.5-flash',
+          model,
           temperature: 0.3, // Reduzido para 0.3 - mais determinístico e focado em seguir instruções rigorosamente
-          maxOutputTokens
+          maxOutputTokens,
+          enableGoogleSearch,
+          userLocation: query?.userLocation || 'Mato Grosso do Sul',
+          cacheQuestion: query?.question,
+          sessionId: query?.sessionId,
         }
       });
 
       // Verificar se há erro na resposta (mesmo com status 200)
+      if (data?.error === 'DAILY_BUDGET_EXCEEDED' || data?.error === 'RATE_LIMIT') {
+        throw new Error(data.error);
+      }
+
+      if (data?.error === 'QUOTA_EXCEEDED') {
+        if (enableGoogleSearch) {
+          if (isDev) console.warn('[Guatá] Quota com google_search — tentando modelo lite sem busca');
+          const retry = await supabase.functions.invoke('guata-gemini-proxy', {
+            body: {
+              prompt,
+              model: 'gemini-2.5-flash-lite',
+              temperature: 0.3,
+              maxOutputTokens,
+              enableGoogleSearch: false,
+              userLocation: query?.userLocation || 'Mato Grosso do Sul',
+              cacheQuestion: query?.question,
+              sessionId: query?.sessionId,
+            },
+          });
+          if (!retry.error && retry.data?.text && retry.data?.success !== false) {
+            return retry.data.text;
+          }
+        }
+        throw new Error('QUOTA_EXCEEDED');
+      }
+
       if (data?.error || !data?.success) {
         if (isDev) {
           console.error('[Guatá] ❌ Edge Function retornou erro:', data);
@@ -1228,9 +1341,16 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
         }
       }
     } catch (edgeFunctionError: unknown) {
-      // Edge Function não disponível ou falhou - usar método antigo
+      const edgeMsg = getErrorMessage(edgeFunctionError);
+      if (
+        edgeMsg.includes('QUOTA_EXCEEDED') ||
+        edgeMsg.includes('DAILY_BUDGET_EXCEEDED') ||
+        edgeMsg.includes('RATE_LIMIT')
+      ) {
+        throw edgeFunctionError;
+      }
       if (isDev) {
-        console.warn('[Guatá] Edge Function não disponível, usando método direto:', getErrorMessage(edgeFunctionError));
+        console.warn('[Guatá] Edge Function falhou:', edgeMsg);
       }
     }
 
@@ -1263,9 +1383,52 @@ Responda de forma natural e conversacional, SEM formatação markdown:`;
     return cleaned.trim();
   }
 
+  private tryKnowledgeBaseAnswer(question: string): string | null {
+    const answer = MSKnowledgeBase.answerForQuestion(question);
+    if (!answer) return null;
+    return this.cleanMarkdown(answer);
+  }
+
+  private generateQuotaExceededResponse(query: GeminiQuery): GeminiResponse {
+    const kbAnswer = this.tryKnowledgeBaseAnswer(query.question);
+    if (kbAnswer) {
+      return {
+        answer: kbAnswer,
+        confidence: 0.85,
+        processingTime: 0,
+        usedGemini: false,
+        personality: 'Guatá',
+        emotionalState: 'helpful',
+      };
+    }
+
+    return {
+      answer:
+        '🦦 Estou com muitas consultas ao mesmo tempo e não consegui buscar informações atualizadas agora. ' +
+        'Aguarde um minuto e tente de novo. Enquanto isso, você pode consultar turismo.ms.gov.br ou o mapa de destinos no Descubra MS.',
+      confidence: 0.5,
+      processingTime: 0,
+      usedGemini: false,
+      personality: 'Guatá',
+      emotionalState: 'helpful',
+    };
+  }
+
   private generateFallbackResponse(query: GeminiQuery): GeminiResponse {
     const { question, searchResults } = query;
     const lowerQuestion = question.toLowerCase().trim();
+
+    const kbAnswer = this.tryKnowledgeBaseAnswer(question);
+    if (kbAnswer) {
+      return {
+        answer: kbAnswer,
+        confidence: 0.85,
+        processingTime: 0,
+        usedGemini: false,
+        personality: 'Guatá',
+        emotionalState: 'helpful',
+      };
+    }
     const partnersInfo = (query as any).partnersInfo;
     
     // Detectar perguntas sobre identidade do Guatá

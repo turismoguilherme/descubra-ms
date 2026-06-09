@@ -107,157 +107,156 @@ class GuataRealWebSearchService {
     }
   }
 
+  /** Snippet via Gemini (sem google_search) quando CSE/Vertex falham. */
+  private async searchWithGeminiSnippetFallback(
+    query: string,
+    cacheKey: string,
+  ): Promise<WebSearchResult[]> {
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const prompt =
+        `Pesquisador de turismo em Mato Grosso do Sul. ` +
+        `Responda em português, factual e específico sobre: ${query}. ` +
+        `Cite programas oficiais, destinos e fontes .gov.br quando souber.`;
+
+      const { data, error } = await supabase.functions.invoke('guata-gemini-proxy', {
+        body: {
+          prompt,
+          model: 'gemini-2.5-flash-lite',
+          temperature: 0.2,
+          maxOutputTokens: 600,
+          enableGoogleSearch: false,
+          userLocation: 'Mato Grosso do Sul',
+          cacheQuestion: query,
+        },
+      });
+
+      if (error || !data?.text || data?.success === false) return [];
+
+      const text = String(data.text).trim();
+      if (text.length < 80) return [];
+
+      const urlMatches = text.match(/https?:\/\/[^\s)\]"']+/g) ?? [];
+      const results: WebSearchResult[] = [];
+
+      if (urlMatches.length > 0) {
+        for (const url of urlMatches.slice(0, 3)) {
+          results.push({
+            title: url,
+            snippet: text.slice(0, 280),
+            url,
+            source: 'gemini_text_snippet',
+            confidence: 0.75,
+            timestamp: new Date(),
+          });
+        }
+      } else {
+        results.push({
+          title: `Pesquisa: ${query.slice(0, 80)}`,
+          snippet: text.slice(0, 500),
+          url: 'https://turismo.ms.gov.br',
+          source: 'gemini_text_snippet',
+          confidence: 0.75,
+          timestamp: new Date(),
+        });
+      }
+
+      this.searchCache.set(cacheKey, { results, timestamp: Date.now() });
+      if (import.meta.env.DEV) {
+        console.log('[Web Search] ✅ Snippet Gemini (sem google_search):', results.length, 'itens');
+      }
+      return results;
+    } catch {
+      return [];
+    }
+  }
+
   /**
    * Pesquisa web REAL usando Google Custom Search API
    * Com rate limiting e cache para evitar ultrapassar limites
    */
   private async searchWithGoogle(query: string, maxResults: number = 5): Promise<WebSearchResult[]> {
-    // Verificar cache primeiro
     const cacheKey = query.toLowerCase().trim();
     const cached = this.searchCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < this.SEARCH_CACHE_DURATION) {
-      console.log('🔄 Usando resultados de busca em cache');
+      if (import.meta.env.DEV) console.log('[Web Search] Cache hit');
       return cached.results;
     }
 
     const isDev = import.meta.env.DEV;
+    let edgeResponded = false;
+    let edgeErrorCode: string | undefined;
 
-    // NOVO: Tentar usar Edge Function primeiro (chaves protegidas no servidor)
     try {
-      if (isDev) {
-        console.log('[Web Search] Tentando usar Edge Function (chaves protegidas)...');
-      }
-
       const { supabase } = await import('@/integrations/supabase/client');
-      
-      try {
-        if (isDev) {
-          console.log('[Web Search] 🔵 Invocando Edge Function guata-google-search-proxy...');
-          console.log('[Web Search] 📤 Payload:', { query, maxResults, location: 'Mato Grosso do Sul' });
-        }
+      const { data, error } = await supabase.functions.invoke('guata-google-search-proxy', {
+        body: { query, maxResults, location: 'Mato Grosso do Sul' },
+      });
 
-        const { data, error } = await supabase.functions.invoke('guata-google-search-proxy', {
-          body: {
-            query,
-            maxResults,
-            location: 'Mato Grosso do Sul'
-          }
-        });
+      edgeResponded = Boolean(data || error);
 
-        // Log completo da resposta para debug (SEMPRE logar, não só em dev)
-        console.log('[Web Search] 📥 Resposta completa da Edge Function:', {
-          hasError: !!error,
-          hasData: !!data,
-          error: error,
-          data: data,
-          dataString: JSON.stringify(data, null, 2)
-        });
-
-        // Verificar se há erro na resposta (mesmo com status 200)
-        if (data?.error || !data?.success) {
-          console.error('🔴 [Web Search] ❌ Edge Function retornou erro:');
-          console.error('   Error:', data?.error);
-          console.error('   Message:', data?.message);
-          console.error('   Details:', data?.details);
-          console.error('   Help:', data?.help);
-          console.error('   Full Data:', JSON.stringify(data, null, 2));
-          
-          // Log específico para erros 403
-          if (
-            data?.error === 'API_NOT_ENABLED' ||
-            data?.error === 'INVALID_API_KEY' ||
-            data?.error === 'INVALID_ENGINE_ID' ||
-            data?.error === 'WEB_SEARCH_NOT_CONFIGURED' ||
-            data?.error === 'NO_RESULTS'
-          ) {
-            console.error('');
-            console.error('🔴🔴🔴 [Web Search] PROBLEMA DE CONFIGURAÇÃO OU PROVEDOR 🔴🔴🔴');
-            console.error('   Tipo de erro:', data.error);
-            console.error('   Mensagem:', data.message);
-            console.error('   Detalhes:', data.details);
-            console.error('   Ajuda:', data.help);
-            console.error('   Fontes usadas:', data.sourcesUsed);
-            console.error('');
-            console.error('   💡 Supabase → Edge Functions → Secrets (guata-google-search-proxy):');
-            console.error('      - GEMINI_API_KEY (busca com grounding Google Search — recomendado)');
-            console.error('      - GOOGLE_SERVICE_ACCOUNT_JSON + GOOGLE_CLOUD_PROJECT + VERTEX_SEARCH_* (Vertex AI Search)');
-            console.error('      - Opcional legado: GOOGLE_SEARCH_API_KEY + GOOGLE_SEARCH_ENGINE_ID (CSE, muitos projetos novos não têm acesso)');
-            console.error('');
-          }
-          
-          // Continuar para fallback
-        } else if (!error && data?.results && Array.isArray(data.results) && data.results.length > 0) {
-          // Salvar no cache
-          this.searchCache.set(cacheKey, {
-            results: data.results,
-            timestamp: Date.now()
-          });
-
-          if (isDev) {
-            console.log('[Web Search] ✅ Edge Function funcionou! (chaves protegidas)');
-          }
-          return data.results;
-        }
-
-        // Se Edge Function falhou, logar detalhes mas continuar para fallback
-        if (error) {
-          const errorObj = error && typeof error === 'object'
-            ? (error as { message?: string; status?: number; context?: unknown })
-            : null;
-          
-          console.error('🔴 [Web Search] ❌ Edge Function falhou com error object:');
-          console.error('   Message:', errorObj?.message || getErrorMessage(error));
-          console.error('   Status:', errorObj?.status);
-          console.error('   Context:', errorObj?.context);
-          console.error('   Data recebida:', data);
-          console.error('   Error completo:', error);
-          
-          // Tentar extrair detalhes do erro se disponível
-          if (data && typeof data === 'object') {
-            console.error('🔴 [Web Search] Detalhes do erro da Edge Function:', JSON.stringify(data, null, 2));
-          }
-        } else if (data) {
-          // Edge Function retornou dados mas sem resultados válidos
-          console.warn('⚠️ [Web Search] Edge Function retornou dados mas sem resultados válidos:');
-          console.warn('   hasResults:', !!data.results);
-          console.warn('   resultsType:', Array.isArray(data.results) ? 'array' : typeof data.results);
-          console.warn('   resultsLength:', Array.isArray(data.results) ? data.results.length : 'N/A');
-          console.warn('   success:', data.success);
-          console.warn('   error:', data.error);
-          console.warn('   message:', data.message);
-          console.warn('   fullData:', JSON.stringify(data, null, 2));
-          
-          if (data.error) {
-            console.error('🔴 [Web Search] Erro na resposta:', data.error, data.message);
-          }
-        } else {
-          console.warn('⚠️ [Web Search] Edge Function retornou resposta vazia (sem data e sem error)');
-          console.warn('   Isso pode indicar que a Edge Function não está configurada ou não está respondendo');
-        }
-      } catch (invokeError: unknown) {
-        if (isDev) {
-          const errorObj = invokeError && typeof invokeError === 'object'
-            ? (invokeError as { message?: string; stack?: string })
-            : null;
-          console.error('[Web Search] ❌ Erro ao invocar Edge Function:', {
-            message: errorObj?.message || String(invokeError),
-            stack: errorObj?.stack,
-            error: invokeError
-          });
-        }
+      if (!error && data?.results?.length > 0) {
+        this.searchCache.set(cacheKey, { results: data.results, timestamp: Date.now() });
+        if (isDev) console.log('[Web Search] ✅ Edge:', data.results.length, 'resultados');
+        return data.results;
       }
-    } catch (edgeFunctionError: unknown) {
-      // Edge Function não disponível ou falhou - usar método antigo
-      if (isDev) {
-        const errorMessage = edgeFunctionError && typeof edgeFunctionError === 'object' && 'message' in edgeFunctionError
-          ? (edgeFunctionError as { message: string }).message
-          : String(edgeFunctionError);
-        console.warn('[Web Search] Edge Function não disponível, usando método direto:', errorMessage);
+
+      if (data?.error) {
+        edgeErrorCode = data.error;
+        if (isDev) {
+          console.warn(`[Web Search] Edge sem resultados (${data.error}):`, data.help || data.message);
+        }
+      } else if (error && isDev) {
+        console.warn('[Web Search] Invoke error:', getErrorMessage(error));
+      }
+    } catch (edgeErr) {
+      if (isDev) console.warn('[Web Search] Edge exception:', getErrorMessage(edgeErr));
+    }
+
+    const geminiResults = await this.searchWithGeminiSnippetFallback(query, cacheKey);
+    if (geminiResults.length > 0) return geminiResults;
+
+    // Dev: fallback client-side com VITE_GOOGLE_SEARCH_* (modo antigo local)
+    if (import.meta.env.DEV) {
+      const apiKey = import.meta.env.VITE_GOOGLE_SEARCH_API_KEY?.trim();
+      const engineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID?.trim();
+      if (apiKey && engineId) {
+        try {
+          const searchQuery = `${query} Mato Grosso do Sul turismo`;
+          const url =
+            `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(apiKey)}` +
+            `&cx=${encodeURIComponent(engineId)}&q=${encodeURIComponent(searchQuery)}&num=${maxResults}`;
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            if (data?.items?.length) {
+              const results = data.items.map((item: { title?: string; snippet?: string; link?: string }) => ({
+                title: item.title || '',
+                snippet: item.snippet || '',
+                url: item.link || '',
+                source: 'google_cse_dev',
+                confidence: 0.85,
+                timestamp: new Date(),
+              })).filter((r: WebSearchResult) => r.url);
+              if (results.length > 0) {
+                this.searchCache.set(cacheKey, { results, timestamp: Date.now() });
+                console.log('[Web Search] ✅ Fallback dev CSE:', results.length, 'resultados');
+                return results;
+              }
+            }
+          }
+        } catch {
+          // CSE local opcional
+        }
       }
     }
 
-    // Se Edge Function falhou, retornar array vazio (sem fallback client-side)
-    console.warn('[Web Search] Edge Function indisponível, retornando sem resultados');
+    if (isDev) {
+      const hint = edgeResponded
+        ? `provedores sem acesso/quota (${edgeErrorCode || 'NO_RESULTS'})`
+        : 'Edge Function não respondeu';
+      console.warn(`[Web Search] Sem resultados — ${hint}; fluxo segue com Gemini/KB local`);
+    }
     return [];
   }
 
@@ -427,18 +426,15 @@ class GuataRealWebSearchService {
       console.log('🏨 Buscando dados específicos de turismo...');
       const tourismData = await this.searchTourismData(query, question);
 
-      // 4. Se nenhuma pesquisa web funcionou, usar dados locais
       if (results.length === 0) {
-        console.warn('⚠️ [FALLBACK] Nenhuma pesquisa web funcionou!');
-        console.warn('⚠️ [FALLBACK] Motivos possíveis:');
-        console.warn('   - Google Search API retornou 403 (API não habilitada)');
-        console.warn('   - Google Search API retornou erro');
-        console.warn('   - Nenhum resultado encontrado');
-        console.warn('⚠️ [FALLBACK] Usando dados locais genéricos (menos específicos)...');
-        results = this.generateLocalSearchResults(question);
+        if (import.meta.env.DEV) {
+          console.log('[Web Search] Sem snippets — resposta via KB local ou Gemini sem google_search');
+        }
         searchMethod = 'tourism_apis';
         usedRealSearch = false;
-        console.warn(`⚠️ [FALLBACK] Gerados ${results.length} resultados locais genéricos`);
+      } else if (results.some((r) => r.source === 'gemini_text_snippet')) {
+        searchMethod = 'hybrid';
+        usedRealSearch = true;
       }
 
       const processingTime = Date.now() - startTime;
@@ -461,10 +457,10 @@ class GuataRealWebSearchService {
       console.error('❌ Erro no Guatá Real Web Search:', error);
       
       return {
-        results: this.generateLocalSearchResults(question),
+        results: [],
         tourismData: {},
-        confidence: 0.5,
-        sources: ['local_fallback'],
+        confidence: 0.3,
+        sources: [],
         processingTime: Date.now() - startTime,
         usedRealSearch: false,
         searchMethod: 'tourism_apis'

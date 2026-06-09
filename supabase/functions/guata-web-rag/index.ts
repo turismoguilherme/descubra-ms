@@ -98,6 +98,8 @@ interface RAGQuery {
   location?: string
   /** WhatsApp wa.me da Guata Viagens (enviado pelo cliente em perguntas de agência/roteiro) */
   guata_viagens_whatsapp_url?: string
+  /** Só retorna fontes do banco/PSE — não chama Gemini (economiza quota; resposta no guata-gemini-proxy) */
+  sources_only?: boolean
 }
 
 interface SearchResult {
@@ -268,7 +270,12 @@ serve(async (req) => {
     console.log('\n🤖 === GERANDO RESPOSTA COM GEMINI ===')
     let response: string
     let guataAiMeta: GenerateResponseResult['meta'] | undefined
-    if (quickAgenda) {
+    const sourcesOnly = Boolean(body.sources_only)
+    if (sourcesOnly) {
+      console.log('📚 sources_only=true — pulando Gemini no RAG')
+      response = ''
+      guataAiMeta = { gemini_status: 'skipped_sources_only' }
+    } else if (quickAgenda) {
       response = `${quickAgenda}\n\nQuer que eu detalhe horários ou como chegar?`
     } else {
       const gen = await generateResponse(
@@ -280,7 +287,9 @@ serve(async (req) => {
       response = gen.answer
       guataAiMeta = gen.meta
     }
-    console.log(`🤖 Resposta gerada: ${response.substring(0, 100)}...`)
+    if (response) {
+      console.log(`🤖 Resposta gerada: ${response.substring(0, 100)}...`)
+    }
     
     // 8. Aplicar aprendizado contínuo
     console.log('\n🧠 === APLICANDO APRENDIZADO CONTÍNUO ===')

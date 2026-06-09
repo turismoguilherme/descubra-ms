@@ -172,51 +172,19 @@ export async function searchVertexDiscoveryEngine(
   return hits;
 }
 
-export async function searchGeminiGoogleGrounding(
-  apiKey: string,
-  model: string,
-  userQuery: string,
-  locationContext: string,
-): Promise<GuataWebSearchHit[]> {
-  const endpoint =
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-  const prompt =
-    `Contexto: turismo em ${locationContext}, Brasil. ` +
-    `Use pesquisa na web e cite fontes confiáveis (.gov.br quando existir). ` +
-    `Consulta: ${userQuery}`;
-
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      tools: [{ google_search: {} }],
-    }),
-  });
-
-  const text = await res.text();
-  if (!res.ok) {
-    console.error("Gemini grounding HTTP error:", res.status, text.slice(0, 400));
-    return [];
-  }
-
-  let data: {
-    candidates?: Array<{
-      groundingMetadata?: {
-        groundingChunks?: Array<{
-          web?: { uri?: string; title?: string };
-        }>;
-      };
-    }>;
+type GeminiCandidate = {
+  content?: { parts?: Array<{ text?: string }> };
+  groundingMetadata?: {
+    groundingChunks?: Array<{ web?: { uri?: string; title?: string } }>;
   };
-  try {
-    data = JSON.parse(text);
-  } catch {
-    return [];
-  }
+};
 
-  const chunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+function hitsFromGeminiCandidate(
+  candidate: GeminiCandidate | undefined,
+  userQuery: string,
+  source: string,
+): GuataWebSearchHit[] {
+  const chunks = candidate?.groundingMetadata?.groundingChunks || [];
   const hits: GuataWebSearchHit[] = [];
   for (const c of chunks) {
     const uri = c.web?.uri?.trim();
@@ -225,39 +193,193 @@ export async function searchGeminiGoogleGrounding(
       title: stripHtml(c.web?.title || uri) || uri,
       snippet: "",
       url: uri,
-      source: "gemini_google_search",
+      source,
       description: "",
     });
   }
+
+  const answerText = (candidate?.content?.parts ?? [])
+    .map((p) => p.text ?? "")
+    .join(" ")
+    .trim();
+
+  if (hits.length === 0 && answerText) {
+    const urlMatches = answerText.match(/https?:\/\/[^\s)\]"']+/g) ?? [];
+    const seen = new Set<string>();
+    for (const uri of urlMatches) {
+      const key = normalizeUrlKey(uri);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      hits.push({
+        title: uri,
+        snippet: answerText.slice(0, 280),
+        url: uri,
+        source,
+        description: answerText.slice(0, 280),
+      });
+      if (hits.length >= 5) break;
+    }
+    if (hits.length === 0 && answerText.length > 80) {
+      hits.push({
+        title: `Pesquisa: ${userQuery.slice(0, 100)}`,
+        snippet: answerText.slice(0, 500),
+        url: "https://turismo.ms.gov.br",
+        source: `${source}_text`,
+        description: answerText.slice(0, 500),
+      });
+    }
+  }
+
   return hits;
 }
+
+async function callGeminiGenerate(
+  apiKey: string,
+  model: string,
+  prompt: string,
+  useGoogleSearch: boolean,
+): Promise<{ ok: boolean; status: number; data?: { candidates?: GeminiCandidate[] }; raw?: string }> {
+  const endpoint =
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const body: Record<string, unknown> = {
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+  };
+  if (useGoogleSearch) {
+    body.tools = [{ google_search: {} }];
+  }
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const raw = await res.text();
+  if (!res.ok) {
+    return { ok: false, status: res.status, raw };
+  }
+  try {
+    return { ok: true, status: res.status, data: JSON.parse(raw) };
+  } catch {
+    return { ok: false, status: res.status, raw };
+  }
+}
+
+/** Fallback sem google_search quando grounding estoura quota. */
+export async function searchGeminiTextFallback(
+  apiKey: string,
+  model: string,
+  userQuery: string,
+  locationContext: string,
+): Promise<GuataWebSearchHit[]> {
+  const prompt =
+    `Você pesquisa turismo em ${locationContext}, Brasil. ` +
+    `Responda em português, de forma factual e específica sobre: ${userQuery}. ` +
+    `Mencione programas oficiais, destinos e fontes .gov.br quando souber.`;
+
+  const result = await callGeminiGenerate(apiKey, model, prompt, false);
+  if (!result.ok || !result.data) {
+    console.error("Gemini text fallback HTTP error:", result.status, result.raw?.slice(0, 400));
+    return [];
+  }
+  return hitsFromGeminiCandidate(
+    result.data.candidates?.[0],
+    userQuery,
+    "gemini_text_fallback",
+  );
+}
+
+export async function searchGeminiGoogleGrounding(
+  apiKey: string,
+  model: string,
+  userQuery: string,
+  locationContext: string,
+): Promise<GuataWebSearchHit[]> {
+  const prompt =
+    `Contexto: turismo em ${locationContext}, Brasil. ` +
+    `Use pesquisa na web e cite fontes confiáveis (.gov.br quando existir). ` +
+    `Consulta: ${userQuery}`;
+
+  const result = await callGeminiGenerate(apiKey, model, prompt, true);
+  if (!result.ok) {
+    const quotaHit =
+      result.status === 429 ||
+      (result.raw ?? "").toLowerCase().includes("quota") ||
+      (result.raw ?? "").toLowerCase().includes("resource_exhausted");
+    console.error("Gemini grounding HTTP error:", result.status, result.raw?.slice(0, 400));
+    if (quotaHit) {
+      console.warn("Gemini grounding quota — tentando fallback textual sem google_search");
+      return searchGeminiTextFallback(apiKey, model, userQuery, locationContext);
+    }
+    return [];
+  }
+
+  const hits = hitsFromGeminiCandidate(
+    result.data?.candidates?.[0],
+    userQuery,
+    "gemini_google_search",
+  );
+  if (hits.length === 0) {
+    return searchGeminiTextFallback(apiKey, model, userQuery, locationContext);
+  }
+  return hits;
+}
+
+export type LegacyCseResult = {
+  hits: GuataWebSearchHit[];
+  error?: string;
+  httpStatus?: number;
+};
 
 export async function searchLegacyCustomSearch(
   apiKey: string,
   engineId: string,
   searchQuery: string,
   num: number,
-): Promise<GuataWebSearchHit[]> {
+): Promise<LegacyCseResult> {
   const url =
     `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${engineId}&q=${
       encodeURIComponent(searchQuery)
     }&num=${num}`;
 
   const response = await fetch(url, { method: "GET" });
-  if (!response.ok) return [];
+  const text = await response.text();
+  if (!response.ok) {
+    let reason = `HTTP ${response.status}`;
+    try {
+      const err = JSON.parse(text) as {
+        error?: { message?: string; errors?: Array<{ reason?: string }> };
+      };
+      reason = err.error?.message || reason;
+      if (
+        reason.toLowerCase().includes("api key not valid") ||
+        reason.toLowerCase().includes("invalid api key")
+      ) {
+        reason = "API_KEY_INVALID";
+      }
+    } catch {
+      // keep HTTP status
+    }
+    console.error("Legacy CSE error:", reason);
+    return { hits: [], error: reason, httpStatus: response.status };
+  }
 
-  const data = await response.json().catch(() => null) as {
+  const data = JSON.parse(text) as {
     items?: Array<{ title?: string; snippet?: string; htmlSnippet?: string; link?: string }>;
-  } | null;
-  if (!data?.items) return [];
+  };
+  if (!data?.items?.length) {
+    return { hits: [] };
+  }
 
-  return data.items.map((item) => ({
-    title: item.title || "",
-    snippet: item.snippet || item.htmlSnippet || "",
-    url: item.link || "",
-    source: "google_cse",
-    description: item.snippet || "",
-  })).filter((x) => x.url);
+  return {
+    hits: data.items.map((item) => ({
+      title: item.title || "",
+      snippet: item.snippet || item.htmlSnippet || "",
+      url: item.link || "",
+      source: "google_cse",
+      description: item.snippet || "",
+    })).filter((x) => x.url),
+  };
 }
 
 export interface PipelineRunResult {
@@ -267,6 +389,29 @@ export interface PipelineRunResult {
   error?: string;
   message?: string;
   help?: string;
+  details?: Record<string, string>;
+}
+
+async function tryLegacyCsePair(
+  apiKey: string | undefined,
+  engineId: string | undefined,
+  searchQuery: string,
+  maxResults: number,
+  label: string,
+): Promise<{ hits: GuataWebSearchHit[]; source: string; error?: string }> {
+  if (!apiKey || !engineId) {
+    return { hits: [], source: label };
+  }
+  const legacy = await searchLegacyCustomSearch(
+    apiKey,
+    engineId,
+    searchQuery,
+    maxResults,
+  );
+  if (legacy.hits.length > 0) {
+    return { hits: legacy.hits, source: label };
+  }
+  return { hits: [], source: label, error: legacy.error };
 }
 
 export async function runGuataWebSearchPipeline(
@@ -278,8 +423,25 @@ export async function runGuataWebSearchPipeline(
 ): Promise<PipelineRunResult> {
   const searchQuery = `${sanitize(query, 500)} ${sanitize(location, 100)} turismo`;
   const sourcesUsed: string[] = [];
+  const providerErrors: Record<string, string> = {};
   const vertexHits: GuataWebSearchHit[] = [];
   const geminiHits: GuataWebSearchHit[] = [];
+  let legacyHits: GuataWebSearchHit[] = [];
+
+  // 1. Modo antigo: Google Custom Search primeiro (rápido, sem quota Gemini)
+  const primaryLegacy = await tryLegacyCsePair(
+    cfg.legacyApiKey,
+    cfg.legacyEngineId,
+    searchQuery,
+    maxResults,
+    "google_cse_legacy",
+  );
+  if (primaryLegacy.hits.length > 0) {
+    legacyHits = primaryLegacy.hits;
+    sourcesUsed.push(primaryLegacy.source);
+  } else if (primaryLegacy.error) {
+    providerErrors[primaryLegacy.source] = primaryLegacy.error;
+  }
 
   const servingResource = buildVertexServingConfigResource({
     full: cfg.vertexServingConfigResource,
@@ -294,7 +456,8 @@ export async function runGuataWebSearchPipeline(
     cfg.serviceAccountJson && servingResource,
   );
 
-  if (canVertex && cfg.serviceAccountJson && servingResource) {
+  // 2. Vertex AI Search (se CSE não trouxe resultados suficientes)
+  if (legacyHits.length < maxResults && canVertex && cfg.serviceAccountJson && servingResource) {
     try {
       const token = await getAccessTokenFromServiceAccountJson(
         cfg.serviceAccountJson,
@@ -309,13 +472,16 @@ export async function runGuataWebSearchPipeline(
       vertexHits.push(...v);
       if (v.length) sourcesUsed.push("vertex_ai_search");
     } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      providerErrors.vertex_ai_search = msg;
       console.error("Vertex AI Search falhou:", e);
     }
   }
 
+  // 3. Gemini grounding (fallback quando CSE/Vertex insuficientes)
   const needGemini =
     Boolean(cfg.geminiApiKey) &&
-    (vertexHits.length < cfg.vertexMinBeforeSkipGemini || !canVertex);
+    legacyHits.length + vertexHits.length < maxResults;
 
   if (cfg.geminiApiKey && needGemini) {
     const g = await searchGeminiGoogleGrounding(
@@ -325,21 +491,21 @@ export async function runGuataWebSearchPipeline(
       location,
     );
     geminiHits.push(...g);
-    if (g.length) sourcesUsed.push("gemini_google_search");
+    if (g.length) {
+      const src = g[0]?.source?.startsWith("gemini_text")
+        ? "gemini_text_fallback"
+        : "gemini_google_search";
+      sourcesUsed.push(src);
+    } else {
+      providerErrors.gemini_google_search = "empty_or_quota";
+    }
   }
 
-  let merged = mergeDedupeRank(vertexHits, geminiHits, maxResults);
-
-  if (merged.length === 0 && cfg.legacyApiKey && cfg.legacyEngineId) {
-    const legacy = await searchLegacyCustomSearch(
-      cfg.legacyApiKey,
-      cfg.legacyEngineId,
-      searchQuery,
-      maxResults,
-    );
-    merged = mergeDedupeRank(legacy, [], maxResults);
-    if (legacy.length) sourcesUsed.push("google_cse_legacy");
-  }
+  let merged = mergeDedupeRank(
+    mergeDedupeRank(legacyHits, vertexHits, maxResults),
+    geminiHits,
+    maxResults,
+  );
 
   if (merged.length > 0) {
     return {
@@ -355,7 +521,11 @@ export async function runGuataWebSearchPipeline(
     };
   }
 
-  if (!cfg.geminiApiKey && !canVertex && !cfg.legacyApiKey) {
+  const hasAnyProvider = Boolean(
+    cfg.geminiApiKey || canVertex || cfg.legacyApiKey || cfg.legacyEngineId,
+  );
+
+  if (!hasAnyProvider) {
     return {
       results: [],
       success: false,
@@ -368,12 +538,20 @@ export async function runGuataWebSearchPipeline(
     };
   }
 
+  const cseInvalid = providerErrors.google_cse_legacy === "API_KEY_INVALID";
   return {
     results: [],
     success: false,
     sourcesUsed,
-    error: "NO_RESULTS",
-    message:
-      "Nenhum resultado retornado pelos provedores configurados (Vertex / Gemini / legado).",
+    error: cseInvalid ? "INVALID_API_KEY" : "NO_RESULTS",
+    message: cseInvalid
+      ? "Chave do Google Custom Search inválida ou expirada. Atualize GOOGLE_SEARCH_API_KEY nos Secrets do Supabase."
+      : "Nenhum resultado retornado pelos provedores configurados (CSE / Vertex / Gemini).",
+    help: cseInvalid
+      ? "Google Cloud Console → APIs & Services → Credentials → crie/renove a API key com Custom Search API habilitada."
+      : Object.keys(providerErrors).length
+      ? `Falhas: ${Object.entries(providerErrors).map(([k, v]) => `${k}=${v}`).join(", ")}`
+      : undefined,
+    details: Object.keys(providerErrors).length ? providerErrors : undefined,
   };
 }

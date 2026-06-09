@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { normalizeGuataUserId } from '@/utils/guataGuestUser';
 import { LearningInteraction, FeedbackData } from './guataMLService';
 import { UserPreferences } from './preferenceLearningService';
 
@@ -22,11 +23,12 @@ export class SupabaseMLIntegration {
    */
   async saveInteraction(interaction: LearningInteraction): Promise<void> {
     try {
+      const normalizedUserId = normalizeGuataUserId(interaction.userId);
       // Salvar na tabela guata_user_memory como learning_data
       const { error } = await supabase
         .from('guata_user_memory')
         .insert({
-          user_id: interaction.userId || null,
+          user_id: normalizedUserId ?? null,
           session_id: interaction.sessionId,
           memory_type: 'learning_data',
           memory_key: `interaction-${Date.now()}`,
@@ -180,8 +182,9 @@ export class SupabaseMLIntegration {
     preferences: Partial<UserPreferences>
   ): Promise<void> {
     try {
+      const normalizedUserId = normalizeGuataUserId(userId);
       // Buscar preferências existentes
-      const existing = await this.getUserPreferences(userId, sessionId);
+      const existing = await this.getUserPreferences(normalizedUserId, sessionId);
       
       // Mesclar com preferências existentes
       const mergedPreferences: UserPreferences = {
@@ -202,23 +205,52 @@ export class SupabaseMLIntegration {
         ].filter((v, i, a) => a.indexOf(v) === i)
       };
 
-      const { error } = await supabase
-        .from('guata_user_memory')
-        .upsert({
-          user_id: userId || null,
-          session_id: sessionId,
-          memory_type: 'user_preferences',
-          memory_key: 'main_preferences',
-          memory_value: mergedPreferences,
-          expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 ano
-        }, {
-          onConflict: 'user_id,session_id,memory_type,memory_key'
-        });
+      const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      const row = {
+        user_id: normalizedUserId ?? null,
+        session_id: sessionId,
+        memory_type: 'user_preferences',
+        memory_key: 'main_preferences',
+        memory_value: mergedPreferences,
+        expires_at: expiresAt,
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) {
-        console.warn('⚠️ Erro ao salvar preferências:', error);
+      let saveError: { code?: string; message?: string } | null = null;
+
+      if (normalizedUserId) {
+        const { error } = await supabase
+          .from('guata_user_memory')
+          .upsert(row, {
+            onConflict: 'user_id,session_id,memory_type,memory_key',
+          });
+        saveError = error;
       } else {
-        // Preferências salvas (log removido)
+        const { data: updated, error: updateError } = await supabase
+          .from('guata_user_memory')
+          .update({
+            memory_value: mergedPreferences,
+            expires_at: expiresAt,
+            updated_at: row.updated_at,
+          })
+          .is('user_id', null)
+          .eq('session_id', sessionId)
+          .eq('memory_type', 'user_preferences')
+          .eq('memory_key', 'main_preferences')
+          .select('id');
+
+        if (updateError) {
+          saveError = updateError;
+        } else if (!updated || updated.length === 0) {
+          const { error: insertError } = await supabase
+            .from('guata_user_memory')
+            .insert(row);
+          saveError = insertError;
+        }
+      }
+
+      if (saveError) {
+        console.warn('⚠️ Erro ao salvar preferências:', saveError);
       }
     } catch (error: unknown) {
       console.warn('⚠️ Erro ao salvar preferências:', error);

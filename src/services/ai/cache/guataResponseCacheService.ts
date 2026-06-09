@@ -6,6 +6,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import CryptoJS from "crypto-js";
+import { normalizeGuataUserId } from "@/utils/guataGuestUser";
 
 export interface CacheEntry {
   id: string;
@@ -101,7 +102,7 @@ class GuataResponseCacheService {
         .gt('expires_at', new Date().toISOString())
         .order('used_count', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return { found: false };
@@ -135,7 +136,8 @@ class GuataResponseCacheService {
    * Busca no cache individual
    */
   async getFromIndividualCache(query: CacheQuery): Promise<CacheResult> {
-    if (!query.userId && !query.sessionId) {
+    const userId = normalizeGuataUserId(query.userId);
+    if (!userId && !query.sessionId) {
       return { found: false };
     }
 
@@ -155,16 +157,18 @@ class GuataResponseCacheService {
         .eq('is_suggestion', isSuggestion)
         .gt('expires_at', new Date().toISOString());
 
-      if (query.userId) {
-        queryBuilder = queryBuilder.eq('user_id', query.userId);
+      if (userId) {
+        queryBuilder = queryBuilder.eq('user_id', userId);
       } else if (query.sessionId) {
-        queryBuilder = queryBuilder.eq('session_id', query.sessionId);
+        queryBuilder = queryBuilder
+          .eq('session_id', query.sessionId)
+          .is('user_id', null);
       }
 
       const { data, error } = await queryBuilder
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         return { found: false };
@@ -266,7 +270,7 @@ class GuataResponseCacheService {
         .eq('is_suggestion', isSuggestion)
         .gt('expires_at', new Date().toISOString())
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         // Atualizar existente
@@ -301,7 +305,8 @@ class GuataResponseCacheService {
    * Salva no cache individual
    */
   async saveToIndividualCache(question: string, answer: string, userId?: string, sessionId?: string): Promise<void> {
-    if (!userId && !sessionId) {
+    const normalizedUserId = normalizeGuataUserId(userId);
+    if (!normalizedUserId && !sessionId) {
       return;
     }
 
@@ -323,13 +328,15 @@ class GuataResponseCacheService {
         .eq('is_suggestion', isSuggestion)
         .gt('expires_at', new Date().toISOString());
 
-      if (userId) {
-        queryBuilder = queryBuilder.eq('user_id', userId);
+      if (normalizedUserId) {
+        queryBuilder = queryBuilder.eq('user_id', normalizedUserId);
       } else if (sessionId) {
-        queryBuilder = queryBuilder.eq('session_id', sessionId);
+        queryBuilder = queryBuilder
+          .eq('session_id', sessionId)
+          .is('user_id', null);
       }
 
-      const { data: existing } = await queryBuilder.limit(1).single();
+      const { data: existing } = await queryBuilder.limit(1).maybeSingle();
 
       if (existing) {
         // Atualizar existente
@@ -350,7 +357,7 @@ class GuataResponseCacheService {
             question: question,
             answer: answer,
             cache_type: 'individual',
-            user_id: userId || null,
+            user_id: normalizedUserId ?? null,
             session_id: sessionId || null,
             is_suggestion: isSuggestion,
             expires_at: expiresAt.toISOString(),
