@@ -26,6 +26,7 @@ export function isViajarPublicMarketingPath(pathname: string): boolean {
     '/partner',
     '/koda',
     '/chatguata',
+    '/chatguata-teste',
     '/eventos',
     '/secretary-dashboard',
     '/attendant-dashboard',

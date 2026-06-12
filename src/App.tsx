@@ -34,6 +34,7 @@ import { safeLog } from "@/utils/safeLog";
 import { initSupabaseInterceptor } from "@/utils/supabaseInterceptor";
 import { useDomainValidation } from "@/hooks/useDomainValidation";
 import { isViajarTestLoginEnabled } from "@/utils/viajarTestLogin";
+import { CHAT_GUATA_MS_TEST_PATH, CHAT_GUATA_TEST_PATH, isChatGuataTestEnabled } from "@/utils/chatGuataTest";
 
 // Inicializar interceptor do Supabase para renovação automática de tokens
 initSupabaseInterceptor();
@@ -189,6 +190,9 @@ function AppRoutes() {
 
                                 {/* Chatbot Guatá Standalone - Totem */}
                                 <Route path="/chatguata" element={<ChatGuata />} />
+                                {isChatGuataTestEnabled() && (
+                                  <Route path={CHAT_GUATA_TEST_PATH} element={<ChatGuata />} />
+                                )}
 
                                 {/* Eventos - Página separada no estilo chatguata */}
                                 <Route path="/eventos" element={<Eventos />} />
@@ -334,6 +338,9 @@ function AppRoutes() {
                                 <Route path="/descubrams/sobre" element={<SobreMS />} />
                                 <Route path="/descubrams/guata" element={<Guata />} />
                                 <Route path="/descubrams/chatguata" element={<ChatGuata />} />
+                                {isChatGuataTestEnabled() && (
+                                  <Route path={CHAT_GUATA_MS_TEST_PATH} element={<ChatGuata />} />
+                                )}
                                 <Route path="/descubrams/passaporte" element={<PassaporteLista />} />
                                 <Route path="/descubrams/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
                                 <Route path="/descubrams/profile" element={<ProfilePageFixed />} />
