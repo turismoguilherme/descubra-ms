@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build",
+  "buildCommand": "node scripts/vercel-build.mjs",
   "outputDirectory": "dist",
   "ignoreCommand": "bash -c 'ONLY=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -v \"^guata-channel/\" || true); test -z \"$ONLY\"'",
   "functions": {
@@ -21,16 +21,6 @@
   "redirects": [
     {
       "source": "/auth/callback",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/auth/confirm",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/",
       "destination": "/descubrams",
       "permanent": false,
       "has": [
@@ -41,9 +31,97 @@
       ]
     },
     {
-      "source": "/",
+      "source": "/auth/callback",
       "destination": "/descubrams",
       "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.descubrams.com"
+        }
+      ]
+    },
+    {
+      "source": "/auth/callback",
+      "destination": "/",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "viajartur.com"
+        }
+      ]
+    },
+    {
+      "source": "/auth/callback",
+      "destination": "/",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.viajartur.com"
+        }
+      ]
+    },
+    {
+      "source": "/auth/confirm",
+      "destination": "/descubrams",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "descubrams.com"
+        }
+      ]
+    },
+    {
+      "source": "/auth/confirm",
+      "destination": "/descubrams",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.descubrams.com"
+        }
+      ]
+    },
+    {
+      "source": "/auth/confirm",
+      "destination": "/",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "viajartur.com"
+        }
+      ]
+    },
+    {
+      "source": "/auth/confirm",
+      "destination": "/",
+      "permanent": false,
+      "has": [
+        {
+          "type": "host",
+          "value": "www.viajartur.com"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "destination": "/descubrams",
+      "permanent": true,
+      "has": [
+        {
+          "type": "host",
+          "value": "descubrams.com"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "destination": "/descubrams",
+      "permanent": true,
       "has": [
         {
           "type": "host",

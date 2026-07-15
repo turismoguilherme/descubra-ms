@@ -213,12 +213,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const currentPath = window.location.pathname;
       const pathSegments = currentPath.split('/').filter(Boolean);
       const currentTenant = pathSegments[0];
-      const isDescubraMS = currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
+      const isDescubraMS =
+        currentTenant === 'descubrams' ||
+        currentTenant === 'descubramatogrossodosul' ||
+        currentTenant === 'ms';
       const isViajar = currentTenant === 'viajar';
       
       let redirectUrl: string;
       if (isDescubraMS) {
-        redirectUrl = `${window.location.origin}/descubrams`;
+        const params = new URLSearchParams(window.location.search);
+        const redirectParam = params.get('redirect') || params.get('next');
+        const safeRedirect =
+          redirectParam &&
+          redirectParam.startsWith('/') &&
+          !redirectParam.startsWith('//') &&
+          !redirectParam.startsWith('/viajar')
+            ? redirectParam
+            : '/descubrams';
+        redirectUrl = `${window.location.origin}${safeRedirect}`;
       } else if (isViajar) {
         redirectUrl = `${window.location.origin}/viajar/onboarding`;
       } else {

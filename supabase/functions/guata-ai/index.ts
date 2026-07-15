@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { generateTouristPrompt, generateCATPrompt } from "./prompts.ts";
+import { generateTouristPrompt, generateCATPrompt, generateGuataToolsGuidance } from "./prompts.ts";
 import { callGeminiGenerate } from "../_shared/guataGeminiCall.ts";
 import {
   callGeminiWithTools,
@@ -12,11 +12,18 @@ import {
   guataResponseDepthMaxTokens,
   guataResponseDepthFormatBlock,
 } from "../_shared/guataResponseDepth.ts";
-import { buildAuthContext, resolveUserId } from "../_shared/guataAuth.ts";
+import {
+  buildAuthContext,
+  isInternalBotRequest,
+  resolveUserId,
+  resolveUserIdByPhone,
+} from "../_shared/guataAuth.ts";
 import { guataToolDeclarations } from "./toolSchemas.ts";
 import { searchPartners } from "./tools/searchPartners.ts";
 import { checkAvailability } from "./tools/checkAvailability.ts";
 import { createEventDraft } from "./tools/createEventDraft.ts";
+import { createReservation } from "./tools/createReservation.ts";
+import { createCheckoutLink } from "./tools/createCheckoutLink.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,7 +35,7 @@ const corsHeaders = {
 
 const GEMINI_MAX_TOKENS_DEFAULT = parseInt(Deno.env.get("GEMINI_MAX_OUTPUT_TOKENS") ?? "2048", 10);
 const GEMINI_TEMPERATURE = parseFloat(Deno.env.get("GEMINI_TEMPERATURE") ?? "0.7");
-const MAX_TOOL_ITERATIONS = 3;
+const MAX_TOOL_ITERATIONS = 4;
 
 interface KnowledgeItem {
   title?: string;
@@ -49,7 +56,7 @@ function buildContextContent(knowledgeBase?: KnowledgeItem[]): string {
     .join("\n\n");
 }
 
-const WRITE_ACTIONS = new Set(["create_event_draft"]);
+const WRITE_ACTIONS = new Set(["create_event_draft", "create_reservation", "create_checkout_link"]);
 const ACTION_LABELS: Record<string, string> = {
   create_event_draft: "cadastrar_evento",
   create_reservation: "reservar",
@@ -73,19 +80,7 @@ async function runToolCallingConversation(params: {
 }): Promise<{ text: string | null; usedTools: string[] }> {
   const { prompt, systemPrompt, chatHistory, ctx, userAuthenticated } = params;
 
-  const toolsGuidance = `
-FERRAMENTAS DISPONÍVEIS (function calling):
-- search_partners(query, city?, business_type?): busca parceiros ativos em MS
-- check_availability(partner_id, date, people?): checa disponibilidade e preço
-- create_event_draft(title, start_date, city, ...): cadastra evento (vai para moderação admin)
-
-REGRAS DE USO:
-1. Use search_partners SEMPRE antes de check_availability — nunca invente partner_id.
-2. Antes de chamar create_event_draft: confirme TODOS os dados em linguagem natural com o usuário e receba um "sim/confirmo" explícito. Se o usuário só perguntou, NÃO chame ainda.
-3. Se o usuário pedir uma ação (cadastrar evento, reservar, pagar) e user_authenticated=${userAuthenticated}, e o valor for false, NÃO chame ferramenta. Responda pedindo login e ao final da mensagem inclua o marcador [[REQUIRE_LOGIN:<acao>]] onde <acao> é uma de: cadastrar_evento, reservar, pagar.
-4. Ao receber resultado de tool com { error }, explique gentilmente ao usuário e sugira o próximo passo.
-5. Nunca invente preço, disponibilidade ou dados de parceiro fora das ferramentas.
-`.trim();
+  const toolsGuidance = generateGuataToolsGuidance(userAuthenticated);
 
   const contents: GeminiContent[] = [];
   if (chatHistory.trim()) {
@@ -134,6 +129,10 @@ REGRAS DE USO:
           result = (await checkAvailability(ctx, fc.args as never)) as Record<string, unknown>;
         } else if (fc.name === "create_event_draft") {
           result = (await createEventDraft(ctx, fc.args as never)) as Record<string, unknown>;
+        } else if (fc.name === "create_reservation") {
+          result = (await createReservation(ctx, fc.args as never)) as Record<string, unknown>;
+        } else if (fc.name === "create_checkout_link") {
+          result = (await createCheckoutLink(ctx, fc.args as never)) as Record<string, unknown>;
         }
       } catch (err) {
         result = { error: "tool_exception", hint: err instanceof Error ? err.message : String(err) };
@@ -247,13 +246,33 @@ serve(async (req) => {
     // Tool-calling path
     if (enableTools && Deno.env.get("GEMINI_API_KEY")) {
       const ctx = buildAuthContext(req);
-      const userId = await resolveUserId(ctx);
+      const whatsappPhone = typeof body.whatsapp_phone === "string"
+        ? body.whatsapp_phone.trim()
+        : "";
+      const fromWhatsApp = Boolean(whatsappPhone) && isInternalBotRequest(req);
+
+      let userId = await resolveUserId(ctx);
+      if (!userId && fromWhatsApp && whatsappPhone) {
+        userId = await resolveUserIdByPhone(ctx, whatsappPhone);
+      }
+
       const isAuthed = !!userId;
       const requestedAction = detectRequestedAction(prompt);
 
       // Short-circuit: se pediu ação e não está logado, evita gastar tool-call
       if (!isAuthed && requestedAction) {
         const acao = requestedAction;
+        if (fromWhatsApp) {
+          const msg =
+            `Para ${acao === "cadastrar_evento" ? "cadastrar eventos" : acao === "reservar" ? "reservar passeios" : "concluir pagamentos"} pelo WhatsApp, vincule este número à sua conta:\n\n` +
+            `1️⃣ Acesse: https://descubrams.com/descubrams/login\n` +
+            `2️⃣ No perfil, salve o telefone *${whatsappPhone}* (mesmo do WhatsApp)\n` +
+            `3️⃣ Envie *vincular* aqui no chat`;
+          return new Response(
+            JSON.stringify({ response: msg, whatsapp_link_required: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
         const msg = acao === "cadastrar_evento"
           ? "Legal! Para cadastrar um evento oficial, preciso que você faça login primeiro — assim o admin sabe quem enviou e você acompanha a aprovação."
           : acao === "reservar"

@@ -93,6 +93,32 @@ Exemplo de tom (pergunta simples):
 }
 
 /**
+ * Instruções de function calling para o modo agente transacional.
+ */
+export function generateGuataToolsGuidance(userAuthenticated: boolean): string {
+  return `
+FERRAMENTAS DISPONÍVEIS (function calling):
+- search_partners(query, city?, business_type?): busca parceiros ativos em MS
+- check_availability(partner_id, date, people?): checa disponibilidade e preço
+- create_event_draft(title, start_date, city, ...): cadastra evento (moderação admin)
+- create_reservation(partner_id, date, service_id, people?, ...): cria reserva pendente
+- create_checkout_link(reservation_id): gera link Stripe para pagar reserva
+
+REGRAS DE USO:
+1. Use search_partners SEMPRE antes de check_availability — nunca invente partner_id.
+2. Fluxo de reserva: search_partners → check_availability → confirme dados e preço → create_reservation → create_checkout_link.
+3. Antes de chamar create_event_draft ou create_reservation: confirme TODOS os dados e receba "sim/confirmo" explícito.
+4. Se user_authenticated=${userAuthenticated} for false e o usuário pedir ação de escrita, NÃO chame ferramenta. Inclua [[REQUIRE_LOGIN:<acao>]] (cadastrar_evento, reservar ou pagar).
+5. Ao receber { error } de uma tool, explique gentilmente e sugira próximo passo.
+6. Se search_partners retornar count=0 ou nenhum parceiro para o que o usuário pediu, diga claramente que ainda não há reserva online para aquele item específico, mas ofereça buscar parceiros na cidade/região (ex.: Bonito).
+7. Nunca invente preço, disponibilidade ou dados de parceiro fora das ferramentas. Atrações turísticas citadas em conversa (ex.: Gruta do Lago Azul) só podem ser reservadas se aparecerem em search_partners.
+8. Entenda referências como "esse", "aquele", "quero esse" pelo último passeio/parceiro mencionado no histórico da conversa.
+9. Ao gerar checkout_url, mostre o link completo para o usuário clicar e pagar.
+10. Ao cadastrar evento, informe que aguarda aprovação do admin.
+`.trim();
+}
+
+/**
  * Format tourism sources information for the AI context
  */
 export function formatSourcesContext(): string {

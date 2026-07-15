@@ -9,6 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { platformContentService } from "@/services/admin/platformContentService";
 import { stripChatMarkdown } from "@/utils/stripChatMarkdown";
+import {
+  saveGuataLoginReturn,
+  saveGuataPendingContext,
+} from "@/utils/guataPendingAction";
+import type { GuataTransactionalAction } from "@/utils/guataTransactionalIntent";
 
 const REQUIRE_LOGIN_RE = /\[\[REQUIRE_LOGIN:([a-z_]+)\]\]/i;
 
@@ -18,12 +23,38 @@ const ACTION_LABEL: Record<string, string> = {
   pagar: "concluir o pagamento",
 };
 
+function renderTextWithLinks(text: string): React.ReactNode[] {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+  return parts.map((part, i) =>
+    /^https?:\/\//.test(part) ? (
+      <a
+        key={`link-${i}`}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline text-sky-300 hover:text-sky-200 break-all"
+      >
+        {part}
+      </a>
+    ) : (
+      <React.Fragment key={`txt-${i}`}>{part}</React.Fragment>
+    ),
+  );
+}
+
 interface ChatMessageProps {
   message: AIMessage;
   enviarFeedback: (positivo: boolean) => void;
+  conversationHistory?: string[];
+  visibleMessages?: unknown[];
 }
 
-const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
+const ChatMessage = ({
+  message,
+  enviarFeedback,
+  conversationHistory = [],
+  visibleMessages = [],
+}: ChatMessageProps) => {
   const isGuata = !message.isUser;
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string>("/guata-mascote.jpg");
@@ -39,14 +70,18 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
   }, [message.text]);
 
   const handleLoginClick = () => {
-    try {
-      sessionStorage.setItem(
-        "guata_pending_action",
-        JSON.stringify({ action: requiredAction, at: Date.now() }),
+    const returnPath = window.location.pathname + window.location.search;
+    if (requiredAction) {
+      saveGuataPendingContext(
+        requiredAction as GuataTransactionalAction,
+        conversationHistory,
+        visibleMessages,
       );
-      sessionStorage.setItem("guata_login_return", window.location.pathname);
-    } catch (_err) { /* ignore */ }
-    navigate(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+    }
+    saveGuataLoginReturn(returnPath);
+    // AuthPage usa ?redirect= e a rota real do Descubra MS é /descubrams/login
+    // (/login não existe e caía no catch-all da Guatá Labs)
+    navigate(`/descubrams/login?redirect=${encodeURIComponent(returnPath)}`);
   };
 
   useEffect(() => {
@@ -55,18 +90,17 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
     const loadAvatar = async () => {
       try {
         const data = await platformContentService.getContent(['guata_avatar_url']);
-        if (data.length > 0 && data[0].content_value) {
-          setAvatarUrl(data[0].content_value);
-          return;
-        }
+        const nextUrl =
+          data.length > 0 && data[0].content_value
+            ? data[0].content_value
+            : '/guata-mascote.jpg';
+        setAvatarUrl((current) => (current === nextUrl ? current : nextUrl));
       } catch (error) {
         console.error('Erro ao carregar avatar do Guatá:', error);
+        setAvatarUrl((current) => (current === '/guata-mascote.jpg' ? current : '/guata-mascote.jpg'));
       }
-      setAvatarUrl('/guata-mascote.jpg');
     };
     loadAvatar();
-
-    const interval = setInterval(loadAvatar, 30000);
 
     const handleLogoUpdate = (event: CustomEvent) => {
       if (event.detail?.key === 'guata_avatar_url') {
@@ -76,7 +110,6 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
     window.addEventListener('logo-updated', handleLogoUpdate as EventListener);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener('logo-updated', handleLogoUpdate as EventListener);
     };
   }, [isGuata]);
@@ -115,7 +148,7 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
         ) : (
           <>
             <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
-              {plain}
+              {renderTextWithLinks(plain)}
             </p>
             {isGuata && requiredAction && (
               <div className="mt-3">

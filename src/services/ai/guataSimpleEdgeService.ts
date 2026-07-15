@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TrueApiQuery, TrueApiResponse } from "./guataTrueApiService";
 import { MSKnowledgeBase } from "./search/msKnowledgeBase";
 import { isGenericGuataFallback } from "./search/msKnowledgeTopics";
+import { isGuataTransactionalIntent } from "@/utils/guataTransactionalIntent";
 
 interface WebRagResult {
   answer?: string;
@@ -29,6 +30,18 @@ class GuataSimpleEdgeService {
     const startTime = Date.now();
     const question = String(query.question || "").trim();
     const rewritten = this.rewriteQuery(question, query.conversationHistory);
+
+    if (isGuataTransactionalIntent(rewritten)) {
+      const toolAnswer = await this.callGuataAi(rewritten, { sources: [] }, query, true);
+      if (
+        toolAnswer?.trim() &&
+        !this.isErrorAnswer(toolAnswer) &&
+        !isGenericGuataFallback(toolAnswer)
+      ) {
+        const answer = this.sanitizeAnswer(toolAnswer, query);
+        return this.toResponse(answer, { sources: [] }, startTime, false, "transactional");
+      }
+    }
 
     const rag = await this.fetchWebContext(rewritten, query);
 
@@ -122,6 +135,7 @@ class GuataSimpleEdgeService {
     prompt: string,
     rag: WebRagResult,
     query: TrueApiQuery,
+    forceTools = false,
   ): Promise<string | null> {
     const knowledgeBase = [
       ...rag.sources.map((s, i) => ({
@@ -150,6 +164,9 @@ class GuataSimpleEdgeService {
           userContext: query.userLocation ? `Localização: ${query.userLocation}` : "",
           chatHistory: (query.conversationHistory || []).slice(-6).join("\n"),
           mode: "tourist",
+          enable_tools: true,
+          user_authenticated: query.userId && query.userId !== "convidado" && query.userId !== "publico",
+          force_tools: forceTools,
         },
       });
 
@@ -258,13 +275,14 @@ class GuataSimpleEdgeService {
     rag: WebRagResult,
     startTime: number,
     usedWeb: boolean,
+    pipeline: "simple_edge" | "transactional" = "simple_edge",
   ): TrueApiResponse {
     return {
       answer,
       confidence: rag.confidence ?? (usedWeb ? 0.85 : 0.65),
       sources: rag.sources.map((s) => s.source || s.title || "web").filter(Boolean),
       processingTime: Date.now() - startTime,
-      learningInsights: { pipeline: "simple_edge", usedWeb },
+      learningInsights: { pipeline, usedWeb },
       adaptiveImprovements: [],
       memoryUpdates: [],
       personality: "Guatá",

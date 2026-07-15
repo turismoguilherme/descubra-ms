@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { getOAuthCallbackRedirectPath, isDescubraMSContext } from '@/utils/authRedirect';
+import { consumeGuataLoginReturn } from '@/utils/guataPendingAction';
 
 /**
  * Componente para processar callback OAuth do Supabase
@@ -57,29 +58,28 @@ export const OAuthCallback = () => {
           console.log('🔄 [OAuthCallback]   - É localhost:', isLocal);
           console.log('🔄 [OAuthCallback]   - Pathname:', window.location.pathname);
           
-          // IMPORTANTE: Garantir que o redirecionamento use o DOMÍNIO ATUAL
-          // LOCALHOST: sempre manter no localhost (getOAuthCallbackRedirectPath já trata isso)
-          // Não forçar redirecionamento para outro domínio - respeitar o domínio onde o usuário está
-          let redirectPath = getOAuthCallbackRedirectPath();
-          console.log('🔄 [OAuthCallback] 🎯 Path inicial calculado:', redirectPath);
+          // Preferir retorno ao chat Guatá (salvo antes do OAuth em sessionStorage)
+          const guataReturn = consumeGuataLoginReturn();
+          let redirectPath = guataReturn || getOAuthCallbackRedirectPath();
+          console.log('🔄 [OAuthCallback] 🎯 Path inicial calculado:', redirectPath, { guataReturn });
           
-          // LOCALHOST: O getOAuthCallbackRedirectPath já trata localhost corretamente
-          // Apenas garantir que não haja ajustes que forcem redirecionamento para produção
-          if (isLocal) {
+          if (guataReturn) {
+            console.log('🔄 [OAuthCallback] 🦦 Retorno Guatá priorizado:', guataReturn);
+          } else if (isLocal) {
             console.log('🔄 [OAuthCallback] 🏠 LOCALHOST detectado - mantendo no localhost');
-            // O path já foi calculado corretamente pela função, não fazer ajustes adicionais
-            // que possam forçar redirecionamento para domínios de produção
           }
           // Se estamos em descubrams.com, garantir que o path seja /descubrams (não /ms)
           else if ((currentHostname === 'descubrams.com' || currentHostname.includes('descubrams'))) {
             console.log('🔄 [OAuthCallback] ✅ Detectado Descubra MS');
-            // Se o callback path for /ms (que é usado para OAuth callback), redirecionar para /descubrams
             if (redirectPath === '/ms' || redirectPath.startsWith('/ms/')) {
               console.log('🔄 [OAuthCallback]   ↳ Convertendo /ms para /descubrams');
               redirectPath = '/descubrams';
             }
-            // Garantir que sempre redireciona para /descubrams se estamos em descubrams.com
-            if (!redirectPath.startsWith('/descubrams')) {
+            if (
+              !redirectPath.startsWith('/descubrams') &&
+              !redirectPath.startsWith('/chatguata') &&
+              !redirectPath.startsWith('/minhas-reservas')
+            ) {
               console.log('🔄 [OAuthCallback]   ↳ Forçando path para /descubrams');
               redirectPath = '/descubrams';
             }
@@ -87,13 +87,17 @@ export const OAuthCallback = () => {
           // Se estamos em viajartur.com, garantir que não redireciona para /descubrams
           else if (currentHostname === 'viajartur.com' || currentHostname.includes('viajartur') || currentHostname === 'viajar.com') {
             console.log('🔄 [OAuthCallback] ✅ Detectado ViaJAR');
-            // Não redirecionar para /descubrams se estiver em viajartur.com
             if (redirectPath === '/descubrams' || redirectPath.startsWith('/descubrams/')) {
               console.log('🔄 [OAuthCallback]   ↳ Prevenindo redirecionamento para /descubrams, usando /');
               redirectPath = '/';
             }
           } else {
             console.log('🔄 [OAuthCallback] ⚠️ Domínio não reconhecido:', currentHostname);
+          }
+
+          // Nunca cair na home Guatá Labs se a intenção era voltar ao chat
+          if (redirectPath === '/' && (guataReturn || isLocal || isDescubraMSContext())) {
+            redirectPath = guataReturn || '/descubrams/guata';
           }
           
           const isDescubraMS = isDescubraMSContext();

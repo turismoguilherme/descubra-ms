@@ -19,18 +19,17 @@ export async function searchPartners(
   }
 
   let builder = ctx.supabaseAdmin
-    .from("commercial_partners")
-    .select("id, company_name, trade_name, city, business_type, description, contact_phone, contact_whatsapp, website_url")
-    .eq("status", "active")
+    .from("institutional_partners")
+    .select("id, name, address, partner_type, description, contact_phone, website_url")
+    .eq("status", "approved")
+    .eq("is_active", true)
     .eq("subscription_status", "active")
     .limit(5);
 
   const like = `%${q}%`;
-  builder = builder.or(
-    `company_name.ilike.${like},trade_name.ilike.${like},description.ilike.${like},services_offered.cs.{${q}}`,
-  );
-  if (input.city) builder = builder.ilike("city", `%${input.city}%`);
-  if (input.business_type) builder = builder.ilike("business_type", `%${input.business_type}%`);
+  builder = builder.or(`name.ilike.${like},description.ilike.${like},address.ilike.${like}`);
+  if (input.city) builder = builder.ilike("address", `%${input.city}%`);
+  if (input.business_type) builder = builder.ilike("partner_type", `%${input.business_type}%`);
 
   const { data, error } = await builder;
   if (error) {
@@ -41,15 +40,22 @@ export async function searchPartners(
 
   const results = (data ?? []).map((p) => ({
     id: p.id,
-    name: p.trade_name || p.company_name,
-    city: p.city,
-    business_type: p.business_type,
+    name: p.name,
+    city: extractCityFromAddress(p.address),
+    partner_type: p.partner_type,
     description: p.description ? String(p.description).slice(0, 220) : undefined,
     website: p.website_url ?? undefined,
-    whatsapp: p.contact_whatsapp ?? undefined,
+    phone: p.contact_phone ?? undefined,
+    reservation_url: `/descubrams/parceiros/${p.id}/reservar`,
   }));
 
   const output = { count: results.length, results };
   await logAction(ctx, "search_partners", input, output, "success");
   return output;
+}
+
+function extractCityFromAddress(address: string | null | undefined): string | undefined {
+  if (!address) return undefined;
+  const parts = address.split(",").map((s) => s.trim()).filter(Boolean);
+  return parts.length > 1 ? parts[parts.length - 1] : undefined;
 }

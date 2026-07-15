@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { getGuataSessionId, resetGuataSessionId } from "@/utils/guataSession";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,10 @@ import { useGuataInput } from "@/hooks/useGuataInput";
 import SuggestionQuestions from "@/components/guata/SuggestionQuestions";
 import { getInitialKnowledgeBase, getDefaultUserInfo } from "@/services/ai/knowledge/guataKnowledgeBase";
 import { guataTrueApiService } from "@/services/ai";
+import { useGuataPendingResume } from "@/hooks/useGuataPendingResume";
 import UniversalLayout from "@/components/layout/UniversalLayout";
+import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 
 const Guata = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -28,6 +31,7 @@ const Guata = () => {
   const [userPreferences, setUserPreferences] = useState<any>({});
   const [learningInsights, setLearningInsights] = useState<any[]>([]);
   const [sessionId, setSessionId] = useState(() => getGuataSessionId());
+  const [pendingResumePrompt, setPendingResumePrompt] = useState<string | null>(null);
 
   const {
     inputMensagem,
@@ -120,6 +124,7 @@ const Guata = () => {
       };
       
       setMensagens(prev => [...prev, novaMensagemBot]);
+      setConversationHistory(prev => [...prev, response.answer]);
       
     } catch (error) {
       console.error("❌ Erro no Guatá True API:", error);
@@ -207,6 +212,7 @@ const Guata = () => {
     setMensagens([]);
     setConversationHistory([]);
     setLearningInsights([]);
+    setPendingResumePrompt(null);
     resetGuataSessionId();
     setSessionId(getGuataSessionId());
   };
@@ -225,6 +231,33 @@ const Guata = () => {
   const handleSuggestionClick = (pergunta: string) => {
     setInputMensagem(pergunta);
     enviarMensagem(pergunta);
+  };
+
+  const enviarMensagemRef = useRef(enviarMensagem);
+  enviarMensagemRef.current = enviarMensagem;
+
+  const handlePendingResume = useCallback((prompt: string, restoredHistory: string[], restoredMessages: any[]) => {
+    if (restoredHistory.length > 0) {
+      setConversationHistory(restoredHistory);
+    }
+    if (restoredMessages.length > 0) {
+      setMensagens(
+        restoredMessages.map((message) => ({
+          ...message,
+          timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
+        })),
+      );
+    }
+    setPendingResumePrompt(prompt);
+  }, []);
+
+  useGuataPendingResume(user?.id, handlePendingResume);
+
+  const handleContinueResume = () => {
+    if (!pendingResumePrompt) return;
+    const prompt = pendingResumePrompt;
+    setPendingResumePrompt(null);
+    void enviarMensagemRef.current(prompt);
   };
 
   // Se está carregando auth E não forçou o carregamento, mostrar loading
@@ -263,7 +296,10 @@ const Guata = () => {
             <p className="text-xl mb-6">Faça login para conversar com o Guatá.</p>
             <div className="space-y-3">
               <button 
-                onClick={() => navigate("/descubrams/login")}
+                onClick={() => {
+                  const returnPath = window.location.pathname + window.location.search;
+                  navigate(`/descubrams/login?redirect=${encodeURIComponent(returnPath)}`);
+                }}
                 className="bg-ms-accent-orange hover:bg-ms-accent-orange/90 text-white px-8 py-3 rounded-lg font-semibold mr-3"
               >
                 Fazer Login
@@ -294,7 +330,10 @@ const Guata = () => {
             <p className="text-sm">
               🎭 Modo Convidado - 
               <button 
-                onClick={() => navigate("/descubrams/login")}
+                onClick={() => {
+                  const returnPath = window.location.pathname + window.location.search;
+                  navigate(`/descubrams/login?redirect=${encodeURIComponent(returnPath)}`);
+                }}
                 className="underline hover:no-underline ml-1"
               >
                 Faça login para uma experiência completa
@@ -329,7 +368,24 @@ const Guata = () => {
                   enviarFeedback={enviarFeedback}
                   onSuggestionClick={handleSuggestionClick}
                   showInlineSuggestions={mensagens.filter((m) => m.isUser).length === 0 && !isLoading}
+                  conversationHistory={conversationHistory}
                 />
+                {pendingResumePrompt && (
+                  <div className="mt-3 rounded-xl border border-white/20 bg-white/10 p-3 text-white shadow-lg backdrop-blur">
+                    <p className="mb-2 text-sm text-white/90">
+                      Conversei antes do login. Quer continuar exatamente de onde paramos?
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleContinueResume}
+                      className="bg-ms-accent-orange hover:bg-ms-accent-orange/90 text-white gap-2"
+                    >
+                      <RotateCcw size={14} />
+                      Continuar de onde paramos?
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Coluna lateral de sugestões (desktop apenas) */}

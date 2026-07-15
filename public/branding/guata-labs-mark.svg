@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Guatá Labs</title>
+  <desc id="desc">Marca Guatá Labs em verde e dourado</desc>
+  <rect width="512" height="512" rx="112" fill="#f7f3e8"/>
+  <circle cx="256" cy="202" r="118" fill="#1f5a3d"/>
+  <path d="M163 174c21-48 58-76 93-76s72 28 93 76c-24-15-57-24-93-24s-69 9-93 24Z" fill="#c59a52"/>
+  <path d="M174 174c12-19 42-34 82-34s70 15 82 34c-20 8-49 13-82 13s-62-5-82-13Z" fill="#f7f3e8"/>
+  <ellipse cx="256" cy="224" rx="70" ry="80" fill="#f7f3e8"/>
+  <circle cx="225" cy="205" r="8" fill="#1f5a3d"/>
+  <circle cx="287" cy="205" r="8" fill="#1f5a3d"/>
+  <ellipse cx="256" cy="236" rx="22" ry="28" fill="#c59a52"/>
+  <path d="M256 255v22m-25 0c12 12 38 12 50 0" fill="none" stroke="#1f5a3d" stroke-width="10" stroke-linecap="round"/>
+  <path d="M154 362c0-47 46-82 102-82s102 35 102 82v42H154Z" fill="#1f5a3d"/>
+  <path d="m221 317 35 38 35-38" fill="none" stroke="#c59a52" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

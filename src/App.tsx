@@ -151,6 +151,12 @@ const RedirectOldMSRoute = () => {
   return <Navigate to={newPath} replace />;
 };
 
+// /login legado → login Descubra MS (preserva ?redirect=)
+const RedirectToMsLogin = () => {
+  const location = useLocation();
+  return <Navigate to={`/descubrams/login${location.search}`} replace />;
+};
+
 // Componente interno que usa useLocation (deve estar dentro do Router)
 function AppRoutes() {
   // Validar domínio e determinar qual conteúdo mostrar
@@ -187,6 +193,9 @@ function AppRoutes() {
                                 <Route path="/delinha" element={<Delinha />} />
                                 <Route path="/welcome" element={<Welcome />} />
                                 <Route path="/blog" element={<BlogOverFlowOne />} />
+
+                                {/* /login sem prefixo caía no catch-all Guatá Labs — redireciona ao login MS */}
+                                <Route path="/login" element={<RedirectToMsLogin />} />
 
                                 {/* Chatbot Guatá Standalone - Totem */}
                                 <Route path="/chatguata" element={<ChatGuata />} />

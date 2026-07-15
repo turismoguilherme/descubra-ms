@@ -13,6 +13,37 @@ import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
 import { getLoginRedirectPath, isDescubraMSContext } from '@/utils/authRedirect';
 import { useBrand } from '@/context/BrandContext';
+import {
+  consumeGuataLoginReturn,
+  peekGuataLoginReturn,
+  saveGuataLoginReturn,
+} from '@/utils/guataPendingAction';
+
+/** Resolve para onde voltar após login — nunca manda para Guatá Labs (`/`). */
+function resolvePostLoginPath(redirectUrlParam: string | null): string {
+  const fromQuery = redirectUrlParam?.trim();
+  if (fromQuery && fromQuery.startsWith('/') && !fromQuery.startsWith('//') && fromQuery !== '/') {
+    if (!fromQuery.startsWith('/viajar') && fromQuery !== '/login') {
+      // Limpa cópia no storage para não sobrar path antigo no próximo OAuth
+      try { sessionStorage.removeItem('guata_login_return'); } catch { /* ignore */ }
+      return fromQuery;
+    }
+  }
+
+  const fromStorage = consumeGuataLoginReturn();
+  if (fromStorage) return fromStorage;
+
+  // Em contexto Descubra MS / chat Guatá, preferir chat a home ViaJAR
+  if (isDescubraMSContext() || peekGuataLoginReturn()) {
+    return '/descubrams/guata';
+  }
+
+  const fallback = getLoginRedirectPath();
+  if (fallback === '/' || fallback.startsWith('/viajar')) {
+    return '/descubrams/guata';
+  }
+  return fallback;
+}
 
 const AuthPage = () => {
   console.log('🔐 [AuthPage] ========== COMPONENTE RENDERIZADO ==========');
@@ -39,7 +70,14 @@ const AuthPage = () => {
   }
   
   // Obter URL de redirect dos parâmetros da query
-  const redirectUrlParam = searchParams.get('redirect');
+  const redirectUrlParam = searchParams.get('redirect') || searchParams.get('next');
+
+  // Garantir que o retorno ao chat sobreviva ao OAuth (query some no callback)
+  useEffect(() => {
+    if (redirectUrlParam?.startsWith('/') && redirectUrlParam !== '/') {
+      saveGuataLoginReturn(redirectUrlParam);
+    }
+  }, [redirectUrlParam]);
   
   console.log('🔐 [AuthPage] Estado inicial:', {
     isAuthenticated,
@@ -52,8 +90,7 @@ const AuthPage = () => {
   // Redirecionar se já autenticado - RECALCULAR path baseado no domínio atual
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      // IMPORTANTE: Recalcular o path baseado no domínio ATUAL, não no render inicial
-      const calculatedRedirectPath = redirectUrlParam || getLoginRedirectPath();
+      const calculatedRedirectPath = resolvePostLoginPath(redirectUrlParam);
       
       console.log('✅ [AuthPage] Usuário já autenticado, redirecionando para:', calculatedRedirectPath);
       console.log('✅ [AuthPage] Domínio atual:', window.location.hostname);
@@ -207,9 +244,8 @@ const AuthPage = () => {
         // Aguardar um pouco para garantir que a sessão foi estabelecida
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // IMPORTANTE: Recalcular o path baseado no domínio ATUAL, não usar valor do render inicial
-        // Se houver parâmetro de redirect na URL, usar ele. Caso contrário, recalcular baseado no domínio atual
-        const redirectPath = redirectUrlParam || getLoginRedirectPath();
+        // IMPORTANTE: query ?redirect= OU sessionStorage (OAuth) — nunca Guatá Labs `/`
+        const redirectPath = resolvePostLoginPath(redirectUrlParam);
         
         console.log('✅ [AuthPage] Redirecionando para:', redirectPath);
         console.log('✅ [AuthPage] Domínio atual:', window.location.hostname);
@@ -422,7 +458,7 @@ const AuthPage = () => {
                   Não tem uma conta?{' '}
                   <button
                     type="button"
-                    onClick={() => navigate('/descubrams/register')}
+                    onClick={() => navigate(`/descubrams/register${window.location.search || ''}`)}
                     className="text-blue-600 hover:text-blue-500 font-medium"
                   >
                     Criar conta

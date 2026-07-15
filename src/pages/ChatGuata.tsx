@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useGuataPendingResume } from "@/hooks/useGuataPendingResume";
 import GuataChat from "@/components/guata/GuataChat";
 import { useGuataConnection } from "@/hooks/useGuataConnection";
 import { useGuataInput } from "@/hooks/useGuataInput";
@@ -9,9 +11,11 @@ import { guataTrueApiService } from "@/services/ai";
 import { guataMLService } from "@/services/ai/ml/guataMLService";
 import { getGuataSessionId, resetGuataSessionId } from "@/utils/guataSession";
 import { isChatGuataTotemPath } from "@/utils/chatGuataTest";
+import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 
 const CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS = [
-  "Quais são os principais pontos turísticos de Campo Grande?",
+  "Quero cadastrar um evento ou reservar um passeio",
   "O que fazer em Campo Grande em um dia?",
   "Quais parques e áreas verdes visitar em Campo Grande?",
   "Onde experimentar comidas típicas em Campo Grande?",
@@ -23,6 +27,7 @@ const ChatGuata = () => {
   const location = useLocation();
   const isChatGuataRoute = isChatGuataTotemPath(location.pathname);
   const { toast } = useToast();
+  const { user } = useAuth();
   const { isConnected, connectionChecking } = useGuataConnection();
 
   // Estados para o Guatá
@@ -34,6 +39,7 @@ const ChatGuata = () => {
   const [currentQuestionId, setCurrentQuestionId] = useState<string | null>(null);
   const [currentAnswer, setCurrentAnswer] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState(() => getGuataSessionId());
+  const [pendingResumePrompt, setPendingResumePrompt] = useState<string | null>(null);
 
   const {
     inputMensagem,
@@ -78,7 +84,7 @@ const ChatGuata = () => {
       // Usar o serviço com APIs reais configuradas (Gemini + Google Search)
       const response = await guataTrueApiService.processQuestion({
         question: mensagemParaEnviar,
-        userId: 'publico',
+        userId: user?.id || "convidado",
         sessionId,
         userLocation: 'Mato Grosso do Sul',
         // Enviar histórico completo (perguntas e respostas) para melhor contexto
@@ -167,6 +173,7 @@ const ChatGuata = () => {
       timestamp: new Date()
     };
     setMensagens([mensagemBoasVindas]);
+    setPendingResumePrompt(null);
   };
 
   const enviarFeedback = async (positivo: boolean) => {
@@ -180,7 +187,7 @@ const ChatGuata = () => {
       const question = lastUserMessage?.text || '';
 
       const feedback = {
-        userId: 'publico',
+        userId: user?.id || "convidado",
         sessionId,
         questionId: currentQuestionId,
         question: question,
@@ -222,6 +229,33 @@ const ChatGuata = () => {
     setInputMensagem(""); // Limpar o campo após enviar
   };
 
+  const enviarMensagemRef = useRef(enviarMensagem);
+  enviarMensagemRef.current = enviarMensagem;
+
+  const handlePendingResume = useCallback((prompt: string, restoredHistory: string[], restoredMessages: any[]) => {
+    if (restoredHistory.length > 0) {
+      setConversationHistory(restoredHistory);
+    }
+    if (restoredMessages.length > 0) {
+      setMensagens(
+        restoredMessages.map((message) => ({
+          ...message,
+          timestamp: message.timestamp ? new Date(message.timestamp) : new Date(),
+        })),
+      );
+    }
+    setPendingResumePrompt(prompt);
+  }, []);
+
+  useGuataPendingResume(user?.id, handlePendingResume);
+
+  const handleContinueResume = () => {
+    if (!pendingResumePrompt) return;
+    const prompt = pendingResumePrompt;
+    setPendingResumePrompt(null);
+    void enviarMensagemRef.current(prompt);
+  };
+
   // Interface principal do Guatá - Tela cheia tipo totem
   return (
     <div 
@@ -248,7 +282,24 @@ const ChatGuata = () => {
                 onSuggestionClick={handleSuggestionClick}
                 suggestionsOverride={isChatGuataRoute ? CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS : undefined}
                 showInlineSuggestions={mensagens.filter((m) => m.isUser).length === 0 && !isLoading}
+                conversationHistory={conversationHistory}
               />
+              {pendingResumePrompt && (
+                <div className="mt-3 rounded-xl border border-white/20 bg-white/10 p-3 text-white shadow-lg backdrop-blur">
+                  <p className="mb-2 text-sm text-white/90">
+                    Conversei antes do login. Quer continuar exatamente de onde paramos?
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleContinueResume}
+                    className="bg-ms-accent-orange hover:bg-ms-accent-orange/90 text-white gap-2"
+                  >
+                    <RotateCcw size={14} />
+                    Continuar de onde paramos?
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Coluna lateral de sugestões (desktop apenas) */}

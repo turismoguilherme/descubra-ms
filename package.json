@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "dev:descubrams": "vite --mode descubrams",
+    "dev:guata-labs": "vite --mode guata-labs",
+    "build": "npm run build:descubrams",
+    "build:descubrams": "tsc && vite build --mode descubrams",
+    "build:guata-labs": "tsc && vite build --mode guata-labs",
     "build:dev": "vite build --mode development",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",

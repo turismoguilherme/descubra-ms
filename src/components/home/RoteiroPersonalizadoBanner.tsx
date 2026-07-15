@@ -6,6 +6,20 @@ import { platformContentService } from '@/services/admin/platformContentService'
 
 type ContactType = 'whatsapp' | 'link' | 'both';
 
+/** Evita abrir "agenciaguata.com" como rota local (localhost:8080/agenciaguata.com → Guatá Labs). */
+function normalizeExternalUrl(raw: string): string {
+  const value = String(raw || '').trim().replace(/^["']|["']$/g, '');
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith('//')) return `https:${value}`;
+  if (value.startsWith('/')) return value; // path relativo interno intencional
+  // domínio sem protocolo (ex.: agenciaguata.com)
+  if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?#].*)?$/i.test(value)) {
+    return `https://${value}`;
+  }
+  return value;
+}
+
 const RoteiroPersonalizadoBanner = () => {
   const [whatsappPhone, setWhatsappPhone] = useState<string>("");
   const [guataImageUrl, setGuataImageUrl] = useState<string>("");
@@ -55,7 +69,7 @@ const RoteiroPersonalizadoBanner = () => {
             setContactType((value as ContactType) || 'whatsapp');
             break;
           case 'ms_roteiro_external_link':
-            setExternalLink(value as string || '');
+            setExternalLink(normalizeExternalUrl(String(value || '')));
             break;
           case 'ms_roteiro_external_link_text':
             setExternalLinkText(value as string || 'Acessar Site');
@@ -103,15 +117,17 @@ const RoteiroPersonalizadoBanner = () => {
   };
 
   const handleExternalLinkClick = () => {
-    if (!externalLink) return;
-    window.open(externalLink, '_blank');
+    const url = normalizeExternalUrl(externalLink);
+    if (!url || url.startsWith('/')) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  // Não exibir se o banner estiver desabilitado ou se não tiver opção de contato configurada
-  const hasWhatsApp = whatsappPhone && (contactType === 'whatsapp' || contactType === 'both');
-  const hasExternalLink = externalLink && (contactType === 'link' || contactType === 'both');
+  // Se houver link da agência, mostrar o botão mesmo com contact_type antigo = "whatsapp"
+  const showWhatsApp =
+    Boolean(whatsappPhone) && (contactType === 'whatsapp' || contactType === 'both');
+  const showAgencyLink = Boolean(normalizeExternalUrl(externalLink));
   
-  if (loading || !bannerEnabled || (!hasWhatsApp && !hasExternalLink)) {
+  if (loading || !bannerEnabled || (!showWhatsApp && !showAgencyLink)) {
     return null;
   }
 
@@ -132,7 +148,7 @@ const RoteiroPersonalizadoBanner = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Botão WhatsApp */}
-              {hasWhatsApp && (
+              {showWhatsApp && (
                 <Button
                   onClick={handleWhatsAppClick}
                   size="lg"
@@ -144,14 +160,14 @@ const RoteiroPersonalizadoBanner = () => {
                 </Button>
               )}
               
-              {/* Botão Link Externo */}
-              {hasExternalLink && (
+              {/* Botão Link Externo / Agência */}
+              {showAgencyLink && (
                 <Button
                   onClick={handleExternalLinkClick}
                   size="lg"
                   variant="default"
                   className={
-                    hasWhatsApp
+                    showWhatsApp
                       ? "bg-white text-green-800 hover:bg-green-50 hover:text-green-900 border-2 border-white font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                       : "bg-ms-secondary-yellow hover:bg-ms-secondary-yellow/90 text-gray-900 font-bold px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
                   }

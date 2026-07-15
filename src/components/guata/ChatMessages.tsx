@@ -6,9 +6,10 @@ import { AnimatePresence } from "framer-motion";
 interface ChatMessagesProps {
   messages: unknown[];
   enviarFeedback: (positivo: boolean) => void;
+  conversationHistory?: string[];
 }
 
-const ChatMessages = ({ messages, enviarFeedback }: ChatMessagesProps) => {
+const ChatMessages = ({ messages, enviarFeedback, conversationHistory = [] }: ChatMessagesProps) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Rolar para a última mensagem quando houver uma nova com animação suave
@@ -31,14 +32,16 @@ const ChatMessages = ({ messages, enviarFeedback }: ChatMessagesProps) => {
   return (
     <div 
       ref={messagesContainerRef}
-      className="h-96 overflow-y-auto p-4 space-y-4 scroll-smooth"
+      className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 scroll-smooth"
     >
       <AnimatePresence initial={false} mode="sync">
         {messages.map((message) => (
           <ChatMessage 
             key={message.id}
             message={message}
-            enviarFeedback={enviarFeedback} 
+            enviarFeedback={enviarFeedback}
+            conversationHistory={conversationHistory}
+            visibleMessages={messages}
           />
         ))}
       </AnimatePresence>

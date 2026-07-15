@@ -27,13 +27,19 @@ export async function checkAvailability(
   const people = Math.max(1, Number(input.people ?? 1));
 
   const { data: partner, error: pErr } = await ctx.supabaseAdmin
-    .from("commercial_partners")
-    .select("id, company_name, trade_name, city, business_type, status")
+    .from("institutional_partners")
+    .select("id, name, address, partner_type, status, is_active, subscription_status")
     .eq("id", input.partner_id)
     .maybeSingle();
 
-  if (pErr || !partner || partner.status !== "active") {
-    const output = { error: "parceiro não encontrado ou inativo" };
+  const partnerActive =
+    partner &&
+    partner.status === "approved" &&
+    partner.is_active === true &&
+    partner.subscription_status === "active";
+
+  if (pErr || !partnerActive) {
+    const output = { error: "parceiro não encontrado ou indisponível para reservas" };
     await logAction(ctx, "check_availability", input, output, "error", pErr?.message);
     return output;
   }
@@ -60,32 +66,46 @@ export async function checkAvailability(
     }))
     .filter((s) => s.remaining === 0 || s.remaining >= people);
 
-  const services = (pricing ?? []).map((p) => {
-    let estimated: number | null = null;
-    if (p.pricing_type === "per_person" && p.price_per_person != null) {
-      estimated = Number(p.price_per_person) * people;
-    } else if (p.pricing_type === "per_night" && p.price_per_night != null) {
-      estimated = Number(p.price_per_night);
-    } else if (p.base_price != null) {
-      estimated = Number(p.base_price);
-    }
-    return {
-      pricing_id: p.id,
-      service_name: p.service_name,
-      service_type: p.service_type,
-      pricing_type: p.pricing_type,
-      estimated_price_brl: estimated,
-    };
-  });
+  const services = (pricing ?? []).map((p) => ({
+    pricing_id: p.id,
+    service_name: p.service_name,
+    service_type: p.service_type,
+    pricing_type: p.pricing_type,
+    estimated_price_brl: estimatePrice(p, people),
+  }));
 
   const output = {
-    partner: { id: partner.id, name: partner.trade_name || partner.company_name, city: partner.city },
+    partner: {
+      id: partner.id,
+      name: partner.name,
+      city: partner.address?.split(",").pop()?.trim(),
+      reservation_url: `/descubrams/parceiros/${partner.id}/reservar`,
+    },
     date: input.date,
     people,
-    has_availability: slots.length > 0 || (avail?.length ?? 0) === 0, // se sem calendário explícito, deixa Gemini pedir contato
+    has_availability: slots.length > 0 || (avail?.length ?? 0) === 0,
     slots,
     services,
   };
   await logAction(ctx, "check_availability", input, output, "success");
   return output;
+}
+
+function estimatePrice(
+  p: {
+    pricing_type: string;
+    base_price: number | null;
+    price_per_person: number | null;
+    price_per_night: number | null;
+  },
+  people: number,
+): number | null {
+  if (p.pricing_type === "per_person" && p.price_per_person != null) {
+    return Number(p.price_per_person) * people;
+  }
+  if (p.pricing_type === "per_night" && p.price_per_night != null) {
+    return Number(p.price_per_night);
+  }
+  if (p.base_price != null) return Number(p.base_price);
+  return null;
 }

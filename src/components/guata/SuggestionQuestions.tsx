@@ -1,7 +1,11 @@
 
 import React, { useEffect, useState } from "react";
 import { platformContentService } from "@/services/admin/platformContentService";
-import { GUATA_DEFAULT_SUGGESTION_QUESTIONS } from "@/components/guata/guataSuggestionDefaults";
+import {
+  GUATA_DEFAULT_SUGGESTION_QUESTIONS,
+  GUATA_TRANSACTIONAL_SUGGESTION,
+  mergeGuataSuggestionQuestions,
+} from "@/components/guata/guataSuggestionDefaults";
 import { cn } from "@/lib/utils";
 
 interface SuggestionQuestionsProps {
@@ -35,13 +39,15 @@ const SuggestionQuestions = ({
 }: SuggestionQuestionsProps) => {
   const hasOverride = Array.isArray(suggestionsOverride) && suggestionsOverride.length > 0;
   const [items, setItems] = useState<string[]>(
-    hasOverride ? suggestionsOverride : GUATA_DEFAULT_SUGGESTION_QUESTIONS
+    hasOverride
+      ? mergeGuataSuggestionQuestions(suggestionsOverride)
+      : GUATA_DEFAULT_SUGGESTION_QUESTIONS
   );
   const [loading, setLoading] = useState(!hasOverride);
 
   useEffect(() => {
     if (hasOverride) {
-      setItems(suggestionsOverride);
+      setItems(mergeGuataSuggestionQuestions(suggestionsOverride));
       setLoading(false);
       return;
     }
@@ -53,10 +59,11 @@ const SuggestionQuestions = ({
         const row = rows.find((r) => r.content_key === "guata_chat_suggestion_questions");
         const fromDb = parseSuggestionJson(row?.content_value ?? null);
         if (!cancelled) {
-          setItems(fromDb.length > 0 ? fromDb : GUATA_DEFAULT_SUGGESTION_QUESTIONS);
+          const base = fromDb.length > 0 ? fromDb : GUATA_DEFAULT_SUGGESTION_QUESTIONS;
+          setItems(mergeGuataSuggestionQuestions(base));
         }
       } catch {
-        if (!cancelled) setItems(GUATA_DEFAULT_SUGGESTION_QUESTIONS);
+        if (!cancelled) setItems(mergeGuataSuggestionQuestions(GUATA_DEFAULT_SUGGESTION_QUESTIONS));
       } finally {
         if (!cancelled) setLoading(false);
       }

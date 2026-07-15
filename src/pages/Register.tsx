@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import RegisterForm, { RegisterFormValues } from "@/components/auth/RegisterForm";
 // import { AccessibilityPreferences } from "@/components/auth/AccessibilityQuestion";
@@ -8,6 +8,26 @@ import SecureProfileForm from "@/components/auth/SecureProfileForm";
 import EmailConfirmationMessage from "@/components/auth/EmailConfirmationMessage";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { getLoginRedirectPath } from "@/utils/authRedirect";
+import { consumeGuataLoginReturn } from "@/utils/guataPendingAction";
+
+function resolveDescubraRegisterRedirect(redirectUrlParam: string | null): string {
+  const fromQuery = redirectUrlParam?.trim();
+  if (fromQuery && fromQuery.startsWith("/") && !fromQuery.startsWith("//") && fromQuery !== "/") {
+    if (!fromQuery.startsWith("/viajar") && fromQuery !== "/login") {
+      try { sessionStorage.removeItem("guata_login_return"); } catch { /* ignore */ }
+      return fromQuery;
+    }
+  }
+
+  const fromStorage = consumeGuataLoginReturn();
+  if (fromStorage) return fromStorage;
+
+  const fallback = getLoginRedirectPath();
+  if (fallback === "/" || fallback.startsWith("/viajar")) {
+    return "/descubrams";
+  }
+  return fallback;
+}
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -15,15 +35,32 @@ const Register = () => {
   const { user, signUp, signInWithProvider, loading } = useAuth();
   const { profileComplete, loading: profileLoading } = useProfileCompletion();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectUrlParam = searchParams.get("redirect") || searchParams.get("next");
 
   useEffect(() => {
     if (!loading && !profileLoading && user) {
+      const pathname = window.location.pathname.toLowerCase();
+      const isDescubraMSRegister =
+        pathname.startsWith("/descubrams/register") ||
+        pathname.startsWith("/ms/register") ||
+        pathname.startsWith("/descubramatogrossodosul/register");
+
       console.log("👤 REGISTER: Usuário logado detectado, verificando perfil...", {
         userEmail: user.email,
         provider: user.app_metadata?.provider,
         profileComplete,
-        userMetadata: user.user_metadata
+        userMetadata: user.user_metadata,
+        isDescubraMSRegister,
+        redirectUrlParam
       });
+
+      if (isDescubraMSRegister) {
+        const redirectPath = resolveDescubraRegisterRedirect(redirectUrlParam);
+        console.log("👤 REGISTER: Descubra MS sem Complete perfil, redirecionando para:", redirectPath);
+        navigate(redirectPath, { replace: true });
+        return;
+      }
       
       if (profileComplete) {
         console.log("👤 REGISTER: ========== PERFIL COMPLETO - REDIRECIONANDO ==========");
@@ -46,7 +83,7 @@ const Register = () => {
         setStep(2);
       }
     }
-  }, [user, loading, profileLoading, profileComplete, navigate]);
+  }, [user, loading, profileLoading, profileComplete, navigate, redirectUrlParam]);
 
   const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     console.log("🔐 Tentativa de login social:", provider);

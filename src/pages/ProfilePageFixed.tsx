@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,16 +21,22 @@ import {
   Share2,
   Edit3,
   Pencil,
-  Calendar
+  Calendar,
+  Smartphone,
 } from 'lucide-react';
 import UserReservations from '@/components/user/UserReservations';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import {
+  formatBrazilPhoneDisplay,
+  normalizeBrazilPhoneDigits,
+} from '@/utils/normalizeBrazilPhone';
 
 export interface UserProfile {
   id: string;
   full_name: string;
   email: string;
+  phone?: string;
   avatar_url?: string;
   selected_avatar?: string;
   avatar_custom_name?: string;
@@ -48,6 +56,8 @@ const ProfilePageFixed: React.FC = () => {
   const [showShare, setShowShare] = useState(false);
   const [isEditingAvatarName, setIsEditingAvatarName] = useState(false);
   const [avatarCustomName, setAvatarCustomName] = useState('');
+  const [phoneInput, setPhoneInput] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
 
   // Estados removidos - Roteiros Personalizados agora está em página dedicada
 
@@ -235,6 +245,7 @@ const ProfilePageFixed: React.FC = () => {
         id: user?.id || '1',
         full_name: dbProfile?.full_name || user?.user_metadata?.full_name || 'Usuário',
         email: user?.email || 'usuario@exemplo.com',
+        phone: dbProfile?.phone || undefined,
         avatar_url: dbProfile?.avatar_url || user?.user_metadata?.avatar_url,
         selected_avatar: dbProfile?.selected_avatar || 'jaguar',
         avatar_custom_name: dbProfile?.avatar_custom_name || null,
@@ -246,6 +257,9 @@ const ProfilePageFixed: React.FC = () => {
       
       setProfile(mockProfile);
       setAvatarCustomName(mockProfile.avatar_custom_name || '');
+      setPhoneInput(
+        dbProfile?.phone ? formatBrazilPhoneDisplay(dbProfile.phone) : '',
+      );
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
       toast({
@@ -355,6 +369,63 @@ const ProfilePageFixed: React.FC = () => {
       title: "Nome Salvo!",
       description: "O nome personalizado do avatar foi salvo com sucesso.",
     });
+  };
+
+  const handleSavePhone = async () => {
+    if (!user || !profile) return;
+
+    const normalized = normalizeBrazilPhoneDigits(phoneInput);
+    if (!normalized || normalized.length < 12) {
+      toast({
+        title: "Telefone inválido",
+        description: "Informe DDD + número com 10 ou 11 dígitos (ex.: 67 99212-3617).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingPhone(true);
+    try {
+      const { data: existing } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const payload = {
+        phone: normalized,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = existing
+        ? await supabase
+            .from('user_profiles')
+            .update(payload)
+            .eq('user_id', user.id)
+        : await supabase.from('user_profiles').insert({
+            user_id: user.id,
+            full_name: profile.full_name,
+            ...payload,
+          });
+
+      if (error) throw error;
+
+      setProfile({ ...profile, phone: normalized });
+      setPhoneInput(formatBrazilPhoneDisplay(normalized));
+      toast({
+        title: "Telefone salvo!",
+        description: "No WhatsApp do Guatá, envie *vincular* para conectar sua conta.",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar telefone:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o telefone.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingPhone(false);
+    }
   };
 
   const handleProfileUpdate = (updatedProfile: Partial<UserProfile>) => {
@@ -559,6 +630,47 @@ const ProfilePageFixed: React.FC = () => {
                       </p>
                     </div>
                   </div>
+
+                  <Card className="border-green-200 bg-green-50/50">
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center gap-2 text-green-800 font-medium">
+                        <Smartphone className="h-4 w-4" />
+                        WhatsApp do Guatá
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Cadastre o <strong>mesmo número</strong> que você usa no WhatsApp.
+                        Depois envie <strong>vincular</strong> no chat do Guatá para reservar
+                        passeios e cadastrar eventos por lá.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="flex-1">
+                          <Label htmlFor="profile-phone" className="sr-only">
+                            Telefone WhatsApp
+                          </Label>
+                          <Input
+                            id="profile-phone"
+                            type="tel"
+                            placeholder="(67) 99212-3617"
+                            value={phoneInput}
+                            onChange={(e) => setPhoneInput(e.target.value)}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={handleSavePhone}
+                          disabled={savingPhone}
+                          className="bg-green-600 hover:bg-green-700 shrink-0"
+                        >
+                          {savingPhone ? 'Salvando...' : 'Salvar telefone'}
+                        </Button>
+                      </div>
+                      {profile.phone && (
+                        <p className="text-xs text-green-700">
+                          Vinculado como: {formatBrazilPhoneDisplay(profile.phone)}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
                 </CardContent>
               </Card>
             </TabsContent>

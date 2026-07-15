@@ -1,4 +1,4 @@
-// Gemini function declarations for Guatá tools (Phase 1: read-only + create_event_draft)
+// Gemini function declarations for Guatá tools (Phase 1 + Phase 2)
 // Format: https://ai.google.dev/gemini-api/docs/function-calling
 
 export const guataToolDeclarations = [
@@ -48,6 +48,35 @@ export const guataToolDeclarations = [
         entry_type: { type: "string", description: "'gratuito' ou 'pago' (opcional)." },
       },
       required: ["title", "start_date", "city"],
+    },
+  },
+  {
+    name: "create_reservation",
+    description:
+      "Cria uma reserva vinculada ao usuário logado (status pendente de pagamento). Só chame após search_partners + check_availability e confirmação explícita do usuário. Use service_id (pricing_id) retornado em check_availability.",
+    parameters: {
+      type: "object",
+      properties: {
+        partner_id: { type: "string", description: "UUID do parceiro." },
+        date: { type: "string", description: "Data YYYY-MM-DD." },
+        people: { type: "integer", description: "Número de pessoas.", minimum: 1 },
+        service_id: { type: "string", description: "UUID do serviço (pricing_id de check_availability)." },
+        reservation_time: { type: "string", description: "Horário HH:MM (opcional)." },
+        notes: { type: "string", description: "Pedidos especiais (opcional)." },
+      },
+      required: ["partner_id", "date", "service_id"],
+    },
+  },
+  {
+    name: "create_checkout_link",
+    description:
+      "Gera link Stripe Checkout para uma reserva já criada (create_reservation). Só chame após create_reservation e confirmação do usuário para pagar.",
+    parameters: {
+      type: "object",
+      properties: {
+        reservation_id: { type: "string", description: "UUID da reserva retornado por create_reservation." },
+      },
+      required: ["reservation_id"],
     },
   },
 ];

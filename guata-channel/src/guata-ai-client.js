@@ -1,28 +1,90 @@
 /**
- * Cliente Guatá IA — usa guata-web-rag (mesma inteligência do site).
+ * Cliente Guatá IA — WhatsApp usa guata-ai (tools) com vínculo por telefone (D1).
  */
-async function askGuata(question, sessionId) {
+const { whatsappFromToPhone } = require('./whatsapp-user');
+
+/** Histórico curto por chat (memória leve) */
+const sessionHistory = new Map();
+const MAX_HISTORY = 8;
+
+function getSessionId(from) {
+  return `wa-${from.replace(/@c\.us$/, '')}`;
+}
+
+function appendHistory(sessionId, role, text) {
+  const list = sessionHistory.get(sessionId) || [];
+  list.push({ role, text: text.slice(0, 800) });
+  while (list.length > MAX_HISTORY) list.shift();
+  sessionHistory.set(sessionId, list);
+}
+
+function buildChatHistory(sessionId) {
+  const history = sessionHistory.get(sessionId) || [];
+  return history
+    .map((m) => (m.role === 'user' ? `Usuário: ${m.text}` : `Guatá: ${m.text}`))
+    .join('\n');
+}
+
+function getBotHeaders() {
   const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
   const anonKey = process.env.SUPABASE_ANON_KEY;
   const botSecret =
     process.env.GUATA_BOT_INTERNAL_SECRET || process.env.DESCUBRA_WEBHOOK_SECRET;
 
-  if (!supabaseUrl || !anonKey) {
-    throw new Error('SUPABASE_URL e SUPABASE_ANON_KEY são obrigatórios');
+  if (!supabaseUrl || !anonKey || !botSecret) {
+    throw new Error('SUPABASE_URL, SUPABASE_ANON_KEY e secret do bot são obrigatórios');
   }
 
-  const headers = {
-    'Content-Type': 'application/json',
-    apikey: anonKey,
-    Authorization: `Bearer ${anonKey}`,
+  return {
+    supabaseUrl,
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: anonKey,
+      Authorization: `Bearer ${botSecret}`,
+    },
   };
+}
 
-  if (botSecret) {
-    headers.Authorization = `Bearer ${botSecret}`;
+function sanitizeWhatsAppAnswer(text) {
+  if (!text) return text;
+  return String(text)
+    .replace(/\[\[REQUIRE_LOGIN:[a-z_]+\]\]/gi, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+async function askGuataAi(question, sessionId, whatsappPhone, chatHistory) {
+  const { supabaseUrl, headers } = getBotHeaders();
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/guata-ai`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      prompt: question,
+      chatHistory,
+      mode: 'tourist',
+      enable_tools: true,
+      whatsapp_phone: whatsappPhone,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`guata-ai HTTP ${res.status}: ${errText.slice(0, 200)}`);
   }
 
-  const history = sessionHistory.get(sessionId) || [];
-  const conversation_history = history.map((m) =>
+  const data = await res.json();
+  const answer = data.response || data.answer;
+  if (!answer || typeof answer !== 'string') {
+    throw new Error('guata-ai sem resposta textual');
+  }
+  return sanitizeWhatsAppAnswer(answer);
+}
+
+async function askGuataWebRag(question, sessionId, chatHistory) {
+  const { supabaseUrl, headers } = getBotHeaders();
+
+  const conversation_history = (sessionHistory.get(sessionId) || []).map((m) =>
     m.role === 'user' ? `Usuário: ${m.text}` : `Guatá: ${m.text}`,
   );
 
@@ -43,49 +105,39 @@ async function askGuata(question, sessionId) {
 
   if (!res.ok) {
     const errText = await res.text();
-    console.warn('[guata-ai] guata-web-rag falhou, tentando guata-ai:', res.status, errText.slice(0, 200));
-    return askGuataFallback(question, headers, supabaseUrl, conversation_history.join('\n'));
+    throw new Error(`guata-web-rag HTTP ${res.status}: ${errText.slice(0, 200)}`);
   }
 
   const data = await res.json();
   const answer = data.answer || data.response || data.message;
-  const geminiFailed = data.guata_ai_meta?.gemini_status && data.guata_ai_meta.gemini_status !== 'ok';
-  const isRateLimitMsg = answer && /muitas consultas|dificuldades técnicas/i.test(String(answer));
-  if (answer && typeof answer === 'string' && !geminiFailed && !isRateLimitMsg) {
-    return answer.trim();
+  if (!answer || typeof answer !== 'string') {
+    throw new Error('guata-web-rag sem resposta textual');
+  }
+  return answer.trim();
+}
+
+async function askGuata(question, fromJid) {
+  const sessionId = getSessionId(fromJid);
+  const whatsappPhone = whatsappFromToPhone(fromJid);
+  const chatHistory = buildChatHistory(sessionId);
+
+  appendHistory(sessionId, 'user', question);
+
+  let answer;
+  try {
+    answer = await askGuataAi(question, sessionId, whatsappPhone, chatHistory);
+  } catch (err) {
+    console.warn('[guata-ai] falhou, tentando guata-web-rag:', err.message);
+    try {
+      answer = await askGuataWebRag(question, sessionId, chatHistory);
+    } catch (ragErr) {
+      console.error('[guata-ai] fallback rag falhou:', ragErr.message);
+      throw ragErr;
+    }
   }
 
-  return askGuataFallback(question, headers, supabaseUrl, conversation_history.join('\n'));
-}
-
-async function askGuataFallback(question, headers, supabaseUrl, chatHistory = '') {
-  const res = await fetch(`${supabaseUrl}/functions/v1/guata-ai`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ prompt: question, chatHistory, mode: 'tourist' }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`guata-ai HTTP ${res.status}`);
-  }
-
-  const data = await res.json();
-  return (data.response || data.answer || 'Desculpe, não consegui processar agora. Tente de novo em instantes.').trim();
-}
-
-/** Histórico curto por chat (memória leve) */
-const sessionHistory = new Map();
-const MAX_HISTORY = 6;
-
-function getSessionId(from) {
-  return `wa-${from.replace(/@c\.us$/, '')}`;
-}
-
-function appendHistory(sessionId, role, text) {
-  const list = sessionHistory.get(sessionId) || [];
-  list.push({ role, text: text.slice(0, 500) });
-  while (list.length > MAX_HISTORY) list.shift();
-  sessionHistory.set(sessionId, list);
+  appendHistory(sessionId, 'model', answer);
+  return answer;
 }
 
 module.exports = { askGuata, getSessionId, appendHistory };

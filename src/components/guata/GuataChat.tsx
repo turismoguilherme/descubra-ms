@@ -21,6 +21,7 @@ interface GuataChatProps {
   onSuggestionClick?: (suggestion: string) => void;
   suggestionsOverride?: string[];
   showInlineSuggestions?: boolean;
+  conversationHistory?: string[];
 }
 
 const GuataChat = ({
@@ -39,6 +40,7 @@ const GuataChat = ({
   onSuggestionClick,
   suggestionsOverride,
   showInlineSuggestions = false,
+  conversationHistory = [],
 }: GuataChatProps) => {
   return (
     <div className="bg-black bg-opacity-20 rounded-xl shadow-lg overflow-hidden h-full flex flex-col">
@@ -50,7 +52,8 @@ const GuataChat = ({
       </div>
       
       <ChatMessages 
-        messages={mensagens} 
+        messages={mensagens}
+        conversationHistory={conversationHistory}
         enviarFeedback={(positivo) => {
           try { 
             enviarFeedback(positivo);
@@ -61,7 +64,7 @@ const GuataChat = ({
       />
 
       {showInlineSuggestions && onSuggestionClick && (
-        <div className="px-4 pb-3 lg:hidden border-t border-white/10">
+        <div className="px-4 pb-3 lg:hidden border-t border-white/10 flex-shrink-0">
           <SuggestionQuestions
             variant="inline"
             onSuggestionClick={onSuggestionClick}

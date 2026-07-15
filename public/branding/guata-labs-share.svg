@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Guatá Labs  Tecnologia e IA para o Turismo</title>
+  <desc id="desc">Identidade da Guatá Labs em verde e dourado</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#123c2b"/>
+      <stop offset="1" stop-color="#1f6b48"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="980" cy="90" r="220" fill="#c59a52" opacity=".12"/>
+  <circle cx="110" cy="600" r="280" fill="#f7f3e8" opacity=".06"/>
+  <rect x="90" y="105" width="190" height="190" rx="48" fill="#f7f3e8"/>
+  <circle cx="185" cy="181" r="49" fill="#1f5a3d"/>
+  <path d="M143 170c11-28 26-42 42-42s31 14 42 42c-12-8-27-12-42-12s-30 4-42 12Z" fill="#c59a52"/>
+  <ellipse cx="185" cy="189" rx="30" ry="35" fill="#f7f3e8"/>
+  <circle cx="173" cy="183" r="4" fill="#1f5a3d"/>
+  <circle cx="197" cy="183" r="4" fill="#1f5a3d"/>
+  <ellipse cx="185" cy="197" rx="9" ry="11" fill="#c59a52"/>
+  <path d="M185 207v9m-11 0c6 6 16 6 22 0" fill="none" stroke="#1f5a3d" stroke-width="4" stroke-linecap="round"/>
+  <text x="90" y="410" fill="#f7f3e8" font-family="Arial, sans-serif" font-size="92" font-weight="700">GUATÁ</text>
+  <text x="405" y="410" fill="#c59a52" font-family="Arial, sans-serif" font-size="92" font-weight="700">LABS</text>
+  <text x="94" y="492" fill="#f7f3e8" font-family="Arial, sans-serif" font-size="38">Tecnologia e IA para o Turismo</text>
+  <path d="M94 535h720" stroke="#c59a52" stroke-width="6" stroke-linecap="round"/>
+</svg>
