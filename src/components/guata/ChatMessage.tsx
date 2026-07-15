@@ -1,12 +1,22 @@
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { AIMessage } from "@/types/ai";
 import { cn } from "@/lib/utils";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { platformContentService } from "@/services/admin/platformContentService";
 import { stripChatMarkdown } from "@/utils/stripChatMarkdown";
+
+const REQUIRE_LOGIN_RE = /\[\[REQUIRE_LOGIN:([a-z_]+)\]\]/i;
+
+const ACTION_LABEL: Record<string, string> = {
+  cadastrar_evento: "cadastrar o evento",
+  reservar: "fazer a reserva",
+  pagar: "concluir o pagamento",
+};
 
 interface ChatMessageProps {
   message: AIMessage;
@@ -15,12 +25,29 @@ interface ChatMessageProps {
 
 const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
   const isGuata = !message.isUser;
+  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string>("/guata-mascote.jpg");
 
-  const plain = useMemo(
-    () => stripChatMarkdown(message.text ?? ""),
-    [message.text]
-  );
+  const { plain, requiredAction } = useMemo(() => {
+    const raw = message.text ?? "";
+    const match = raw.match(REQUIRE_LOGIN_RE);
+    const cleaned = raw.replace(REQUIRE_LOGIN_RE, "").trim();
+    return {
+      plain: stripChatMarkdown(cleaned),
+      requiredAction: match ? match[1] : null,
+    };
+  }, [message.text]);
+
+  const handleLoginClick = () => {
+    try {
+      sessionStorage.setItem(
+        "guata_pending_action",
+        JSON.stringify({ action: requiredAction, at: Date.now() }),
+      );
+      sessionStorage.setItem("guata_login_return", window.location.pathname);
+    } catch (_err) { /* ignore */ }
+    navigate(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+  };
 
   useEffect(() => {
     if (!isGuata) return;
@@ -90,6 +117,18 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
             <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
               {plain}
             </p>
+            {isGuata && requiredAction && (
+              <div className="mt-3">
+                <Button
+                  size="sm"
+                  onClick={handleLoginClick}
+                  className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white gap-2"
+                >
+                  <LogIn size={14} />
+                  Entrar para {ACTION_LABEL[requiredAction] ?? "continuar"}
+                </Button>
+              </div>
+            )}
             {message.timestamp && (
               <div className={cn("text-xs mt-1", isGuata ? "text-gray-400" : "text-gray-400")}>
                 {message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
