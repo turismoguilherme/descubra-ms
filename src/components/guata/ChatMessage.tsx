@@ -25,12 +25,29 @@ interface ChatMessageProps {
 
 const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
   const isGuata = !message.isUser;
+  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string>("/guata-mascote.jpg");
 
-  const plain = useMemo(
-    () => stripChatMarkdown(message.text ?? ""),
-    [message.text]
-  );
+  const { plain, requiredAction } = useMemo(() => {
+    const raw = message.text ?? "";
+    const match = raw.match(REQUIRE_LOGIN_RE);
+    const cleaned = raw.replace(REQUIRE_LOGIN_RE, "").trim();
+    return {
+      plain: stripChatMarkdown(cleaned),
+      requiredAction: match ? match[1] : null,
+    };
+  }, [message.text]);
+
+  const handleLoginClick = () => {
+    try {
+      sessionStorage.setItem(
+        "guata_pending_action",
+        JSON.stringify({ action: requiredAction, at: Date.now() }),
+      );
+      sessionStorage.setItem("guata_login_return", window.location.pathname);
+    } catch (_err) { /* ignore */ }
+    navigate(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+  };
 
   useEffect(() => {
     if (!isGuata) return;
