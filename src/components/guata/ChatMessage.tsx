@@ -117,6 +117,18 @@ const ChatMessage = ({ message, enviarFeedback }: ChatMessageProps) => {
             <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
               {plain}
             </p>
+            {isGuata && requiredAction && (
+              <div className="mt-3">
+                <Button
+                  size="sm"
+                  onClick={handleLoginClick}
+                  className="bg-ms-primary-blue hover:bg-ms-primary-blue/90 text-white gap-2"
+                >
+                  <LogIn size={14} />
+                  Entrar para {ACTION_LABEL[requiredAction] ?? "continuar"}
+                </Button>
+              </div>
+            )}
             {message.timestamp && (
               <div className={cn("text-xs mt-1", isGuata ? "text-gray-400" : "text-gray-400")}>
                 {message.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
