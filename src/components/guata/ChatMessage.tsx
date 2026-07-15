@@ -1,12 +1,22 @@
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { AIMessage } from "@/types/ai";
 import { cn } from "@/lib/utils";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import { ThumbsUp, ThumbsDown, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { platformContentService } from "@/services/admin/platformContentService";
 import { stripChatMarkdown } from "@/utils/stripChatMarkdown";
+
+const REQUIRE_LOGIN_RE = /\[\[REQUIRE_LOGIN:([a-z_]+)\]\]/i;
+
+const ACTION_LABEL: Record<string, string> = {
+  cadastrar_evento: "cadastrar o evento",
+  reservar: "fazer a reserva",
+  pagar: "concluir o pagamento",
+};
 
 interface ChatMessageProps {
   message: AIMessage;
