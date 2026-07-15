@@ -2718,6 +2718,24 @@ export type Database = {
         }
         Relationships: []
       }
+      guata_gemini_daily_usage: {
+        Row: {
+          gemini_calls: number
+          updated_at: string
+          usage_date: string
+        }
+        Insert: {
+          gemini_calls?: number
+          updated_at?: string
+          usage_date?: string
+        }
+        Update: {
+          gemini_calls?: number
+          updated_at?: string
+          usage_date?: string
+        }
+        Relationships: []
+      }
       guata_itineraries: {
         Row: {
           accommodation_suggestions: string | null
@@ -8425,6 +8443,10 @@ export type Database = {
           status: string
           user_type: string
         }[]
+      }
+      guata_try_consume_gemini_budget: {
+        Args: { p_max?: number }
+        Returns: Json
       }
       has_plano_diretor_access: {
         Args: { plano_id: string; required_permission: string; user_id: string }
