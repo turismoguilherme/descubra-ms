@@ -2604,6 +2604,39 @@ export type Database = {
           },
         ]
       }
+      guata_action_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          input: Json
+          output: Json | null
+          status: string
+          tool_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input?: Json
+          output?: Json | null
+          status?: string
+          tool_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input?: Json
+          output?: Json | null
+          status?: string
+          tool_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       guata_events: {
         Row: {
           city: string | null
