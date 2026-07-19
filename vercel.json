@@ -141,7 +141,7 @@
       ]
     },
     {
-      "source": "/index.html",
+      "source": "/((?!assets|_next|favicon.ico|robots.txt|sitemap.xml|api).*)",
       "headers": [
         {
           "key": "Cache-Control",
