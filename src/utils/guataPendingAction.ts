@@ -39,14 +39,15 @@ function normalizePendingMessages(messages: unknown[]): GuataPendingMessage[] {
             ? candidate.timestamp
             : undefined;
 
-      return {
+      const normalized: GuataPendingMessage = {
         id: typeof candidate.id === "number" ? candidate.id : Date.now(),
         text: candidate.text,
         isUser: candidate.isUser,
         timestamp,
       };
+      return normalized;
     })
-    .filter((message): message is GuataPendingMessage => Boolean(message));
+    .filter((message): message is GuataPendingMessage => message !== null);
 }
 
 /** Paths seguros de retorno ao chat Guatá (nunca home Guatá Labs `/`). */
