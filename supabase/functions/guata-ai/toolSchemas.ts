@@ -46,6 +46,8 @@ export const guataToolDeclarations = [
         category: { type: "string", description: "Categoria (ex.: 'música', 'gastronomia', 'esporte', 'cultura')." },
         organizer: { type: "string", description: "Organizador ou responsável (opcional)." },
         entry_type: { type: "string", description: "'gratuito' ou 'pago' (opcional)." },
+        logo_url: { type: "string", description: "URL http(s) da logo/imagem do evento (opcional). Use a URL fornecida quando o usuário anexar uma imagem no chat." },
+        promo_video_url: { type: "string", description: "URL http(s) de um vídeo promocional do evento, ex.: YouTube (opcional)." },
       },
       required: ["title", "start_date", "city"],
     },

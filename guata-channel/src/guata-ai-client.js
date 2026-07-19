@@ -116,6 +116,34 @@ async function askGuataWebRag(question, sessionId, chatHistory) {
   return answer.trim();
 }
 
+/**
+ * Faz upload de uma imagem (logo de evento) recebida no WhatsApp.
+ * Chama a edge function guata-whatsapp-upload (service role no servidor).
+ * Retorna { url } ou { linked:false } / lança erro.
+ */
+async function uploadWhatsAppImage(base64, mimetype, whatsappPhone) {
+  const { supabaseUrl, headers } = getBotHeaders();
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/guata-whatsapp-upload`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      whatsapp_phone: whatsappPhone,
+      image_base64: base64,
+      mimetype,
+    }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 403 && data.linked === false) {
+    return { linked: false };
+  }
+  if (!res.ok || !data.url) {
+    throw new Error(`guata-whatsapp-upload HTTP ${res.status}: ${JSON.stringify(data).slice(0, 200)}`);
+  }
+  return { url: data.url };
+}
+
 async function askGuata(question, fromJid) {
   const sessionId = getSessionId(fromJid);
   const whatsappPhone = whatsappFromToPhone(fromJid);
@@ -140,4 +168,4 @@ async function askGuata(question, fromJid) {
   return answer;
 }
 
-module.exports = { askGuata, getSessionId, appendHistory };
+module.exports = { askGuata, uploadWhatsAppImage, getSessionId, appendHistory };

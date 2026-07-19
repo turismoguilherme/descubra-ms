@@ -1,16 +1,91 @@
 const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const { askGuata } = require('./guata-ai-client');
+const { askGuata, uploadWhatsAppImage } = require('./guata-ai-client');
 const {
   resolveWhatsAppUser,
   buildLinkInstructions,
   whatsappFromToPhone,
 } = require('./whatsapp-user');
 
+const SUPPORTED_IMAGE_TYPES = new Set([
+  'image/png',
+  'image/jpeg',
+  'image/jpg',
+  'image/webp',
+  'image/gif',
+]);
+
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
 let clientInstance = null;
 let ready = false;
+
+async function handleImageMessage(client, chat, msg) {
+  await chat.sendStateTyping();
+
+  // Só usuários vinculados podem cadastrar evento (e portanto enviar logo)
+  const link = await resolveWhatsAppUser(msg.from);
+  if (!link.linked) {
+    const phone = whatsappFromToPhone(msg.from);
+    await client.sendMessage(
+      msg.from,
+      `📎 Recebi sua imagem, mas para usá-la no cadastro de evento você precisa vincular sua conta.\n\n` +
+        buildLinkInstructions(phone),
+    );
+    return;
+  }
+
+  let media;
+  try {
+    media = await msg.downloadMedia();
+  } catch (err) {
+    console.error('[guata] erro ao baixar mídia:', err.message);
+    media = null;
+  }
+
+  if (!media || !media.data || !SUPPORTED_IMAGE_TYPES.has((media.mimetype || '').toLowerCase())) {
+    await client.sendMessage(
+      msg.from,
+      'Não consegui ler essa imagem. Envie uma foto no formato PNG, JPG, WEBP ou GIF (até 5MB). 🦦',
+    );
+    return;
+  }
+
+  const whatsappPhone = whatsappFromToPhone(msg.from);
+  let uploaded;
+  try {
+    uploaded = await uploadWhatsAppImage(media.data, media.mimetype.toLowerCase(), whatsappPhone);
+  } catch (err) {
+    console.error('[guata] erro no upload da imagem:', err.message);
+    await client.sendMessage(
+      msg.from,
+      'Tive um problema ao salvar sua imagem. Tente novamente em alguns instantes. 🦦',
+    );
+    return;
+  }
+
+  if (uploaded.linked === false) {
+    const phone = whatsappFromToPhone(msg.from);
+    await client.sendMessage(msg.from, buildLinkInstructions(phone));
+    return;
+  }
+
+  // Usa a legenda da foto como contexto extra, se houver
+  const caption = (msg.body || '').trim();
+  const imageTag = `[imagem enviada pelo usuário: ${uploaded.url}]`;
+  const prompt = caption ? `${caption}\n\n${imageTag}` : imageTag;
+
+  let answer;
+  try {
+    answer = await askGuata(prompt, msg.from);
+  } catch (err) {
+    console.error('[guata] erro ao consultar IA (imagem):', err.message);
+    answer =
+      'Recebi sua imagem, mas estou com dificuldade técnica agora. Tente novamente em alguns minutos. 🦦';
+  }
+
+  await client.sendMessage(msg.from, answer);
+}
 
 function createWhatsAppClient() {
   const client = new Client({
@@ -52,11 +127,17 @@ function createWhatsAppClient() {
       const chat = await msg.getChat();
       if (chat.isGroup) return;
 
-      const body = (msg.body || '').trim();
-      if (!body) return;
-
       // Ignora eco de mensagens enviadas pelo próprio bot
       if (msg.fromMe) return;
+
+      // Recebimento de imagem (ex.: logo do evento)
+      if (msg.hasMedia && msg.type === 'image') {
+        await handleImageMessage(client, chat, msg);
+        return;
+      }
+
+      const body = (msg.body || '').trim();
+      if (!body) return;
 
       const lower = body.toLowerCase();
 

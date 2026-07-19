@@ -1,6 +1,16 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Estas funções de segurança são SECURITY DEFINER e tiveram o EXECUTE revogado
+// do papel `authenticated` no endurecimento de segurança do banco. O log sério
+// acontece no servidor (edge functions com service_role). No cliente, tratamos
+// o "permission denied" (42501) como esperado e evitamos poluir o console.
+function isPermissionDenied(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as { code?: string; message?: string };
+  return e.code === "42501" || /permission denied/i.test(e.message ?? "");
+}
+
 export interface SecurityEvent {
   user_id?: string;
   action: string;
@@ -32,11 +42,13 @@ export const securityService = {
         event_metadata: metadata
       });
 
-      if (error) {
+      if (error && !isPermissionDenied(error)) {
         console.error('Error logging security event:', error);
       }
     } catch (error) {
-      console.error('Failed to log security event:', error);
+      if (!isPermissionDenied(error)) {
+        console.error('Failed to log security event:', error);
+      }
     }
   },
 
@@ -48,7 +60,9 @@ export const securityService = {
       });
 
       if (error) {
-        console.error('Error detecting suspicious activity:', error);
+        if (!isPermissionDenied(error)) {
+          console.error('Error detecting suspicious activity:', error);
+        }
         return null;
       }
 

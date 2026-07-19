@@ -100,7 +100,7 @@ export function generateGuataToolsGuidance(userAuthenticated: boolean): string {
 FERRAMENTAS DISPONÍVEIS (function calling):
 - search_partners(query, city?, business_type?): busca parceiros ativos em MS
 - check_availability(partner_id, date, people?): checa disponibilidade e preço
-- create_event_draft(title, start_date, city, ...): cadastra evento (moderação admin)
+- create_event_draft(title, start_date, city, ..., logo_url?, promo_video_url?): cadastra evento (moderação admin)
 - create_reservation(partner_id, date, service_id, people?, ...): cria reserva pendente
 - create_checkout_link(reservation_id): gera link Stripe para pagar reserva
 
@@ -115,7 +115,7 @@ REGRAS DE USO:
    f) SÓ chame create_checkout_link após novo "sim" e use APENAS o reservation_id que create_reservation retornou nesta conversa. NUNCA invente reservation_id.
 3. NUNCA chame create_checkout_link sem ter chamado create_reservation antes na mesma conversa.
 4. NUNCA chame create_reservation ou create_checkout_link no mesmo turno de check_availability — sempre aguarde confirmação humana entre etapas.
-5. Antes de create_event_draft: confirme TODOS os dados e receba "sim/confirmo" explícito.
+5. Antes de create_event_draft: confirme TODOS os dados e receba "sim/confirmo" explícito. Pergunte também, de forma opcional, se o usuário quer adicionar uma LOGO (anexando uma imagem pelo botão de anexo do chat) e um VÍDEO promocional (link, ex.: YouTube). Se o usuário anexar uma imagem, o sistema fornecerá uma URL — use-a em logo_url. Se informar um link de vídeo, use promo_video_url. Nunca invente essas URLs; deixe em branco se não forem fornecidas.
 6. Se user_authenticated=${userAuthenticated} for false e o usuário pedir ação de escrita, NÃO chame ferramenta. Inclua [[REQUIRE_LOGIN:<acao>]] (cadastrar_evento, reservar ou pagar).
 7. Ao receber { error } de uma tool, explique gentilmente em PT-BR e sugira próximo passo. Se error="pagamento indisponível", oriente o usuário a entrar em contato direto com o parceiro.
 8. Se search_partners retornar count=0, diga claramente que ainda não há reserva online para aquele item, mas ofereça buscar parceiros na cidade/região.
@@ -123,6 +123,7 @@ REGRAS DE USO:
 10. Entenda referências como "esse", "aquele", "quero esse" pelo último passeio/parceiro mencionado no histórico.
 11. Ao gerar checkout_url, mostre o link completo em uma linha própria para o usuário clicar e pagar.
 12. Ao cadastrar evento, informe que aguarda aprovação do admin antes de aparecer publicamente.
+13. Quando a mensagem contiver "[imagem enviada pelo usuário: URL]": (a) se houver também uma pergunta/mensagem, responda-a normalmente e siga a conversa; (b) se estivermos no meio de um cadastro de evento, use a URL como logo_url e continue o cadastro; (c) se for uma imagem solta, sem contexto de evento, reconheça a imagem de boa, continue ajudando no que a pessoa quiser e apenas mencione de leve que imagens podem ser usadas como logo caso ela queira cadastrar um evento — sem insistir nem forçar o cadastro. Nunca descreva o conteúdo visual da imagem (você não a vê); trate a URL apenas como logo_url quando fizer sentido.
 `.trim();
 }
 

@@ -1,13 +1,19 @@
 
-import React from "react";
-import { Send, Mic, MicOff, Loader2, Trash2 } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { Send, Mic, MicOff, Loader2, Trash2, Paperclip } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { uploadEventLogo } from "@/utils/uploadEventImage";
+import { securityService } from "@/services/securityService";
+
+const UPLOAD_MAX_PER_WINDOW = 8;
+const UPLOAD_WINDOW_MINUTES = 30;
 interface ChatInputProps {
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
-  enviarMensagem: () => void;
+  enviarMensagem: (message?: string) => void;
   toggleMicrofone: () => void;
   isGravandoAudio: boolean;
   isLoading: boolean;
@@ -27,8 +33,71 @@ const ChatInput = ({
   onClearConversation = () => {}, // Definir valor padrão
   mensagens
 }: ChatInputProps) => {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleAttachClick = () => {
+    if (isLoading || isUploading) return;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Permite reenviar o mesmo arquivo depois
+    e.target.value = "";
+    if (!file) return;
+
+    const allowed = await securityService.checkRateLimit(
+      "guata_chat",
+      "image_upload",
+      UPLOAD_MAX_PER_WINDOW,
+      UPLOAD_WINDOW_MINUTES,
+    );
+    if (!allowed) {
+      toast({
+        title: "Muitos envios de imagem",
+        description: `Aguarde alguns minutos antes de enviar outra imagem.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const { url, error } = await uploadEventLogo(file);
+      if (error || !url) {
+        toast({
+          title: "Não foi possível anexar a imagem",
+          description: error ?? "Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const typed = inputMensagem.trim();
+      const imageTag = `[imagem enviada pelo usuário: ${url}]`;
+      enviarMensagem(typed ? `${typed}\n\n${imageTag}` : imageTag);
+      setInputMensagem("");
+    } catch (err) {
+      toast({
+        title: "Erro ao enviar imagem",
+        description: err instanceof Error ? err.message : "Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div className="border-t p-4 border-white/20">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
       <div className="flex items-center space-x-2">
         <motion.button 
           onClick={toggleMicrofone}
@@ -44,6 +113,19 @@ const ChatInput = ({
           transition={isGravandoAudio ? { repeat: Infinity, duration: 1.5 } : {}}
         >
           {isGravandoAudio ? <MicOff size={20} /> : <Mic size={20} />}
+        </motion.button>
+        <motion.button
+          onClick={handleAttachClick}
+          className={cn(
+            "p-2 rounded-full transition-all bg-white/10 text-gray-300 hover:bg-white/20",
+            (isLoading || isUploading) && "opacity-50 cursor-not-allowed"
+          )}
+          disabled={isLoading || isUploading}
+          whileTap={{ scale: 0.9 }}
+          title="Anexar imagem (ex.: logo do evento)"
+          aria-label="Anexar imagem"
+        >
+          {isUploading ? <Loader2 size={20} className="animate-spin" /> : <Paperclip size={20} />}
         </motion.button>
         <motion.div 
           className="flex-grow relative"

@@ -9,7 +9,7 @@ interface GuataChatProps {
   mensagens: unknown[];
   inputMensagem: string;
   setInputMensagem: (message: string) => void;
-  enviarMensagem: () => void;
+  enviarMensagem: (message?: string) => void;
   onClearConversation: () => void;
   isGravandoAudio: boolean;
   toggleMicrofone: () => void;

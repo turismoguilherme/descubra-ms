@@ -11,12 +11,24 @@ export interface CreateEventDraftInput {
   category?: string;
   organizer?: string;
   entry_type?: string;
+  logo_url?: string;
+  promo_video_url?: string;
 }
 
 function isIsoDate(s: string | undefined): boolean {
   if (!s) return false;
   const d = new Date(s);
   return !isNaN(d.getTime()) && d.getTime() > Date.now() - 24 * 60 * 60 * 1000;
+}
+
+function isHttpUrl(s: string | undefined): boolean {
+  if (!s) return false;
+  try {
+    const u = new URL(s);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 export async function createEventDraft(
@@ -51,6 +63,16 @@ export async function createEventDraft(
     await logAction(ctx, "create_event_draft", input, output, "error", "invalid end_date");
     return output;
   }
+  if (input.logo_url && !isHttpUrl(input.logo_url)) {
+    const output = { error: "logo_url inválido", hint: "A logo precisa ser uma URL http(s) válida." };
+    await logAction(ctx, "create_event_draft", input, output, "error", "invalid logo_url");
+    return output;
+  }
+  if (input.promo_video_url && !isHttpUrl(input.promo_video_url)) {
+    const output = { error: "promo_video_url inválido", hint: "O vídeo precisa ser uma URL http(s) válida (YouTube, etc.)." };
+    await logAction(ctx, "create_event_draft", input, output, "error", "invalid promo_video_url");
+    return output;
+  }
 
   // Rate limit
   const rl = await checkWriteRateLimit(ctx, "create_event_draft");
@@ -76,6 +98,8 @@ export async function createEventDraft(
       categoria: input.category ?? null,
       tipo_entrada: input.entry_type ?? null,
       organizador: input.organizer ?? null,
+      logo_evento: input.logo_url ?? null,
+      video_promocional: input.promo_video_url ?? null,
       fonte: "guata_chat",
       source: "guata_chat",
       approval_status: "pending",
