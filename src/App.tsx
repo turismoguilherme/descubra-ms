@@ -17,6 +17,7 @@ import SecurityProvider from "@/components/security/SecurityProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import VLibrasWidget from "@/components/accessibility/VLibrasWidget";
+import DynamicBranding from "@/components/DynamicBranding";
 import "@/i18n/config";
 // Removendo imports complexos temporariamente
 // import DebugPanel from "@/components/debug/DebugPanel";
@@ -174,6 +175,7 @@ function AppRoutes() {
     <BrandProvider>
       {/* Normalizar barras invertidas em rotas (Windows usa \ mas URLs usam /) */}
       <NormalizePathRoute />
+      <DynamicBranding />
       <VLibrasWidget />
       <div className="min-h-screen bg-background font-sans antialiased">
         <Routes>
