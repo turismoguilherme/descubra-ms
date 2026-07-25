@@ -9,6 +9,23 @@ import {
 } from '@/services/cartilhasService';
 import type { CartilhaItem } from '@/data/cartilhasCatalog';
 
+/** Garante URL same-origin para o iframe (evita bloqueio de frame). */
+function resolveCartilhaEmbedSrc(htmlPath?: string | null): string {
+  if (!htmlPath) return '';
+  try {
+    if (htmlPath.startsWith('http://') || htmlPath.startsWith('https://')) {
+      const url = new URL(htmlPath);
+      if (typeof window !== 'undefined' && url.origin === window.location.origin) {
+        return `${url.pathname}${url.search}${url.hash}`;
+      }
+      return htmlPath;
+    }
+  } catch {
+    /* ignore */
+  }
+  return htmlPath.startsWith('/') ? htmlPath : `/${htmlPath}`;
+}
+
 const CartilhaViewer = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
@@ -83,6 +100,8 @@ const CartilhaViewer = () => {
     return <Navigate to="/descubrams/cartilhas" replace />;
   }
 
+  const embedSrc = resolveCartilhaEmbedSrc(cartilha.htmlPath);
+
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-slate-950">
       <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900 text-white shrink-0">
@@ -126,7 +145,7 @@ const CartilhaViewer = () => {
             </span>
           )}
           <a
-            href={cartilha.htmlPath}
+            href={embedSrc || cartilha.htmlPath}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-bold transition-colors"
@@ -139,7 +158,7 @@ const CartilhaViewer = () => {
 
       <iframe
         ref={iframeRef}
-        src={cartilha.htmlPath}
+        src={embedSrc}
         title={cartilha.title}
         className="flex-1 w-full border-0 bg-slate-950"
         allow="fullscreen"

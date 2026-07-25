@@ -141,7 +141,24 @@
       ]
     },
     {
-      "source": "/((?!assets|_next|favicon.ico|robots.txt|sitemap.xml|api).*)",
+      "source": "/cartilhas/:path*",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self'"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/((?!assets|_next|favicon.ico|robots.txt|sitemap.xml|api|cartilhas).*)",
       "headers": [
         {
           "key": "Cache-Control",
