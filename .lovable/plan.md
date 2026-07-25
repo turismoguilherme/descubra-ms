@@ -1,47 +1,76 @@
+## Escopo aprovado
 
-## Onde paramos
+1. Limpeza completa e profunda de código morto (Descubra MS + Guatá Labs)
+2. Remover a "capa" que aparece rapidamente ao clicar em "Iniciar Rota"
+3. Substituir favicon dos dois sites e corrigir o título da aba
 
-A Fase 2 (reserva + checkout Stripe pelo Guatá) **já foi implementada** na sessão anterior. Verifiquei o código e o banco:
+---
 
-- `supabase/functions/guata-ai/tools/createReservation.ts` — cria linha em `partner_reservations` (status `pending`, valida parceiro ativo, min/max guests, calcula comissão de `site_settings`, gera `reservation_code` via RPC).
-- `supabase/functions/guata-ai/tools/createCheckoutLink.ts` — gera Stripe Checkout Session (card/pix/boleto), grava `stripe_checkout_session_id`, `success_url = /minhas-reservas`.
-- `guata-ai/index.ts` roteia `create_reservation` e `create_checkout_link`, e o guard `REQUIRE_LOGIN:reservar|pagar` já existe.
-- `toolSchemas.ts` declara as duas ferramentas para o Gemini.
-- Banco tem as colunas necessárias em `partner_reservations`: `service_id`, `stripe_checkout_session_id`, `stripe_payment_intent_id`, `reservation_code`, `user_id`.
-- `ChatMessage.tsx` renderiza a URL do Stripe automaticamente como link clicável.
+## 1) Limpeza completa e profunda
 
-**Ou seja, o fluxo está funcional.** Falta validar end-to-end e cobrir pontas soltas antes de anunciar como pronto.
+### 1a. Raiz do projeto — remoção direta
+- **Scripts obsoletos**: todos os `test_guata_*.bat` (~25 arquivos), `fix_*.bat`, `diagnose_*.bat`, `restore_*.bat`, `verify_*.bat`, `test_*.bat`, `enable_all_components.bat`, `clean_restore.bat`, `clear_cache.bat`, `commit_logo_update.bat`, `force_logo_update.bat`, `open_browser_debug.bat`, `push_vercel.bat`, `atualizar_vercel.bat`, `git_update.bat`, `limpar_cache*.bat`, `forcar_deploy_vercel.bat`, `diagnosticar_vercel.bat`, `merge_preservando_admin_chatbot.cmd`, `update_from_main.bat`, `CORRIGIR_VERCEL_COMPLETO.bat`, `t_guata_protection.bat`, `restore_before_partners.bat`.
+- **PowerShell antigos**: `fix-all-errors.ps1`, `gerar_hash_*.ps1`, `update_main.ps1`.
+- **Docs de trabalho já concluídos**: todos `RESUMO_*.md`, `ANALISE_*.md`, `CORRECOES_APLICADAS.md`, `IMPLEMENTACAO_*.md`, `VERIFICACAO_*.md`, `PROPOSTA_*.md`, `PROGRESSO_*.md`, `PLANO_*.md` (raiz), `SOLUCAO_*.md`, `DIAGNOSTICO_*.md`, `RECOMENDACAO_*.md`, `TROUBLESHOOTING_*.md`, `MELHORIAS_*.md`, `AUDITORIA_*.md`, `ACAO_IMEDIATA_*.md`, `EXPLICACAO_*.md`, `MELHOR_OPCAO_*.md`, `ONDE_PARCEIRO_*.md`, `INSTRUCOES_*.md`, `CONFIGURAR_*.md`, `CONFIGURACAO_*.md`, `COMO_USAR_*.md`, `CONSULTA_*.md`. Manter: `README.md`.
+- **Arquivos soltos**: `temp.html`, `temp_file.tsx`, `test_report.json`, `tsc-errors.txt`, `diagnosticar_versao_servida.html`, `hash-sha256*.txt`, `guata-config*.txt`, `guata-env-config.txt`, `env.example.txt` (manter só se referenciado), `supabase_cli_install_log.txt`.
+- **JS scripts one-off**: `baixar_logo*.js`, `buscar_e_baixar_logo.js`, `check_events.js`, `create_users_script.js`, `criar_parceiro_teste_console.js`, `criar_usuario_parceiro_teste.js`, `debug-translations.js`, `test-google-translate.js`, `test-translation-flow.js`, `test_destinations.js`, `test_edge_function.js`, `generate-missing-translations.js`, `run-migration.js`, `verificar_logo_banco.js`, `fix_prefer_const.py`.
+- **Alternativos App**: `src/App.simple.tsx`, `src/MinimalApp.tsx`, `package-simple.json`, `.env.bak`, `server.js` (se não usado), `deploy.config.js` (se não usado).
+- **Nomes corrompidos**: paths estranhos em `public/images/descubra-ms/` (`.env.bak`, `clean_restore.bat`, `0.7)`, etc.) e nomes como `ersguilhDescubra MSdescubra-ms && git status`, `how 1627771 --name-only`, `rccomponentsadmindashboards...`, `tash show stash...`, `tatus`, `dir`, `copy`, `desabilitados` (verificar antes de remover).
 
-## Plano da rodada
+### 1b. Serviços Guatá antigos
+Manter apenas o serviço ativo em produção. Vou identificar qual é o ativo (rastreando `guata-ai` edge function e imports em `src/pages/Guata.tsx` e `src/components/koda/`) e remover os demais dentre:
+`guataInstantService, guataUltraFastIntelligentService, guataUltraFastService, guataSmartHybridService, guataSmartHybridRealService, guataIntelligentService, guataAdaptiveService, guataAdvancedMemoryService, guataEmotionalIntelligenceService, guataFallbackService, guataGeminiService, guataInteractiveService, guataPersonaService, guataRealWebSearchService, guataResponseDepth, guataRestoredService, guataSimpleEdgeService, guataSimpleService, guataSupabaseService, guataTrueApiService, guataIntelligentTourismService`.
 
-### 1. Validação end-to-end (prioridade)
-Rodar o fluxo real logado no preview:
-1. Perguntar ao Guatá: "quero reservar pousada em Bonito para 2 pessoas no dia XX".
-2. Confirmar que ele chama `search_partners` → `check_availability` → pede confirmação → `create_reservation` → `create_checkout_link`.
-3. Abrir o link, pagar em modo teste Stripe (cartão `4242…`).
-4. Confirmar que o webhook existente (`stripe-webhook`) atualiza status para `confirmed` e o registro aparece em `/minhas-reservas`.
-5. Conferir `guata_action_logs` com os inserts de `create_reservation` e `create_checkout_link` (`status = success`).
+Vou também revisar `src/services/ai/` (subpastas `apis/`, `cache/`, `external/`, `feedback/`, `integration/`, `knowledge/`, `learning/`) e remover módulos sem imports.
 
-### 2. Ajustes que já sei que precisam
-- **System prompt** do `guata-ai/index.ts`: garantir instrução explícita do fluxo sequencial (search → check → confirmar → reservar → confirmar → pagar) e proibir chamar `create_checkout_link` sem `create_reservation` no mesmo turno. Hoje o modelo pode pular etapas.
-- **Mensagem pós-reserva**: quando `create_reservation` retorna `success`, forçar o Guatá a resumir (parceiro, data, pessoas, total) e pedir confirmação em PT-BR antes de gerar o link — evita cobrança acidental.
-- **Fallback sem Stripe**: se `STRIPE_SECRET_KEY` estiver ausente, retornar mensagem clara "pagamento indisponível, entre em contato com o parceiro" (já retorna, mas sem instrução para o usuário).
-- **Logar `partner_id` e `reservation_id`** em `guata_action_logs.output` para auditoria (parte já loga, revisar cobertura).
+### 1c. Componentes/hooks/pages órfãos
+Varredura com `rg` para achar `.tsx`/`.ts` em `src/components/`, `src/hooks/`, `src/pages/` que não são importados em nenhum lugar (excluindo entry points e rotas de `App.tsx`). Removo apenas os 100% órfãos. Também remover diretórios `docs/historico/`, `docs/sql-archive/` e `guata-channel/` (WhatsApp export legado) — confirmarei que não são referenciados em runtime.
 
-### 3. Pontos de UX opcionais (só se aprovar)
-- Card visual no chat para reservas confirmadas (código, data, valor, botão pagar) em vez de texto puro — exige mudança em `ChatMessage.tsx` para detectar payload estruturado do tool call.
-- Botão "Cancelar reserva" no chat quando `status = pending` e ainda não paga, chamando `cancel-reservation` existente.
+### 1d. Segurança de limpeza
+- Antes de apagar cada bloco, confirmo com `rg` que não há import/referência no código executável.
+- Nada em `supabase/functions/`, `supabase/migrations/`, `src/integrations/`, `public/branding/`, `public/_redirects` será tocado.
+
+---
+
+## 2) Remover a "capa" ao iniciar rota
+
+Ao clicar em "Iniciar Rota" em `PassaporteLista.tsx`, é aberta uma rota (`/descubrams/passaporte/:id`) que renderiza um `RoutePreviewCard` (capa com resumo/imagem/botão "Iniciar") e só depois entra em `PassportRouteView` (mapa + checkpoints). Vou:
+- Pular a etapa da capa: renderizar `PassportRouteView` diretamente na abertura da rota.
+- Manter `RoutePreviewCard` no arquivo mas removê-lo do fluxo, ou removê-lo se ficar órfão após a mudança (cai na limpeza da fase 1).
+
+---
+
+## 3) Favicon e título da aba
+
+### 3a. Favicon
+Dois sites compartilham o mesmo `index.html`, então o favicon precisa mudar por rota, via JS.
+- Adiciono dois arquivos em `public/`: `favicon-ms.png` (logo oficial do MS que já usamos no header) e `favicon-guata-labs.png` (derivado de `image-27.png` que você enviou).
+- Adiciono um pequeno componente `<DynamicFavicon />` (montado em `App.tsx`) que, com base em `location.pathname.startsWith('/descubrams') ? MS : Guatá Labs`, injeta o `<link rel="icon">` correto.
+- Removo o `public/favicon.ico` padrão do Lovable.
+
+### 3b. Título da aba
+Hoje `index.html` não tem `<title>` nenhum, então quando o usuário navega Guatá Labs → Descubra MS, o navegador mantém o último título (é o bug que você viu).
+- Adiciono `<title>` inicial em `index.html`.
+- Adiciono um `<DynamicTitle />` (mesmo componente que o favicon) que aplica títulos por plataforma:
+  - Guatá Labs (rotas fora de `/descubrams`): **"Guatá Labs — IA para o turismo"**
+  - Descubra MS (`/descubrams/*` e `/`  quando é home MS): **"Descubra MS — Turismo em Mato Grosso do Sul"**
+- Páginas que já usam `<Helmet>` (Termos, Privacidade, Cookies) continuam sobrescrevendo.
+
+**Sugestões de título (você escolhe agora ou aceito estes como padrão):**
+- Descubra MS → `Descubra MS — Turismo em Mato Grosso do Sul`
+- Guatá Labs → `Guatá Labs — IA para o turismo`
+
+---
+
+## Ordem de execução
+1. Confirmar quais serviços Guatá estão em uso ativo (rastrear `import` em `Guata.tsx`, edge functions e `services/ai/index.ts`)
+2. Limpeza 1a (raiz) + 1b (serviços)
+3. Limpeza 1c (órfãos com varredura)
+4. Fase 2: remover capa de rota
+5. Fase 3: favicons + títulos dinâmicos
+6. Build de verificação após cada fase
 
 ## Detalhes técnicos
-
-- Nenhuma migration necessária — schema já suporta.
-- Nenhum segredo novo — `STRIPE_SECRET_KEY` e `SITE_URL` já usados.
-- Rate limit de 5 write-actions/hora do `checkWriteRateLimit` cobre reservas e checkouts.
-
-## O que faço primeiro se aprovar
-
-1. Reforçar system prompt (item 2) — mudança mínima, alto impacto.
-2. Testar o fluxo real no preview e reportar o que der certo/errado.
-3. Trazer os cards de UX (item 3) só depois que você validar o backend.
-
-Confirma seguir por aí, ou prefere que eu comece pelos cards visuais no chat antes de testar?
+- Nenhuma migration, nenhuma mudança em RLS, nenhuma edge function tocada.
+- Nenhum arquivo em `.lovable/`, `supabase/`, `src/integrations/supabase/types.ts` será removido.
+- Todos os removidos são confirmados como "sem import" antes de sair. Se houver dúvida, o arquivo fica.
