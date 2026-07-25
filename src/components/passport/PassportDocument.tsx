@@ -22,14 +22,16 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
     }
   }, [routeId, loadRoute]);
 
-  // Loading state - padrão Descubra MS
-  if (loading) {
+  // Loading state - padrão Descubra MS.
+  // Também é exibido enquanto uma rota específica está sendo carregada,
+  // para evitar o "flash" da tela de conquistas antes do PassportRouteView.
+  if (loading || (routeId && !activeRoute && !error)) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="relative mx-auto w-16 h-16 mb-4">
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-ms-primary-blue/20"></div>
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-ms-primary-blue absolute top-0 left-0"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-ms-primary-blue absolute top-0 left-0"></div>
           </div>
           <p className="text-gray-600 font-medium">Carregando passaporte...</p>
         </div>
@@ -159,109 +161,9 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
                   </Button>
                 </div>
 
-                {/* Seção: Suas Conquistas - Preview dos Selos */}
-                <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-                  <h4 className="text-lg font-semibold mb-6 flex items-center gap-2 text-ms-primary-blue">
-                    <TrendingUp className="h-5 w-5" />
-                    Suas Conquistas
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {/* Selo Onça-Pintada */}
-                    <Card className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 hover:border-ms-primary-blue/30 group overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 opacity-60 group-hover:opacity-30 transition-opacity"></div>
-                      <CardContent className="p-6 text-center relative">
-                        <div className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">🐆</div>
-                        <h5 className="font-bold text-ms-primary-blue">Onça-Pintada</h5>
-                        <p className="text-sm text-gray-500 mt-1">0/5 fragmentos</p>
-                        <span className="inline-flex items-center mt-3 px-3 py-1 rounded-full text-xs font-medium bg-ms-secondary-yellow/20 text-ms-primary-blue border border-ms-secondary-yellow/30">
-                          Em Breve
-                        </span>
-                      </CardContent>
-                    </Card>
-
-                    {/* Selo Tuiuiú */}
-                    <Card className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 hover:border-ms-primary-blue/30 group overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 opacity-60 group-hover:opacity-30 transition-opacity"></div>
-                      <CardContent className="p-6 text-center relative">
-                        <div className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">🦩</div>
-                        <h5 className="font-bold text-ms-primary-blue">Tuiuiú</h5>
-                        <p className="text-sm text-gray-500 mt-1">0/5 fragmentos</p>
-                        <span className="inline-flex items-center mt-3 px-3 py-1 rounded-full text-xs font-medium bg-ms-secondary-yellow/20 text-ms-primary-blue border border-ms-secondary-yellow/30">
-                          Em Breve
-                        </span>
-                      </CardContent>
-                    </Card>
-
-                    {/* Selo Jacaré */}
-                    <Card className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 hover:border-ms-primary-blue/30 group overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 opacity-60 group-hover:opacity-30 transition-opacity"></div>
-                      <CardContent className="p-6 text-center relative">
-                        <div className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">🐊</div>
-                        <h5 className="font-bold text-ms-primary-blue">Jacaré</h5>
-                        <p className="text-sm text-gray-500 mt-1">0/5 fragmentos</p>
-                        <span className="inline-flex items-center mt-3 px-3 py-1 rounded-full text-xs font-medium bg-ms-secondary-yellow/20 text-ms-primary-blue border border-ms-secondary-yellow/30">
-                          Em Breve
-                        </span>
-                      </CardContent>
-                    </Card>
-
-                    {/* Selo Arara-Azul */}
-                    <Card className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-gray-100 hover:border-ms-primary-blue/30 group overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 opacity-60 group-hover:opacity-30 transition-opacity"></div>
-                      <CardContent className="p-6 text-center relative">
-                        <div className="text-5xl mb-3 group-hover:scale-110 transition-transform duration-300">🦜</div>
-                        <h5 className="font-bold text-ms-primary-blue">Arara-Azul</h5>
-                        <p className="text-sm text-gray-500 mt-1">0/5 fragmentos</p>
-                        <span className="inline-flex items-center mt-3 px-3 py-1 rounded-full text-xs font-medium bg-ms-secondary-yellow/20 text-ms-primary-blue border border-ms-secondary-yellow/30">
-                          Em Breve
-                        </span>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-
-                {/* Estatísticas - Redesign */}
-                <Card className="bg-white rounded-2xl shadow-lg border-0 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-                  <CardHeader className="bg-gradient-to-r from-ms-primary-blue/5 to-ms-discovery-teal/5 rounded-t-2xl border-b border-gray-100">
-                    <CardTitle className="text-lg text-ms-primary-blue flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5" />
-                      Estatísticas do Passaporte
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                      <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-sm">
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-purple-200/50 flex items-center justify-center">
-                          <MapPin className="w-6 h-6 text-purple-600" />
-                        </div>
-                        <div className="text-3xl font-bold text-purple-600">0</div>
-                        <div className="text-sm text-gray-600 mt-1">Rotas Completas</div>
-                      </div>
-                      <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm">
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-blue-200/50 flex items-center justify-center">
-                          <Puzzle className="w-6 h-6 text-ms-primary-blue" />
-                        </div>
-                        <div className="text-3xl font-bold text-ms-primary-blue">0</div>
-                        <div className="text-sm text-gray-600 mt-1">Selos Coletados</div>
-                      </div>
-                      <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm">
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-green-200/50 flex items-center justify-center">
-                          <Award className="w-6 h-6 text-ms-pantanal-green" />
-                        </div>
-                        <div className="text-3xl font-bold text-ms-pantanal-green">0</div>
-                        <div className="text-sm text-gray-600 mt-1">Checkpoints</div>
-                      </div>
-                      <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm">
-                        <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-orange-200/50 flex items-center justify-center">
-                          <Gift className="w-6 h-6 text-orange-600" />
-                        </div>
-                        <div className="text-3xl font-bold text-orange-600">0</div>
-                        <div className="text-sm text-gray-600 mt-1">Recompensas</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                {/* Seções "Suas Conquistas" e "Estatísticas do Passaporte"
+                    removidas do estado vazio a pedido do produto — o foco
+                    aqui é levar o usuário à lista de rotas. */}
             </>
           )}
         </CardContent>
