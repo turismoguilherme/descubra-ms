@@ -49,7 +49,7 @@ export const SecurityHeaders = () => {
       { httpEquiv: 'X-Content-Type-Options', content: 'nosniff' },
       { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
       { httpEquiv: 'Strict-Transport-Security', content: 'max-age=31536000; includeSubDomains; preload' },
-      { httpEquiv: 'Permissions-Policy', content: 'camera=(), microphone=(), geolocation=()' },
+      { httpEquiv: 'Permissions-Policy', content: 'camera=(), microphone=(), geolocation=(self)' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' }
     ];
 
