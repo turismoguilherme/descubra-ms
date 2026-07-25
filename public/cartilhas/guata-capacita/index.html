@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plataforma de Cartilhas Institucionais - Guatá Capacita</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- QRCode.js Library for dynamic QR Code generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;700;800&display=swap');
+
+    :root {
+      --pantanal-green-dark: #1b4332;
+      --pantanal-green-primary: #2d6a4f;
+      --pantanal-green-light: #52b788;
+      --pantanal-river-blue: #1d3557;
+      --pantanal-blue-accent: #457b9d;
+      --pantanal-sand: #e9c46a;
+      --pantanal-terracotta: #d4a373;
+    }
+
+    /* THEME COLOR SCHEMES DYNAMIC OVERRIDES */
+    body.theme-blue .bg-gradient-to-r.from-emerald-800.to-emerald-700,
+    body.theme-blue .bg-gradient-to-r.from-emerald-900.to-emerald-800,
+    body.theme-blue .bg-emerald-900 {
+      background: linear-gradient(to right, #0f172a, #1d3557) !important;
+    }
+    body.theme-blue .bg-gradient-to-b.from-emerald-950.via-emerald-900.to-slate-900 {
+      background: linear-gradient(to bottom, #0284c7, #1d3557, #0f172a) !important;
+    }
+    body.theme-blue .bg-emerald-600,
+    body.theme-blue .bg-emerald-700,
+    body.theme-blue .bg-emerald-500 {
+      background-color: #0284c7 !important;
+    }
+    body.theme-blue .text-emerald-800,
+    body.theme-blue .text-emerald-700,
+    body.theme-blue .text-emerald-600 {
+      color: #0284c7 !important;
+    }
+    body.theme-blue .border-emerald-100,
+    body.theme-blue .border-emerald-200 {
+      border-color: #bae6fd !important;
+    }
+    body.theme-blue .bg-emerald-50,
+    body.theme-blue .bg-emerald-50\/60 {
+      background-color: #f0f9ff !important;
+    }
+
+    body.theme-terracotta .bg-gradient-to-r.from-emerald-800.to-emerald-700,
+    body.theme-terracotta .bg-gradient-to-r.from-emerald-900.to-emerald-800,
+    body.theme-terracotta .bg-emerald-900 {
+      background: linear-gradient(to right, #431407, #9a3412) !important;
+    }
+    body.theme-terracotta .bg-gradient-to-b.from-emerald-950.via-emerald-900.to-slate-900 {
+      background: linear-gradient(to bottom, #7c2d12, #431407, #1c1917) !important;
+    }
+    body.theme-terracotta .bg-emerald-600,
+    body.theme-terracotta .bg-emerald-700,
+    body.theme-terracotta .bg-emerald-500 {
+      background-color: #ea580c !important;
+    }
+    body.theme-terracotta .text-emerald-800,
+    body.theme-terracotta .text-emerald-700,
+    body.theme-terracotta .text-emerald-600 {
+      color: #c2410c !important;
+    }
+    body.theme-terracotta .border-emerald-100,
+    body.theme-terracotta .border-emerald-200 {
+      border-color: #ffedd5 !important;
+    }
+    body.theme-terracotta .bg-emerald-50,
+    body.theme-terracotta .bg-emerald-50\/60 {
+      background-color: #fff7ed !important;
+    }
+
+    body.theme-amber .bg-gradient-to-r.from-emerald-800.to-emerald-700,
+    body.theme-amber .bg-gradient-to-r.from-emerald-900.to-emerald-800,
+    body.theme-amber .bg-emerald-900 {
+      background: linear-gradient(to right, #451a03, #b45309) !important;
+    }
+    body.theme-amber .bg-gradient-to-b.from-emerald-950.via-emerald-900.to-slate-900 {
+      background: linear-gradient(to bottom, #78350f, #451a03, #1c1917) !important;
+    }
+    body.theme-amber .bg-emerald-600,
+    body.theme-amber .bg-emerald-700,
+    body.theme-amber .bg-emerald-500 {
+      background-color: #d97706 !important;
+    }
+    body.theme-amber .text-emerald-800,
+    body.theme-amber .text-emerald-700,
+    body.theme-amber .text-emerald-600 {
+      color: #b45309 !important;
+    }
+    body.theme-amber .border-emerald-100,
+    body.theme-amber .border-emerald-200 {
+      border-color: #fef3c7 !important;
+    }
+    body.theme-amber .bg-emerald-50,
+    body.theme-amber .bg-emerald-50\/60 {
+      background-color: #fffbeb !important;
+    }
+
+    body.theme-purple .bg-gradient-to-r.from-emerald-800.to-emerald-700,
+    body.theme-purple .bg-gradient-to-r.from-emerald-900.to-emerald-800,
+    body.theme-purple .bg-emerald-900 {
+      background: linear-gradient(to right, #2e1065, #581c87) !important;
+    }
+    body.theme-purple .bg-gradient-to-b.from-emerald-950.via-emerald-900.to-slate-900 {
+      background: linear-gradient(to bottom, #581c87, #2e1065, #0f172a) !important;
+    }
+    body.theme-purple .bg-emerald-600,
+    body.theme-purple .bg-emerald-700,
+    body.theme-purple .bg-emerald-500 {
+      background-color: #9333ea !important;
+    }
+    body.theme-purple .text-emerald-800,
+    body.theme-purple .text-emerald-700,
+    body.theme-purple .text-emerald-600 {
+      color: #7e22ce !important;
+    }
+    body.theme-purple .border-emerald-100,
+    body.theme-purple .border-emerald-200 {
+      border-color: #f3e8ff !important;
+    }
+    body.theme-purple .bg-emerald-50,
+    body.theme-purple .bg-emerald-50\/60 {
+      background-color: #faf5ff !important;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0f172a;
+      color: #1f2937;
+    }
+
+    .font-heading {
+      font-family: 'Outfit', sans-serif;
+    }
+
+    /* Standard A4 Page Styling */
+    .a4-page {
+      width: 210mm;
+      height: 297mm;
+      box-sizing: border-box;
+      position: relative;
+      background: white;
+      overflow: hidden;
+      margin: 0 auto 30px auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+
+    /* Print Setup for PDF Export */
+    @media print {
+      body {
+        background: white !important;
+        padding: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .a4-page {
+        margin: 0 !important;
+        box-shadow: none !important;
+        width: 210mm !important;
+        height: 297mm !important;
+        page-break-after: always !important;
+      }
+      .page-container {
+        padding: 0 !important;
+      }
+    }
+
+    /* Editable Mode Visual Feedback */
+    .editable-active [contenteditable="true"] {
+      outline: 2px dashed #52b788 !important;
+      outline-offset: 2px;
+      border-radius: 4px;
+      background-color: rgba(82, 183, 136, 0.08) !important;
+      cursor: text;
+    }
+
+    .admin-logged-in .admin-only {
+      display: inline-flex !important;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #2d6a4f; border-radius: 4px; }
+
+    /* QR Container styling for auto-canvas */
+    .qr-holder canvas, .qr-holder img {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+
+  <header class="no-print sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-800/80 text-white px-4 py-3 shadow-2xl">
+    <div class="max-w-7xl mx-auto flex flex-col gap-3">
+      
+      <!-- Top Row: Brand, Multi-Cartilha Selector & Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        
+        <!-- Brand & Active Booklet Status -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-emerald-600/30">
+            G
+          </div>
+          <div>
+            <h1 class="font-heading font-bold text-lg leading-tight flex items-center gap-2">
+              <span id="activeBookletTitle">Guatá Capacita</span> 
+              <span id="adminStatusBadge" class="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2.5 py-0.5 rounded-full font-semibold">
+                Modo Leitura
+              </span>
+            </h1>
+            <p id="activeBookletSubtitle" class="text-xs text-slate-400">Plano de Capacitação para Atendentes dos CATs • MS</p>
+          </div>
+        </div>
+
+        <!-- Public Actions & Admin Control Trigger -->
+        <div class="flex flex-wrap items-center gap-2">
+          
+          <!-- Public Button 1: Como Disponibilizar -->
+          <button onclick="openShareModal()" class="flex items-center gap-2 bg-sky-600 hover:bg-sky-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-lg shadow-sky-600/20 active:scale-95">
+            <i data-lucide="share-2" class="w-4 h-4"></i>
+            <span>Como Disponibilizar?</span>
+          </button>
+
+          <!-- Public Button 2: Imprimir / Baixar PDF -->
+          <button onclick="triggerPdfPrint()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-600/20 active:scale-95">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Imprimir / Baixar PDF</span>
+          </button>
+
+          <div class="h-6 w-px bg-slate-800 mx-1"></div>
+
+          <!-- ADMIN-ONLY CONTROLS (Unlocked after Auth) -->
+          <button id="cartilhaManagerBtn" onclick="openCartilhaManagerModal()" class="admin-only hidden items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-2 rounded-xl text-xs transition shadow-lg active:scale-95">
+            <i data-lucide="folder-kanban" class="w-4 h-4"></i>
+            <span>Minhas Cartilhas</span>
+          </button>
+
+          <!-- Theme Switcher Dropdown for Admin -->
+          <div class="admin-only hidden items-center gap-1 bg-slate-800 border border-slate-700 px-2 py-1 rounded-xl text-xs">
+            <i data-lucide="palette" class="w-4 h-4 text-amber-400"></i>
+            <select id="themeSelector" onchange="changeBookletTheme(this.value)" class="bg-transparent text-slate-200 font-bold text-xs focus:outline-none cursor-pointer">
+              <option value="default" class="bg-slate-900 text-emerald-400">Cor: Verde Pantanal</option>
+              <option value="theme-blue" class="bg-slate-900 text-sky-400">Cor: Azul Rio</option>
+              <option value="theme-terracotta" class="bg-slate-900 text-amber-500">Cor: Terra Cota</option>
+              <option value="theme-amber" class="bg-slate-900 text-yellow-400">Cor: Ipê Amarelo</option>
+              <option value="theme-purple" class="bg-slate-900 text-fuchsia-400">Cor: Cerrado Violeta</option>
+            </select>
+          </div>
+
+          <button id="addModuleBtn" onclick="openModuleModal()" class="admin-only hidden items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-3 py-2 rounded-xl text-xs transition shadow-lg active:scale-95">
+            <i data-lucide="plus-square" class="w-4 h-4"></i>
+            <span>+ Novo Módulo</span>
+          </button>
+
+          <button id="toggleEditBtn" onclick="toggleEditMode()" class="admin-only hidden items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95">
+            <i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i>
+            <span id="editBtnText">Edição de Textos</span>
+          </button>
+
+          <!-- Auth Login / Logout Button -->
+          <button id="authBtn" onclick="toggleAuthModal()" class="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3.5 py-2 rounded-xl text-xs transition shadow-lg shadow-amber-500/20 active:scale-95">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            <span id="authBtnText">Entrar como Administrador</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Bottom Row: Navigation Tabs for Pages -->
+      <div class="flex items-center justify-between border-t border-slate-800/80 pt-2 text-xs">
+        <span class="text-slate-400 font-semibold text-[11px] flex items-center gap-1.5 shrink-0">
+          <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-400"></i>
+          Navegação Rápida:
+        </span>
+
+        <nav class="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none max-w-full">
+          <a href="#page1" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
+            <span class="w-4 h-4 rounded-md bg-emerald-500/20 text-emerald-400 font-bold text-[10px] flex items-center justify-center">1</span> Capa
+          </a>
+          <a href="#page2" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
+            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">2</span> Apresentação
+          </a>
+          <a href="#page3" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
+            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">3</span> Metodologia
+          </a>
+          <a href="#page4" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
+            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">4</span> Mód. 01 e 02
+          </a>
+          <a href="#page5" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
+            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">5</span> Mód. 03 e 04
+          </a>
+          <a href="#page6" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
+            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">6</span> Mód. 05, 06 & Dicas
+          </a>
+          <a href="#page7" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
+            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">7</span> Progresso
+          </a>
+          <a href="#page8" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
+            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">8</span> Contatos
+          </a>
+        </nav>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="page-container py-8 px-2 sm:px-4 max-w-7xl mx-auto flex flex-col items-center">
+
+    <!-- PÁGINA 1: CAPA INSTITUCIONAL -->
+    <section id="page1" class="a4-page rounded-2xl relative overflow-hidden bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-900 text-white p-10 flex flex-col justify-between">
+      
+      <div class="relative z-10 flex items-center justify-between border-b border-emerald-500/30 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="bg-white/10 backdrop-blur p-2 rounded-xl border border-white/20 flex items-center gap-2">
+            <svg class="w-8 h-8 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <div class="text-left">
+              <span class="text-[10px] uppercase font-bold tracking-wider block text-emerald-300">Governo do Estado</span>
+              <span class="text-xs font-bold block text-white leading-none">Mato Grosso do Sul</span>
+            </div>
+          </div>
+          <div class="h-8 w-px bg-white/20"></div>
+          <div class="text-left">
+            <span class="text-[10px] uppercase font-semibold text-emerald-200/80 block">FUNDTUR - MS</span>
+            <span class="text-xs font-bold text-white">Fundação de Turismo</span>
+          </div>
+        </div>
+        <span class="text-[10px] bg-amber-400 text-slate-900 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider shadow">Material Oficial CAT</span>
+      </div>
+
+      <div class="relative z-10 my-auto text-center space-y-4 pt-4">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold uppercase tracking-widest mb-2">
+          <i data-lucide="compass" class="w-4 h-4 text-amber-400"></i> Programa de Qualificação Turística
+        </div>
+        
+        <h1 id="coverMainTitle" contenteditable="true" class="font-heading text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-emerald-200 to-white tracking-tight uppercase leading-none drop-shadow-md">
+          GUATÁ CAPACITA
+        </h1>
+        
+        <p id="coverSubTitle" contenteditable="true" class="text-base sm:text-lg font-medium text-emerald-100/90 max-w-lg mx-auto leading-relaxed border-t border-b border-emerald-500/20 py-3">
+          Plano de Capacitação Prática para Atendentes dos Centros de Atendimento ao Turista (CATs)
+        </p>
+      </div>
+
+      <div class="relative z-10 w-full h-72 my-2 rounded-3xl bg-gradient-to-b from-sky-400/20 to-emerald-800/40 border border-white/10 overflow-hidden flex items-end justify-center p-4">
+        <svg class="absolute inset-0 w-full h-full object-cover opacity-60" viewBox="0 0 500 300" preserveAspectRatio="none">
+          <circle cx="250" cy="100" r="60" fill="#E9C46A" opacity="0.4"/>
+          <path d="M0,220 Q120,140 250,190 T500,210 L500,300 L0,300 Z" fill="#2d6a4f" opacity="0.7"/>
+          <path d="M0,240 Q180,180 350,230 T500,220 L500,300 L0,300 Z" fill="#1b4332" opacity="0.9"/>
+          <path d="M0,270 C150,250 300,290 500,260 L500,300 L0,300 Z" fill="#1d3557"/>
+        </svg>
+
+        <div class="relative z-20 flex flex-col items-center">
+          <button onclick="openImageModal('mascot-cover')" class="asset-edit-btn no-print absolute -top-3 -right-3 z-30 hidden bg-amber-400 text-slate-900 font-bold px-2.5 py-1 rounded-full text-[10px] shadow-lg border border-white items-center gap-1 hover:bg-amber-300">
+            <i data-lucide="image" class="w-3.5 h-3.5"></i> Trocar Mascote
+          </button>
+
+          <div id="mascot-cover" class="w-48 h-52 flex items-center justify-center">
+            <svg class="w-full h-full drop-shadow-2xl" viewBox="0 0 200 220" fill="none">
+              <ellipse cx="100" cy="150" rx="65" ry="50" fill="#9C6644"/>
+              <path d="M70,90 C70,60 130,60 130,90 C130,115 120,125 100,125 C80,125 70,115 70,90 Z" fill="#B07D5B"/>
+              <ellipse cx="100" cy="105" rx="22" ry="14" fill="#6C483B"/>
+              <circle cx="93" cy="103" r="3" fill="#3D261D"/><circle cx="107" cy="103" r="3" fill="#3D261D"/>
+              <path d="M92,112 Q100,118 108,112" stroke="#3D261D" stroke-width="2.5" fill="none"/>
+              <circle cx="85" cy="82" r="6" fill="#1F2937"/><circle cx="83" cy="80" r="2" fill="white"/>
+              <circle cx="115" cy="82" r="6" fill="#1F2937"/><circle cx="113" cy="80" r="2" fill="white"/>
+              <path d="M52,140 C52,120 148,120 148,140 L152,185 C152,192 142,198 100,198 C58,198 48,192 48,185 Z" fill="#2D6A4F"/>
+              <rect x="68" y="152" width="64" height="18" rx="4" fill="#1B4332" stroke="#E9C46A"/>
+              <text x="100" y="164" font-size="7.5" font-weight="bold" fill="#E9C46A" text-anchor="middle">GUATÁ CAPACITA</text>
+              <path d="M145,140 Q170,120 165,100 C160,90 148,98 142,110" fill="#9C6644" stroke="#6C483B" stroke-width="2"/>
+            </svg>
+          </div>
+
+          <div id="mascotCoverLabel" class="bg-amber-400 text-slate-900 font-extrabold text-xs px-4 py-1 rounded-full shadow-lg border border-amber-300 -mt-2">
+            Mascote Guatá • Guia Oficial
+          </div>
+        </div>
+      </div>
+
+      <div class="relative z-10 border-t border-emerald-500/30 pt-3 flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <p class="text-[10px] text-emerald-300 uppercase font-bold tracking-widest">Realização e Parceria Institucional</p>
+          <button onclick="openPartnerModal()" class="asset-edit-btn no-print hidden bg-amber-400 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded-full items-center gap-1 hover:bg-amber-300">
+            <i data-lucide="plus-circle" class="w-3 h-3"></i> Gerenciar Logos
+          </button>
+        </div>
+
+        <div id="partnerLogosGrid" class="grid grid-cols-4 gap-2 text-center text-[10px]"></div>
+      </div>
+
+      <div class="relative z-10 flex justify-between items-center text-[10px] text-emerald-300/80 pt-2 border-t border-white/5">
+        <span>www.turismo.ms.gov.br</span>
+        <span>Edição 2026/2027 • Versão A4 Editável</span>
+        <span>Página 01</span>
+      </div>
+
+    </section>
+
+    <!-- PÁGINA 2: BOAS-VINDAS -->
+    <section id="page2" class="a4-page rounded-2xl relative bg-white text-slate-800 p-10 flex flex-col justify-between border border-slate-200">
+      <div class="flex justify-between items-center border-b border-emerald-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-600"></span>
+          <span class="font-heading font-bold text-xs uppercase tracking-wider text-emerald-800">02 | Apresentação e Boas-vindas</span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">Guatá Capacita • CATs MS</span>
+      </div>
+
+      <div class="my-3">
+        <h2 id="p2Title" contenteditable="true" class="font-heading text-3xl font-extrabold text-slate-900 tracking-tight">
+          Boas-vindas ao Programa Guatá Capacita!
+        </h2>
+        <p id="p2Subtitle" contenteditable="true" class="text-sm font-medium text-emerald-700 mt-1">
+          Você é a porta de entrada para as maravilhas do Mato Grosso do Sul.
+        </p>
+      </div>
+
+      <div class="relative bg-emerald-50/60 rounded-2xl p-6 border border-emerald-100 space-y-4 my-2">
+        <p contenteditable="true" class="text-xs leading-relaxed text-slate-700">
+          Caro(a) Atendente, seja muito bem-vindo(a) a esta jornada de aprendizado. Este guia foi desenvolvido para fortalecer suas competências diárias de recepção, orientação e promoção das riquezas turísticas do nosso território.
+        </p>
+        
+        <p contenteditable="true" class="text-xs leading-relaxed text-slate-700">
+          O atendimento caloroso e conhecedor do território transmite hospitalidade e segurança a cada visitante que busca informações nos nossos centros de atendimento.
+        </p>
+
+        <div class="bg-white p-4 rounded-xl border border-emerald-200/80 shadow-sm flex items-start gap-3">
+          <i data-lucide="award" class="w-6 h-6 text-emerald-600 shrink-0 mt-0.5"></i>
+          <div>
+            <h4 contenteditable="true" class="text-xs font-bold text-slate-900">Seu Papel Transformador</h4>
+            <p contenteditable="true" class="text-[11px] text-slate-600 leading-normal">
+              Um atendimento empático e bem informado transforma a experiência do viajante e impulsiona o desenvolvimento local sustentável.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 bg-gradient-to-r from-amber-50 to-emerald-50 p-4 rounded-2xl border border-amber-200/60 my-2">
+        <div class="shrink-0 relative">
+          <button onclick="openImageModal('mascot-p2')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-30 hidden bg-amber-400 text-slate-900 font-bold p-1 rounded-full text-[9px] shadow border border-white hover:bg-amber-300">
+            <i data-lucide="image" class="w-3 h-3"></i>
+          </button>
+          
+          <div id="mascot-p2" class="w-20 h-20 flex items-center justify-center">
+            <svg class="w-full h-full" viewBox="0 0 200 220" fill="none">
+              <ellipse cx="100" cy="150" rx="65" ry="50" fill="#9C6644"/>
+              <path d="M70,90 C70,60 130,60 130,90 C130,115 120,125 100,125 Z" fill="#B07D5B"/>
+              <circle cx="85" cy="82" r="6" fill="#1F2937"/><circle cx="115" cy="82" r="6" fill="#1F2937"/>
+              <path d="M52,140 C52,120 148,120 148,140 L152,185 L48,185 Z" fill="#2D6A4F"/>
+            </svg>
+          </div>
+        </div>
+        
+        <div class="relative bg-white p-3.5 rounded-2xl border border-amber-300 shadow-sm text-xs leading-relaxed text-slate-800">
+          <div class="absolute -left-2 top-6 w-3 h-3 bg-white border-l border-b border-amber-300 transform rotate-45"></div>
+          <p contenteditable="true">
+            <strong class="text-emerald-800">Dica Prática:</strong> "Aproveite cada módulo! Esta cartilha foi organizada em passos rápidos. Escaneie os QR Codes para ver as videoaulas e responda às atividades pelo celular!"
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 gap-3 text-center my-2">
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <i data-lucide="heart-handshake" class="w-5 h-5 text-emerald-600 mx-auto mb-1"></i>
+          <span contenteditable="true" class="text-[11px] font-bold text-slate-800 block">Hospitalidade</span>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <i data-lucide="map-pin" class="w-5 h-5 text-emerald-600 mx-auto mb-1"></i>
+          <span contenteditable="true" class="text-[11px] font-bold text-slate-800 block">Território</span>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <i data-lucide="leaf" class="w-5 h-5 text-emerald-600 mx-auto mb-1"></i>
+          <span contenteditable="true" class="text-[11px] font-bold text-slate-800 block">Sustentabilidade</span>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <i data-lucide="smartphone" class="w-5 h-5 text-emerald-600 mx-auto mb-1"></i>
+          <span contenteditable="true" class="text-[11px] font-bold text-slate-800 block">Inovação Digital</span>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+        <span>Capacitação Institucional</span>
+        <span>Orientação Inicial</span>
+        <span>Página 02</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 3: INFOGRÁFICO METODOLOGIA -->
+    <section id="page3" class="a4-page rounded-2xl relative bg-white text-slate-800 p-10 flex flex-col justify-between border border-slate-200">
+      <div class="flex justify-between items-center border-b border-emerald-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-600"></span>
+          <span class="font-heading font-bold text-xs uppercase tracking-wider text-emerald-800">03 | Metodologia de Ensino</span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">Jornada de Aprendizado</span>
+      </div>
+
+      <div class="my-2">
+        <h2 contenteditable="true" class="font-heading text-3xl font-extrabold text-slate-900">
+          Como funciona a capacitação?
+        </h2>
+        <p contenteditable="true" class="text-xs font-medium text-slate-600 mt-1">
+          Siga as 5 etapas simples para concluir seu treinamento e obter o certificado oficial.
+        </p>
+      </div>
+
+      <div class="space-y-3 relative my-auto">
+        <div class="absolute left-6 top-6 bottom-6 w-1 bg-emerald-100 rounded-full"></div>
+
+        <div class="relative flex items-center gap-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+          <div class="w-12 h-12 rounded-xl bg-emerald-700 text-white font-heading font-black text-lg flex items-center justify-center shrink-0 shadow-md">01</div>
+          <div class="flex-1">
+            <h3 contenteditable="true" class="text-xs font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="qr-code" class="w-4 h-4 text-emerald-600"></i> Escanear o QR Code
+            </h3>
+            <p contenteditable="true" class="text-[11px] text-slate-600 mt-0.5">Utilize a câmera do seu smartphone na área indicada em cada módulo da cartilha.</p>
+          </div>
+        </div>
+
+        <div class="relative flex items-center gap-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+          <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white font-heading font-black text-lg flex items-center justify-center shrink-0 shadow-md">02</div>
+          <div class="flex-1">
+            <h3 contenteditable="true" class="text-xs font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="play-circle" class="w-4 h-4 text-emerald-600"></i> Assistir à Videoaula
+            </h3>
+            <p contenteditable="true" class="text-[11px] text-slate-600 mt-0.5">Acesse pílulas em vídeo de 8 a 12 minutos apresentadas por especialistas.</p>
+          </div>
+        </div>
+
+        <div class="relative flex items-center gap-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500 text-white font-heading font-black text-lg flex items-center justify-center shrink-0 shadow-md">03</div>
+          <div class="flex-1">
+            <h3 contenteditable="true" class="text-xs font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="file-check" class="w-4 h-4 text-emerald-600"></i> Realizar a Atividade
+            </h3>
+            <p contenteditable="true" class="text-[11px] text-slate-600 mt-0.5">Responda ao questionário rápido de fixação sobre os conceitos aprendidos.</p>
+          </div>
+        </div>
+
+        <div class="relative flex items-center gap-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+          <div class="w-12 h-12 rounded-xl bg-amber-500 text-slate-900 font-heading font-black text-lg flex items-center justify-center shrink-0 shadow-md">04</div>
+          <div class="flex-1">
+            <h3 contenteditable="true" class="text-xs font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="check-square" class="w-4 h-4 text-amber-600"></i> Marcar como Concluído
+            </h3>
+            <p contenteditable="true" class="text-[11px] text-slate-600 mt-0.5">Assinale o módulo na tabela de acompanhamento na página 7.</p>
+          </div>
+        </div>
+
+        <div class="relative flex items-center gap-4 bg-gradient-to-r from-emerald-900 to-emerald-800 text-white p-3.5 rounded-2xl border border-emerald-700 shadow-lg">
+          <div class="w-12 h-12 rounded-xl bg-amber-400 text-slate-900 font-heading font-black text-lg flex items-center justify-center shrink-0 shadow-md">05</div>
+          <div class="flex-1">
+            <h3 contenteditable="true" class="text-xs font-bold text-amber-300 flex items-center gap-2">
+              <i data-lucide="award" class="w-4 h-4 text-amber-300"></i> Receber o Certificado Oficial
+            </h3>
+            <p contenteditable="true" class="text-[11px] text-emerald-100/90 mt-0.5">Ao concluir todos os módulos, solicite seu Certificado de Capacitação.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+        <span>Metodologia</span>
+        <span>Passo a Passo de Estudo</span>
+        <span>Página 03</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 4: MÓDULOS 01 E 02 -->
+    <section id="page4" class="a4-page rounded-2xl relative bg-white text-slate-800 p-10 flex flex-col justify-between border border-slate-200">
+      <div class="flex justify-between items-center border-b border-emerald-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-600"></span>
+          <span class="font-heading font-bold text-xs uppercase tracking-wider text-emerald-800">04 | Módulos de Capacitação</span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">Módulos 01 e 02</span>
+      </div>
+
+      <div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden my-2">
+        <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-amber-400 text-slate-900 text-xs font-black px-2.5 py-0.5 rounded-full uppercase">Módulo 01</span>
+            <h3 contenteditable="true" class="font-heading font-bold text-sm text-white">Hospitalidade e Atendimento de Excelência</h3>
+          </div>
+          <span class="text-[10px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded border border-emerald-600">4h</span>
+        </div>
+
+        <div class="p-4 space-y-3">
+          <p contenteditable="true" class="text-xs text-slate-700">
+            <strong>Objetivo:</strong> Desenvolver técnicas de acolhimento empático, escuta ativa e postura profissional no atendimento.
+          </p>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+              <button onclick="openQrModal('qr-m1-video')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-emerald-600 text-white p-1 rounded-full text-[9px]">
+                <i data-lucide="qr-code" class="w-3 h-3"></i>
+              </button>
+              <div id="qr-m1-video" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-emerald-700 block">Videoaula 01</span>
+                <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Escaneie para assistir</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+              <button onclick="openQrModal('qr-m1-quiz')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-amber-500 text-slate-900 p-1 rounded-full text-[9px]">
+                <i data-lucide="qr-code" class="w-3 h-3"></i>
+              </button>
+              <div id="qr-m1-quiz" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-amber-600 block">Atividade 01</span>
+                <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Quiz de Fixação</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden my-2">
+        <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-amber-400 text-slate-900 text-xs font-black px-2.5 py-0.5 rounded-full uppercase">Módulo 02</span>
+            <h3 contenteditable="true" class="font-heading font-bold text-sm text-white">Patrimônio, Cultura e Atrativos</h3>
+          </div>
+          <span class="text-[10px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded border border-emerald-600">6h</span>
+        </div>
+
+        <div class="p-4 space-y-3">
+          <p contenteditable="true" class="text-xs text-slate-700">
+            <strong>Objetivo:</strong> Mapear os principais atrativos turísticos, patrimônio histórico e cultura regional.
+          </p>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+              <button onclick="openQrModal('qr-m2-video')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-emerald-600 text-white p-1 rounded-full text-[9px]">
+                <i data-lucide="qr-code" class="w-3 h-3"></i>
+              </button>
+              <div id="qr-m2-video" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-emerald-700 block">Videoaula 02</span>
+                <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Escaneie para assistir</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+              <button onclick="openQrModal('qr-m2-quiz')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-amber-500 text-slate-900 p-1 rounded-full text-[9px]">
+                <i data-lucide="qr-code" class="w-3 h-3"></i>
+              </button>
+              <div id="qr-m2-quiz" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-amber-600 block">Atividade 02</span>
+                <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Quiz de Fixação</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+        <span>Módulos Operacionais</span>
+        <span>Módulos 01 & 02</span>
+        <span>Página 04</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 5: MÓDULOS 03 E 04 -->
+    <section id="page5" class="a4-page rounded-2xl relative bg-white text-slate-800 p-10 flex flex-col justify-between border border-slate-200">
+      <div class="flex justify-between items-center border-b border-emerald-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-600"></span>
+          <span class="font-heading font-bold text-xs uppercase tracking-wider text-emerald-800">05 | Módulos de Capacitação</span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">Módulos 03 e 04</span>
+      </div>
+
+      <div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden my-2">
+        <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-amber-400 text-slate-900 text-xs font-black px-2.5 py-0.5 rounded-full uppercase">Módulo 03</span>
+            <h3 contenteditable="true" class="font-heading font-bold text-sm text-white">Sustentabilidade e Boas Práticas Ambientais</h3>
+          </div>
+          <span class="text-[10px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded border border-emerald-600">4h</span>
+        </div>
+
+        <div class="p-4 space-y-3">
+          <p contenteditable="true" class="text-xs text-slate-700">
+            <strong>Objetivo:</strong> Promover ações sustentáveis, conservação ambiental e respeito à biodiversidade local.
+          </p>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+              <button onclick="openQrModal('qr-m3-video')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-emerald-600 text-white p-1 rounded-full text-[9px]">
+                <i data-lucide="qr-code" class="w-3 h-3"></i>
+              </button>
+              <div id="qr-m3-video" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-emerald-700 block">Videoaula 03</span>
+                <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Escaneie para assistir</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+              <button onclick="openQrModal('qr-m3-quiz')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-amber-500 text-slate-900 p-1 rounded-full text-[9px]">
+                <i data-lucide="qr-code" class="w-3 h-3"></i>
+              </button>
+              <div id="qr-m3-quiz" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-amber-600 block">Atividade 03</span>
+                <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Quiz de Fixação</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden my-2">
+        <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="bg-amber-400 text-slate-900 text-xs font-black px-2.5 py-0.5 rounded-full uppercase">Módulo 04</span>
+            <h3 contenteditable="true" class="font-heading font-bold text-sm text-white">Tecnologia e Ferramentas Digitais</h3>
+          </div>
+          <span class="text-[10px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded border border-emerald-600">4h</span>
+        </div>
+
+        <div class="p-4 space-y-3">
+          <p contenteditable="true" class="text-xs text-slate-700">
+            <strong>Objetivo:</strong> Utilizar mapas digitais, QR Codes e canais oficiais digitais para suporte rápido.
+          </p>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+              <button onclick="openQrModal('qr-m4-video')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-emerald-600 text-white p-1 rounded-full text-[9px]">
+                <i data-lucide="qr-code" class="w-3 h-3"></i>
+              </button>
+              <div id="qr-m4-video" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-emerald-700 block">Videoaula 04</span>
+                <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Escaneie para assistir</span>
+              </div>
+            </div>
+
+            <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+              <button onclick="openQrModal('qr-m4-quiz')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-amber-500 text-slate-900 p-1 rounded-full text-[9px]">
+                <i data-lucide="qr-code" class="w-3 h-3"></i>
+              </button>
+              <div id="qr-m4-quiz" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+              <div>
+                <span class="text-[10px] uppercase font-bold text-amber-600 block">Atividade 04</span>
+                <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Quiz de Fixação</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+        <span>Módulos Operacionais</span>
+        <span>Módulos 03 & 04</span>
+        <span>Página 05</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 6: MÓDULOS 05, 06 & AULAS CRIADAS PELO GESTOR -->
+    <section id="page6" class="a4-page rounded-2xl relative bg-white text-slate-800 p-10 flex flex-col justify-between border border-slate-200">
+      <div class="flex justify-between items-center border-b border-emerald-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-600"></span>
+          <span class="font-heading font-bold text-xs uppercase tracking-wider text-emerald-800">06 | Módulos e Boas Práticas</span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">Módulos 05, 06 & Customizados</span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 my-2">
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="bg-amber-400 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Módulo 05</span>
+            <span class="text-[9px] text-slate-500 font-semibold">3 horas</span>
+          </div>
+          <h3 contenteditable="true" class="font-heading font-bold text-xs text-slate-900">Atendimento Inclusivo e Acessibilidade</h3>
+          <p contenteditable="true" class="text-[10px] text-slate-600 leading-normal">
+            Acolhimento adequado para Pessoas com Deficiência (PcD), idosos e diversidade.
+          </p>
+          <div class="bg-white p-2 rounded-lg border border-slate-200 flex items-center gap-2 relative">
+            <button onclick="openQrModal('qr-m5')" class="asset-edit-btn no-print absolute -top-1 -right-1 z-20 hidden bg-emerald-600 text-white p-1 rounded-full text-[8px]">
+              <i data-lucide="qr-code" class="w-2.5 h-2.5"></i>
+            </button>
+            <div id="qr-m5" class="qr-holder w-9 h-9 shrink-0 bg-slate-900 p-0.5 rounded"></div>
+            <div class="text-[9px]">
+              <span class="font-bold text-emerald-800 block">QR Code Mód. 05</span>
+              <span class="text-slate-500">Aula + Quiz</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="bg-amber-400 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Módulo 06</span>
+            <span class="text-[9px] text-slate-500 font-semibold">4 horas</span>
+          </div>
+          <h3 contenteditable="true" class="font-heading font-bold text-xs text-slate-900">Gestão de Crises e Emergências</h3>
+          <p contenteditable="true" class="text-[10px] text-slate-600 leading-normal">
+            Procedimentos para imprevistos de saúde, contatos de emergência e apoio ao turista.
+          </p>
+          <div class="bg-white p-2 rounded-lg border border-slate-200 flex items-center gap-2 relative">
+            <button onclick="openQrModal('qr-m6')" class="asset-edit-btn no-print absolute -top-1 -right-1 z-20 hidden bg-emerald-600 text-white p-1 rounded-full text-[8px]">
+              <i data-lucide="qr-code" class="w-2.5 h-2.5"></i>
+            </button>
+            <div id="qr-m6" class="qr-holder w-9 h-9 shrink-0 bg-slate-900 p-0.5 rounded"></div>
+            <div class="text-[9px]">
+              <span class="font-bold text-emerald-800 block">QR Code Mód. 06</span>
+              <span class="text-slate-500">Aula + Quiz</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container for Dynamic Custom Modules Added via Admin -->
+      <div id="customModulesContainer" class="space-y-2 my-1"></div>
+
+      <div class="bg-gradient-to-br from-emerald-900 to-slate-900 text-white p-5 rounded-2xl border border-emerald-700 my-2 space-y-3 shadow-lg">
+        <div class="flex items-center gap-2 border-b border-emerald-600/50 pb-2">
+          <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+          <h3 contenteditable="true" class="font-heading font-bold text-sm text-amber-300 uppercase tracking-wide">
+            10 Mandamentos do Atendimento de Sucesso
+          </h3>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-[11px] text-emerald-100/90 leading-snug">
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">1.</span> <span contenteditable="true">Cumprimente sempre com um sorriso sincero.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">2.</span> <span contenteditable="true">Ouça a necessidade do turista com atenção.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">3.</span> <span contenteditable="true">Forneça informações precisas e checadas.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">4.</span> <span contenteditable="true">Mantenha os folhetos organizados.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">5.</span> <span contenteditable="true">Valorize os atrativos da comunidade local.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">6.</span> <span contenteditable="true">Incentive a preservação ambiental.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">7.</span> <span contenteditable="true">Tenha à mão contatos de emergência.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">8.</span> <span contenteditable="true">Ofereça suporte digital rápido via QR Code.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">9.</span> <span contenteditable="true">Trate a todos com empatia e respeito.</span></div>
+          <div class="flex items-start gap-1.5"><span class="text-amber-400 font-bold">10.</span> <span contenteditable="true">Seja o embaixador do orgulho do nosso destino!</span></div>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+        <span>Atendimento de Excelência</span>
+        <span>Dicas & Boas Práticas</span>
+        <span>Página 06</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 7: PAINEL DE ACOMPANHAMENTO -->
+    <section id="page7" class="a4-page rounded-2xl relative bg-white text-slate-800 p-10 flex flex-col justify-between border border-slate-200">
+      <div class="flex justify-between items-center border-b border-emerald-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded-full bg-emerald-600"></span>
+          <span class="font-heading font-bold text-xs uppercase tracking-wider text-emerald-800">07 | Meu Progresso</span>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">Controle de Capacitação</span>
+      </div>
+
+      <div class="my-2">
+        <h2 contenteditable="true" class="font-heading text-2xl font-extrabold text-slate-900">
+          Acompanhamento do Atendente
+        </h2>
+        <p contenteditable="true" class="text-xs text-slate-600 mt-0.5">
+          Marque os módulos conforme for concluindo e apresente ao seu supervisor.
+        </p>
+      </div>
+
+      <div class="overflow-hidden border border-slate-200 rounded-2xl shadow-sm my-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-emerald-900 text-white font-heading font-bold uppercase text-[10px]">
+            <tr>
+              <th class="p-3 text-center">Status</th>
+              <th class="p-3">Módulo</th>
+              <th class="p-3 text-center">Carga</th>
+              <th class="p-3 text-center">Data Conclusão</th>
+              <th class="p-3 text-center">Visto Supervisor</th>
+            </tr>
+          </thead>
+          <tbody id="progressTableBody" class="divide-y divide-slate-200 bg-white text-slate-700">
+            <tr class="hover:bg-slate-50"><td class="p-3 text-center"><input type="checkbox" class="w-4 h-4 text-emerald-600 rounded"></td><td class="p-3 font-semibold text-slate-900">Mód. 01 - Hospitalidade & Atendimento</td><td class="p-3 text-center text-slate-500">4h</td><td contenteditable="true" class="p-3 text-center text-slate-400">__/__/2026</td><td contenteditable="true" class="p-3 text-center text-slate-400">______</td></tr>
+            <tr class="hover:bg-slate-50"><td class="p-3 text-center"><input type="checkbox" class="w-4 h-4 text-emerald-600 rounded"></td><td class="p-3 font-semibold text-slate-900">Mód. 02 - Patrimônio e Atrativos</td><td class="p-3 text-center text-slate-500">6h</td><td contenteditable="true" class="p-3 text-center text-slate-400">__/__/2026</td><td contenteditable="true" class="p-3 text-center text-slate-400">______</td></tr>
+            <tr class="hover:bg-slate-50"><td class="p-3 text-center"><input type="checkbox" class="w-4 h-4 text-emerald-600 rounded"></td><td class="p-3 font-semibold text-slate-900">Mód. 03 - Sustentabilidade Ambiental</td><td class="p-3 text-center text-slate-500">4h</td><td contenteditable="true" class="p-3 text-center text-slate-400">__/__/2026</td><td contenteditable="true" class="p-3 text-center text-slate-400">______</td></tr>
+            <tr class="hover:bg-slate-50"><td class="p-3 text-center"><input type="checkbox" class="w-4 h-4 text-emerald-600 rounded"></td><td class="p-3 font-semibold text-slate-900">Mód. 04 - Ferramentas Digitais</td><td class="p-3 text-center text-slate-500">4h</td><td contenteditable="true" class="p-3 text-center text-slate-400">__/__/2026</td><td contenteditable="true" class="p-3 text-center text-slate-400">______</td></tr>
+            <tr class="hover:bg-slate-50"><td class="p-3 text-center"><input type="checkbox" class="w-4 h-4 text-emerald-600 rounded"></td><td class="p-3 font-semibold text-slate-900">Mód. 05 - Atendimento Inclusivo</td><td class="p-3 text-center text-slate-500">3h</td><td contenteditable="true" class="p-3 text-center text-slate-400">__/__/2026</td><td contenteditable="true" class="p-3 text-center text-slate-400">______</td></tr>
+            <tr class="hover:bg-slate-50"><td class="p-3 text-center"><input type="checkbox" class="w-4 h-4 text-emerald-600 rounded"></td><td class="p-3 font-semibold text-slate-900">Mód. 06 - Gestão de Crises</td><td class="p-3 text-center text-slate-500">4h</td><td contenteditable="true" class="p-3 text-center text-slate-400">__/__/2026</td><td contenteditable="true" class="p-3 text-center text-slate-400">______</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-amber-500/10 border-2 border-amber-400/60 p-5 rounded-2xl flex items-center justify-between gap-4 my-2">
+        <div class="space-y-1.5 flex-1">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[10px] font-black uppercase">
+            <i data-lucide="award" class="w-3.5 h-3.5"></i> Emissão de Certificado
+          </div>
+          <h3 contenteditable="true" class="font-heading font-extrabold text-base text-slate-900">
+            Concluiu todos os módulos?
+          </h3>
+          <p contenteditable="true" class="text-xs text-slate-700 leading-relaxed">
+            Escaneie o QR Code ao lado para validar seu progresso e solicitar seu <strong>Certificado Oficial</strong>.
+          </p>
+        </div>
+
+        <div class="bg-white p-3 rounded-2xl border border-amber-300 shadow-md text-center shrink-0 relative">
+          <button onclick="openQrModal('qr-cert')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-amber-500 text-slate-900 p-1 rounded-full text-[9px] shadow">
+            <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+          </button>
+          
+          <div id="qr-cert" class="qr-holder w-20 h-20 bg-slate-900 p-1 rounded mx-auto flex items-center justify-center"></div>
+          <span class="text-[9px] font-extrabold text-amber-700 uppercase block mt-1">Certificado</span>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+        <span>Registro do Atendente</span>
+        <span>Acompanhamento & Certificado</span>
+        <span>Página 07</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 8: ENCERRAMENTO -->
+    <section id="page8" class="a4-page rounded-2xl relative bg-gradient-to-b from-slate-900 via-emerald-950 to-slate-950 text-white p-10 flex flex-col justify-between overflow-hidden">
+      
+      <div class="relative z-10 flex justify-between items-center border-b border-emerald-500/30 pb-3">
+        <span class="font-heading font-bold text-xs text-emerald-300 uppercase tracking-wider">08 | Encerramento e Suporte</span>
+        <span class="text-[10px] bg-white/10 px-2.5 py-0.5 rounded text-white font-mono">www.turismo.ms.gov.br</span>
+      </div>
+
+      <div class="relative z-10 text-center space-y-3 my-2">
+        <h2 contenteditable="true" class="font-heading text-3xl font-black text-amber-300 uppercase tracking-tight">
+          Obrigado por Fazer a Diferença!
+        </h2>
+        <p contenteditable="true" class="text-xs text-emerald-100/90 max-w-md mx-auto leading-relaxed">
+          Sua dedicação em acolher bem os visitantes fortalece nossa região como referência mundial em ecoturismo, cultura e hospitalidade.
+        </p>
+      </div>
+
+      <div class="relative z-10 bg-white/10 backdrop-blur border border-white/20 p-6 rounded-3xl text-center max-w-md mx-auto my-auto space-y-3 shadow-2xl relative">
+        <button onclick="openQrModal('qr-main-portal')" class="asset-edit-btn no-print absolute top-3 right-3 z-20 hidden bg-amber-400 text-slate-900 p-1.5 rounded-full text-[10px] font-bold shadow hover:bg-amber-300">
+          <i data-lucide="qr-code" class="w-4 h-4"></i> Editar QR
+        </button>
+
+        <span class="text-xs uppercase font-extrabold text-amber-300 tracking-wider block">Acesse o Portal do Aluno</span>
+        
+        <div class="bg-white p-3 rounded-2xl inline-block shadow-lg">
+          <div id="qr-main-portal" class="qr-holder w-32 h-32 bg-slate-900 p-1.5 rounded-xl flex items-center justify-center"></div>
+        </div>
+
+        <p contenteditable="true" class="text-xs font-mono text-emerald-200">
+          turismo.ms.gov.br/guata-capacita
+        </p>
+      </div>
+
+      <div class="relative z-10 grid grid-cols-2 gap-3 my-2">
+        <div class="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center gap-3">
+          <i data-lucide="globe" class="w-5 h-5 text-amber-400 shrink-0"></i>
+          <div>
+            <span class="text-[9px] uppercase text-emerald-300 font-bold block">Site Oficial</span>
+            <span contenteditable="true" class="text-xs font-medium text-white">www.turismo.ms.gov.br</span>
+          </div>
+        </div>
+
+        <div class="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center gap-3">
+          <i data-lucide="instagram" class="w-5 h-5 text-amber-400 shrink-0"></i>
+          <div>
+            <span class="text-[9px] uppercase text-emerald-300 font-bold block">Instagram</span>
+            <span contenteditable="true" class="text-xs font-medium text-white">@turismoms • @fundturms</span>
+          </div>
+        </div>
+
+        <div class="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center gap-3">
+          <i data-lucide="message-circle" class="w-5 h-5 text-amber-400 shrink-0"></i>
+          <div>
+            <span class="text-[9px] uppercase text-emerald-300 font-bold block">WhatsApp Central</span>
+            <span contenteditable="true" class="text-xs font-medium text-white">(67) 99999-0000</span>
+          </div>
+        </div>
+
+        <div class="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center gap-3">
+          <i data-lucide="mail" class="w-5 h-5 text-amber-400 shrink-0"></i>
+          <div>
+            <span class="text-[9px] uppercase text-emerald-300 font-bold block">Suporte Técnico</span>
+            <span contenteditable="true" class="text-xs font-medium text-white">capacitacao@turismo.ms.gov.br</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative z-10 flex items-center justify-between border-t border-emerald-500/30 pt-3">
+        <div class="flex items-center gap-2">
+          <svg class="w-16 h-16 drop-shadow-md" viewBox="0 0 100 100" fill="none">
+            <path d="M30,20 C50,10 70,30 65,70 C60,90 40,95 30,80 Z" fill="#1D3557"/>
+            <path d="M40,30 C55,25 75,35 70,85 L55,95 Z" fill="#0077B6"/>
+            <path d="M35,22 Q25,28 32,38 Z" fill="#E9C46A"/>
+            <path d="M25,25 C15,30 20,45 32,38 Z" fill="#1F2937"/>
+            <circle cx="38" cy="26" r="2.5" fill="white"/>
+          </svg>
+          <div class="text-left">
+            <span class="text-[10px] font-bold text-amber-300 block">Mato Grosso do Sul</span>
+            <span class="text-[9px] text-emerald-200 block">Um Estado de Cores e Natureza</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 bg-emerald-900/80 px-3 py-1.5 rounded-2xl border border-emerald-600">
+          <span class="text-xs text-amber-300 font-bold">Até breve na nossa rede de atendimento!</span>
+        </div>
+      </div>
+
+      <div class="relative z-10 text-center text-[9px] text-emerald-400/60 pt-2">
+        Governo do Estado de Mato Grosso do Sul • Fundação de Turismo (FUNDTUR-MS) • Todos os direitos reservados.
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE AUTENTICAÇÃO / LOGIN ADMIN -->
+  <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 text-white max-w-sm w-full rounded-2xl p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-heading font-bold text-base text-amber-300 flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-5 h-5 text-amber-400"></i> Login do Gestor
+        </h3>
+        <button onclick="toggleAuthModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">E-mail do Administrador:</label>
+          <input type="email" id="loginEmail" required placeholder="seu@email.com" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-400">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Senha de Acesso:</label>
+          <input type="password" id="loginPassword" required placeholder="••••••••••••" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-400">
+        </div>
+
+        <div id="loginError" class="hidden text-rose-400 font-semibold text-[11px] bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+          E-mail ou senha incorretos. Verifique suas credenciais.
+        </div>
+
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-black py-2.5 rounded-xl text-xs transition shadow-lg mt-2">
+          Entrar no Painel do Gestor
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL GERENCIADOR MULTICARTILHAS (ADMIN) -->
+  <div id="cartilhaManagerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 text-white max-w-xl w-full rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-heading font-bold text-base text-amber-300 flex items-center gap-2">
+          <i data-lucide="folder-kanban" class="w-5 h-5 text-amber-400"></i> Gerenciador de Cartilhas
+        </h3>
+        <button onclick="closeCartilhaManagerModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Action: Create New Cartilha Form -->
+      <div class="bg-slate-800/90 border border-slate-700/80 p-4 rounded-xl space-y-3">
+        <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> Criar Nova Cartilha Institucional
+        </h4>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <label class="block text-slate-300 mb-1">Título do Projeto:</label>
+            <input type="text" id="newBookletTitle" placeholder="Ex: Turismo Gastronômico de MS" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+          </div>
+          <div>
+            <label class="block text-slate-300 mb-1">Nome do Mascote:</label>
+            <input type="text" id="newBookletMascot" placeholder="Ex: Guatá, Ararinha, Tuiuiú" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-300 mb-1">Subtítulo / Objetivo:</label>
+          <input type="text" id="newBookletSubtitle" placeholder="Ex: Manual de Boas Práticas e Qualificação para Garçons e Restaurantes" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+        </div>
+
+        <button onclick="handleCreateNewBooklet()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs transition shadow-lg">
+          + Criar e Ativar Esta Nova Cartilha
+        </button>
+      </div>
+
+      <!-- Saved Cartilhas List -->
+      <div class="space-y-2 pt-2">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="library" class="w-4 h-4 text-emerald-400"></i> Cartilhas Salvas no Sistema:
+        </h4>
+
+        <div id="savedBookletsList" class="space-y-2 max-h-60 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ADICIONAR MÓDULO PERSONALIZADO -->
+  <div id="moduleModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 text-white max-w-md w-full rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-heading font-bold text-base text-emerald-400 flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-emerald-400"></i> Adicionar Novo Módulo
+        </h3>
+        <button onclick="closeModuleModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleCreateModule(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Identificador:</label>
+            <input type="text" id="modNum" required placeholder="Módulo 07" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-300 mb-1">Carga Horária:</label>
+            <input type="text" id="modHours" required placeholder="4h" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Título do Módulo:</label>
+          <input type="text" id="modTitle" required placeholder="Ex: Gestão e Atendimento de Grupos Grandes" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-300 mb-1">Objetivo do Módulo:</label>
+          <textarea id="modDesc" required rows="2" placeholder="Resumo e meta de aprendizagem deste módulo..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-bold text-emerald-400 mb-1">Link/URL da Videoaula:</label>
+          <input type="url" id="modVideoUrl" placeholder="https://youtube.com/watch?v=..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white">
+        </div>
+
+        <div>
+          <label class="block font-bold text-amber-400 mb-1">Link/URL do Quiz/Atividade:</label>
+          <input type="url" id="modQuizUrl" placeholder="https://forms.google.com/..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white">
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg mt-2">
+          + Criar e Inserir Módulo na Cartilha
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL COMO DISPONIBILIZAR -->
+  <div id="shareModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 text-white max-w-lg w-full rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 contenteditable="true" class="font-heading font-bold text-base text-amber-300 flex items-center gap-2">
+          <i data-lucide="share-2" class="w-5 h-5 text-amber-400"></i> Como Disponibilizar esta Cartilha?
+        </h3>
+        <button onclick="closeShareModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+        <!-- Item 1: Impressão Física da CARTILHA -->
+        <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/80 space-y-1">
+          <h4 contenteditable="true" class="font-bold text-emerald-400 flex items-center gap-2 text-sm">
+            <i data-lucide="printer" class="w-4 h-4"></i> 1. Impressão Física da CARTILHA
+          </h4>
+          <p contenteditable="true">
+            Clique em <strong>"Imprimir / Baixar PDF"</strong>. Selecione o destino como "Salvar como PDF" ou escolha sua impressora A4.
+          </p>
+        </div>
+
+        <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/80 space-y-1">
+          <h4 contenteditable="true" class="font-bold text-emerald-400 flex items-center gap-2 text-sm">
+            <i data-lucide="send" class="w-4 h-4"></i> 2. Envio de PDF pelo WhatsApp / E-mail
+          </h4>
+          <p contenteditable="true">
+            O PDF exportado preserva todos os links e códigos QR. Os atendentes podem abrir o arquivo no celular ou tablet.
+          </p>
+        </div>
+
+        <!-- Item 3: Publicação em Portal Web + Solicitação Gratuita -->
+        <div class="bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/80 space-y-1">
+          <h4 contenteditable="true" class="font-bold text-emerald-400 flex items-center gap-2 text-sm">
+            <i data-lucide="globe" class="w-4 h-4"></i> 3. Publicação em Portal Web
+          </h4>
+          <p contenteditable="true">
+            Este arquivo pode ser hospedado no servidor do Governo ou FUNDTUR para acesso online 24h. Pode ser hospedado ou disponibilizado de forma gratuita mediante pedido: por meio do e-mail: <strong class="text-amber-300">guilhermearevalo27@gmail.com</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-2 flex items-center gap-2">
+        <button onclick="triggerPdfPrint(); closeShareModal();" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg flex items-center justify-center gap-2">
+          <i data-lucide="printer" class="w-4 h-4"></i> Baixar PDF Agora
+        </button>
+        <button onclick="closeShareModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-4 py-2.5 rounded-xl text-xs transition border border-slate-700">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GERENCIAR PARCEIROS & LOGOS -->
+  <div id="partnerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 text-white max-w-md w-full rounded-2xl p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-heading font-bold text-base text-amber-300 flex items-center gap-2">
+          <i data-lucide="building-2" class="w-5 h-5 text-amber-400"></i> Gerenciar Logos e Parceiros
+        </h3>
+        <button onclick="closePartnerModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2">
+          <span class="font-bold text-emerald-400 block">Adicionar Novo Parceiro / Logo</span>
+          <input type="text" id="newPartnerName" placeholder="Nome da Instituição (ex: EMBRATUR)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+          <input type="url" id="newPartnerLogoUrl" placeholder="Link/URL do Logo PNG (Opcional)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+          <button onclick="addPartner()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs transition">
+            + Adicionar à Capa
+          </button>
+        </div>
+
+        <div class="space-y-1.5 max-h-48 overflow-y-auto pt-2">
+          <span class="font-bold text-slate-400 text-[10px] uppercase block">Parceiros Atuais:</span>
+          <div id="partnerManageList" class="space-y-1.5"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE EDIÇÃO DO MASCOTE -->
+  <div id="imageModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 text-white max-w-md w-full rounded-2xl p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-heading font-bold text-base text-amber-300 flex items-center gap-2">
+          <i data-lucide="image" class="w-5 h-5 text-amber-400"></i> Personalizar Mascote
+        </h3>
+        <button onclick="closeImageModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2">
+          <span class="font-bold text-emerald-400 block">Opção 1: Enviar Imagem do seu computador/Canva</span>
+          <input type="file" id="mascotFileInput" accept="image/*" class="text-xs text-slate-300 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500">
+        </div>
+
+        <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2">
+          <span class="font-bold text-emerald-400 block">Opção 2: Link de Imagem da Web (URL)</span>
+          <input type="url" id="mascotUrlInput" placeholder="https://exemplo.com/mascote.png" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="applyMascotImage()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs transition">
+          Aplicar Imagem
+        </button>
+        <button onclick="restoreMascotDefault()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-semibold px-3 py-2 rounded-xl text-xs transition">
+          Restaurar Vetor Padrão
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE EDIÇÃO DE QR CODE -->
+  <div id="qrModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 text-white max-w-md w-full rounded-2xl p-6 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <h3 class="font-heading font-bold text-base text-amber-300 flex items-center gap-2">
+          <i data-lucide="qr-code" class="w-5 h-5 text-amber-400"></i> Editar QR Code
+        </h3>
+        <button onclick="closeQrModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold text-emerald-400 block mb-1">Cole a URL / Link do Vídeo ou Formulário:</label>
+          <input type="url" id="qrTargetUrl" placeholder="https://youtube.com/watch?v=... ou https://forms.google..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2">
+        <button onclick="applyQrCode()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs transition">
+          Gerar Novo QR Code
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Theme Switcher Function
+    function changeBookletTheme(themeClass) {
+      document.body.classList.remove('theme-blue', 'theme-terracotta', 'theme-amber', 'theme-purple');
+      if (themeClass && themeClass !== 'default') {
+        document.body.classList.add(themeClass);
+      }
+      
+      // Save current theme in active booklet state
+      const currentBooklet = savedBooklets.find(b => b.id === currentBookletId);
+      if (currentBooklet) {
+        currentBooklet.theme = themeClass;
+        localStorage.setItem('guata_cartilhas_data', JSON.stringify(savedBooklets));
+      }
+    }
+
+    // Default Booklets Repository Data State
+    let defaultBooklets = [
+      {
+        id: 'guata-cat',
+        title: 'Guatá Capacita',
+        subtitle: 'Plano de Capacitação Prática para Atendentes dos Centros de Atendimento ao Turista (CATs)',
+        mascot: 'Capivara Guatá',
+        p2Title: 'Boas-vindas ao Programa Guatá Capacita!',
+        p2Subtitle: 'Você é a porta de entrada para as maravilhas do Mato Grosso do Sul.',
+        theme: 'default'
+      },
+      {
+        id: 'gastronomia-ms',
+        title: 'Sabores de MS - Capacitação',
+        subtitle: 'Guia de Boas Práticas e Hospitalidade no Atendimento em Bares e Restaurantes',
+        mascot: 'Tuiuiú Chef',
+        p2Title: 'Boas-vindas ao Sabores de MS!',
+        p2Subtitle: 'Promovendo nossa gastronomia regional e ingredientes típicos do Pantanal.',
+        theme: 'theme-terracotta'
+      },
+      {
+        id: 'hospedagem-ms',
+        title: 'Recepção de Hotelaria MS',
+        subtitle: 'Qualificação em Recepção e Hospitalidade para Pousadas e Hotéis',
+        mascot: 'Arara Acolhedora',
+        p2Title: 'Boas-vindas ao Treinamento de Hotelaria!',
+        p2Subtitle: 'Acolhendo o viajante com conforto, agilidade e excelência.',
+        theme: 'theme-blue'
+      }
+    ];
+
+    let savedBooklets = [];
+    let currentBookletId = 'guata-cat';
+
+    let partners = [
+      { id: '1', name: 'Fundtur - MS', logoUrl: '' },
+      { id: '2', name: 'Gov. Mato Grosso do Sul', logoUrl: '' },
+      { id: '3', name: 'Sebrae MS', logoUrl: '' },
+      { id: '4', name: 'Rede de CATs MS', logoUrl: '' }
+    ];
+
+    let isAdminLoggedIn = false;
+    let isEditMode = false;
+    let currentActiveTargetId = null;
+    let defaultMascotVectorHTML = {};
+    const PROGRESS_STORAGE_KEY = 'guata_cartilha_progress_v1';
+
+    function lockPublicEditing() {
+      document.querySelectorAll('[contenteditable]').forEach((el) => {
+        // Aluno pode preencher datas/visto na tabela de progresso
+        if (el.closest('#progressTableBody')) return;
+        el.setAttribute('data-admin-editable', 'true');
+        el.setAttribute('contenteditable', 'false');
+      });
+    }
+
+    function applyEditMode(enabled) {
+      document.querySelectorAll('[data-admin-editable="true"]').forEach((el) => {
+        el.setAttribute('contenteditable', enabled ? 'true' : 'false');
+      });
+      if (!enabled) document.body.classList.remove('editable-active');
+    }
+
+    function collectProgressData() {
+      const rows = Array.from(document.querySelectorAll('#progressTableBody tr'));
+      return {
+        cartilhaId: currentBookletId,
+        modules: rows.map((row, index) => {
+          const checkbox = row.querySelector('input[type="checkbox"]');
+          const cells = row.querySelectorAll('td');
+          return {
+            index,
+            completed: !!(checkbox && checkbox.checked),
+            label: cells[1] ? cells[1].innerText.trim() : '',
+            hours: cells[2] ? cells[2].innerText.trim() : '',
+            date: cells[3] ? cells[3].innerText.trim() : '',
+            supervisor: cells[4] ? cells[4].innerText.trim() : '',
+          };
+        }),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    function applyProgressData(data) {
+      if (!data || !Array.isArray(data.modules)) return;
+      const rows = Array.from(document.querySelectorAll('#progressTableBody tr'));
+      data.modules.forEach((mod) => {
+        const row = rows[mod.index];
+        if (!row) return;
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const cells = row.querySelectorAll('td');
+        if (checkbox) checkbox.checked = !!mod.completed;
+        if (cells[3] && typeof mod.date === 'string') cells[3].innerText = mod.date;
+        if (cells[4] && typeof mod.supervisor === 'string') cells[4].innerText = mod.supervisor;
+      });
+    }
+
+    function persistProgressLocal(data) {
+      try {
+        localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function notifyParentProgress(data) {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'guata-cartilha-progress', payload: data }, '*');
+        }
+      } catch (e) {}
+    }
+
+    function saveProgress() {
+      const data = collectProgressData();
+      persistProgressLocal(data);
+      notifyParentProgress(data);
+    }
+
+    function bindProgressListeners() {
+      const table = document.getElementById('progressTableBody');
+      if (!table || table.dataset.progressBound === '1') return;
+      table.dataset.progressBound = '1';
+      table.addEventListener('change', (e) => {
+        if (e.target && e.target.matches('input[type="checkbox"]')) saveProgress();
+      });
+      table.addEventListener('blur', (e) => {
+        if (e.target && e.target.getAttribute('contenteditable') !== null) saveProgress();
+      }, true);
+    }
+
+    window.addEventListener('message', (event) => {
+      const msg = event.data;
+      if (!msg || msg.type !== 'guata-cartilha-progress-hydrate') return;
+      if (msg.payload) {
+        applyProgressData(msg.payload);
+        persistProgressLocal(msg.payload);
+      }
+    });
+
+    window.onload = function() {
+      lockPublicEditing();
+
+      // Load saved booklets from LocalStorage if available
+      const stored = localStorage.getItem('guata_cartilhas_data');
+      if (stored) {
+        try {
+          savedBooklets = JSON.parse(stored);
+        } catch(e) {
+          savedBooklets = defaultBooklets;
+        }
+      } else {
+        savedBooklets = defaultBooklets;
+        localStorage.setItem('guata_cartilhas_data', JSON.stringify(savedBooklets));
+      }
+
+      ['mascot-cover', 'mascot-p2'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) defaultMascotVectorHTML[id] = el.innerHTML;
+      });
+
+      renderPartners();
+      generateDefaultQRCodes();
+      renderSavedBookletsList();
+      bindProgressListeners();
+
+      try {
+        const progressStored = localStorage.getItem(PROGRESS_STORAGE_KEY);
+        if (progressStored) applyProgressData(JSON.parse(progressStored));
+      } catch (e) {}
+
+      // Pede progresso da nuvem ao app pai (Descubra MS)
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'guata-cartilha-progress-request', cartilhaId: currentBookletId }, '*');
+        }
+      } catch (e) {}
+    };
+
+    function triggerPdfPrint() {
+      window.print();
+    }
+
+    function openShareModal() {
+      const modal = document.getElementById('shareModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        lucide.createIcons();
+      }
+    }
+
+    function closeShareModal() {
+      const modal = document.getElementById('shareModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    // Authentication Handling
+    function toggleAuthModal() {
+      if (isAdminLoggedIn) {
+        if (confirm('Deseja sair do modo Administrador?')) {
+          isAdminLoggedIn = false;
+          isEditMode = false;
+          applyEditMode(false);
+          document.body.classList.remove('admin-logged-in', 'editable-active');
+          document.getElementById('authBtnText').innerText = 'Entrar como Administrador';
+          document.getElementById('authBtn').classList.replace('bg-emerald-500', 'bg-amber-500');
+          document.getElementById('authBtn').classList.replace('hover:bg-emerald-400', 'hover:bg-amber-400');
+          
+          const badge = document.getElementById('adminStatusBadge');
+          badge.innerText = 'Modo Leitura';
+          badge.classList.replace('bg-emerald-500/20', 'bg-slate-800');
+          badge.classList.replace('text-emerald-400', 'text-slate-400');
+          document.getElementById('editBtnText').innerText = 'Edição de Textos';
+        }
+      } else {
+        const modal = document.getElementById('authModal');
+        if (modal) modal.classList.remove('hidden');
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+      const errBox = document.getElementById('loginError');
+
+      // Credenciais não ficam no código-fonte público.
+      // Configure uma vez no DevTools (F12 → Console):
+      // localStorage.setItem('guata_admin_email', 'seu@email.com');
+      // localStorage.setItem('guata_admin_pass', 'sua-senha');
+      const adminEmail = localStorage.getItem('guata_admin_email') || '';
+      const adminPass = localStorage.getItem('guata_admin_pass') || '';
+
+      if (!adminEmail || !adminPass) {
+        errBox.classList.remove('hidden');
+        errBox.innerText = 'Admin não configurado. Defina guata_admin_email e guata_admin_pass no localStorage (veja o console).';
+        console.info('Para liberar o admin: localStorage.setItem("guata_admin_email","..."); localStorage.setItem("guata_admin_pass","...");');
+        return;
+      }
+
+      if (email === adminEmail && pass === adminPass) {
+        isAdminLoggedIn = true;
+        document.body.classList.add('admin-logged-in');
+        document.getElementById('authBtnText').innerText = 'Sair do ADM (Logado)';
+        document.getElementById('authBtn').classList.replace('bg-amber-500', 'bg-emerald-500');
+        document.getElementById('authBtn').classList.replace('hover:bg-amber-400', 'hover:bg-emerald-400');
+        
+        const badge = document.getElementById('adminStatusBadge');
+        badge.innerText = 'Painel Gestor Ativo ✓';
+        badge.classList.replace('bg-slate-800', 'bg-emerald-500/20');
+        badge.classList.replace('text-slate-400', 'text-emerald-400');
+
+        errBox.classList.add('hidden');
+        document.getElementById('authModal').classList.add('hidden');
+        alert('Autenticado com sucesso! O painel de gestão de cartilhas e edição foi liberado.');
+      } else {
+        errBox.classList.remove('hidden');
+        errBox.innerText = 'E-mail ou senha incorretos. Verifique suas credenciais.';
+      }
+    }
+
+    // Toggle Editable Text Mode (Admin only)
+    function toggleEditMode() {
+      if (!isAdminLoggedIn) return;
+      isEditMode = !isEditMode;
+      const body = document.body;
+      const btnText = document.getElementById('editBtnText');
+      
+      if (isEditMode) {
+        body.classList.add('editable-active');
+        applyEditMode(true);
+        btnText.innerText = 'Concluir Edição';
+      } else {
+        body.classList.remove('editable-active');
+        applyEditMode(false);
+        btnText.innerText = 'Edição de Textos';
+      }
+    }
+
+    // MULTI-CARTILHA MANAGER FUNCTIONS
+    function openCartilhaManagerModal() {
+      renderSavedBookletsList();
+      document.getElementById('cartilhaManagerModal').classList.remove('hidden');
+    }
+
+    function closeCartilhaManagerModal() {
+      document.getElementById('cartilhaManagerModal').classList.add('hidden');
+    }
+
+    function renderSavedBookletsList() {
+      const container = document.getElementById('savedBookletsList');
+      if (!container) return;
+
+      container.innerHTML = '';
+      savedBooklets.forEach(booklet => {
+        const isCurrent = booklet.id === currentBookletId;
+        const itemHtml = `
+          <div class="flex items-center justify-between p-3 rounded-xl border ${isCurrent ? 'bg-emerald-950/60 border-emerald-500' : 'bg-slate-800/80 border-slate-700/80'}">
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-xs ${isCurrent ? 'text-amber-300' : 'text-white'}">${booklet.title}</span>
+                ${isCurrent ? '<span class="text-[9px] bg-emerald-500 text-slate-900 font-extrabold px-2 py-0.2 rounded-full">ATIVA AGORA</span>' : ''}
+              </div>
+              <p class="text-[10px] text-slate-400 line-clamp-1">${booklet.subtitle}</p>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              ${!isCurrent ? `
+                <button onclick="activateBooklet('${booklet.id}')" class="bg-sky-600 hover:bg-sky-500 text-white font-bold px-2.5 py-1 rounded-lg text-[10px] transition">
+                  Carregar
+                </button>
+              ` : ''}
+              ${booklet.id !== 'guata-cat' ? `
+                <button onclick="deleteBooklet('${booklet.id}')" class="text-rose-400 hover:text-rose-300 font-bold p-1 rounded">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        container.innerHTML += itemHtml;
+      });
+
+      lucide.createIcons();
+    }
+
+    function activateBooklet(id) {
+      const booklet = savedBooklets.find(b => b.id === id);
+      if (!booklet) return;
+
+      currentBookletId = id;
+
+      // Update DOM Text Elements for active Booklet
+      document.getElementById('activeBookletTitle').innerText = booklet.title;
+      document.getElementById('activeBookletSubtitle').innerText = booklet.subtitle;
+      document.getElementById('coverMainTitle').innerText = booklet.title.toUpperCase();
+      document.getElementById('coverSubTitle').innerText = booklet.subtitle;
+      document.getElementById('mascotCoverLabel').innerText = 'Mascote • ' + booklet.mascot;
+      document.getElementById('p2Title').innerText = booklet.p2Title;
+      document.getElementById('p2Subtitle').innerText = booklet.p2Subtitle;
+
+      // Apply theme
+      const themeSelector = document.getElementById('themeSelector');
+      if (themeSelector) themeSelector.value = booklet.theme || 'default';
+      changeBookletTheme(booklet.theme || 'default');
+
+      renderSavedBookletsList();
+      closeCartilhaManagerModal();
+      alert(`Cartilha "${booklet.title}" carregada com sucesso!`);
+    }
+
+    function handleCreateNewBooklet() {
+      const title = document.getElementById('newBookletTitle').value.trim();
+      const mascot = document.getElementById('newBookletMascot').value.trim() || 'Guatá';
+      const subtitle = document.getElementById('newBookletSubtitle').value.trim() || 'Manual de Capacitação e Qualificação Prática';
+
+      if (!title) {
+        alert('Por favor, digite o título para a nova cartilha.');
+        return;
+      }
+
+      const newId = 'cartilha-' + Date.now();
+      const newBooklet = {
+        id: newId,
+        title: title,
+        subtitle: subtitle,
+        mascot: mascot,
+        p2Title: `Boas-vindas ao ${title}!`,
+        p2Subtitle: 'Desenvolvendo competências de excelência no atendimento.'
+      };
+
+      savedBooklets.push(newBooklet);
+      localStorage.setItem('guata_cartilhas_data', JSON.stringify(savedBooklets));
+
+      // Clear Inputs
+      document.getElementById('newBookletTitle').value = '';
+      document.getElementById('newBookletMascot').value = '';
+      document.getElementById('newBookletSubtitle').value = '';
+
+      activateBooklet(newId);
+    }
+
+    function deleteBooklet(id) {
+      if (confirm('Deseja excluir esta cartilha permanentemente?')) {
+        savedBooklets = savedBooklets.filter(b => b.id !== id);
+        localStorage.setItem('guata_cartilhas_data', JSON.stringify(savedBooklets));
+        if (currentBookletId === id) {
+          activateBooklet('guata-cat');
+        } else {
+          renderSavedBookletsList();
+        }
+      }
+    }
+
+    // Partner Management
+    function renderPartners() {
+      const grid = document.getElementById('partnerLogosGrid');
+      const manageList = document.getElementById('partnerManageList');
+      if (!grid) return;
+
+      grid.innerHTML = '';
+      if (manageList) manageList.innerHTML = '';
+
+      partners.forEach(partner => {
+        const itemHtml = `
+          <div class="bg-white/5 border border-white/10 rounded-lg p-2 font-semibold text-emerald-100 flex items-center justify-center min-h-[36px] relative group">
+            ${partner.logoUrl ? `<img src="${partner.logoUrl}" alt="${partner.name}" class="max-h-6 object-contain mx-auto">` : `<span>${partner.name}</span>`}
+          </div>
+        `;
+        grid.innerHTML += itemHtml;
+
+        if (manageList) {
+          const manageItem = `
+            <div class="flex items-center justify-between bg-slate-800 p-2 rounded-lg border border-slate-700">
+              <span class="font-medium text-slate-200">${partner.name}</span>
+              <button onclick="removePartner('${partner.id}')" class="text-rose-400 hover:text-rose-300 font-bold p-1 rounded">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          `;
+          manageList.innerHTML += manageItem;
+        }
+      });
+
+      lucide.createIcons();
+    }
+
+    function addPartner() {
+      const nameInput = document.getElementById('newPartnerName');
+      const urlInput = document.getElementById('newPartnerLogoUrl');
+      const name = nameInput.value.trim();
+      const logoUrl = urlInput.value.trim();
+
+      if (!name) {
+        alert('Por favor, digite o nome do parceiro.');
+        return;
+      }
+
+      partners.push({ id: Date.now().toString(), name: name, logoUrl: logoUrl });
+      nameInput.value = '';
+      urlInput.value = '';
+      renderPartners();
+    }
+
+    function removePartner(id) {
+      partners = partners.filter(p => p.id !== id);
+      renderPartners();
+    }
+
+    function openPartnerModal() {
+      document.getElementById('partnerModal').classList.remove('hidden');
+    }
+
+    function closePartnerModal() {
+      document.getElementById('partnerModal').classList.add('hidden');
+    }
+
+    // Mascot Functions
+    function openImageModal(targetId) {
+      currentActiveTargetId = targetId;
+      document.getElementById('imageModal').classList.remove('hidden');
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.add('hidden');
+    }
+
+    function applyMascotImage() {
+      const fileInput = document.getElementById('mascotFileInput');
+      const urlInput = document.getElementById('mascotUrlInput').value.trim();
+      const container = document.getElementById(currentActiveTargetId);
+
+      if (!container) return;
+
+      if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          container.innerHTML = `<img src="${e.target.result}" alt="Mascote" class="w-full h-full object-contain drop-shadow-xl rounded-xl">`;
+          closeImageModal();
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      } else if (urlInput !== '') {
+        container.innerHTML = `<img src="${urlInput}" alt="Mascote" class="w-full h-full object-contain drop-shadow-xl rounded-xl">`;
+        closeImageModal();
+      }
+    }
+
+    function restoreMascotDefault() {
+      if (currentActiveTargetId && defaultMascotVectorHTML[currentActiveTargetId]) {
+        document.getElementById(currentActiveTargetId).innerHTML = defaultMascotVectorHTML[currentActiveTargetId];
+      }
+      closeImageModal();
+    }
+
+    // QR Codes
+    function generateDefaultQRCodes() {
+      const qrTargets = [
+        { id: 'qr-m1-video', url: 'https://turismo.ms.gov.br/capacita/modulo1-video' },
+        { id: 'qr-m1-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo1-quiz' },
+        { id: 'qr-m2-video', url: 'https://turismo.ms.gov.br/capacita/modulo2-video' },
+        { id: 'qr-m2-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo2-quiz' },
+        { id: 'qr-m3-video', url: 'https://turismo.ms.gov.br/capacita/modulo3-video' },
+        { id: 'qr-m3-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo3-quiz' },
+        { id: 'qr-m4-video', url: 'https://turismo.ms.gov.br/capacita/modulo4-video' },
+        { id: 'qr-m4-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo4-quiz' },
+        { id: 'qr-m5', url: 'https://turismo.ms.gov.br/capacita/modulo5' },
+        { id: 'qr-m6', url: 'https://turismo.ms.gov.br/capacita/modulo6' },
+        { id: 'qr-cert', url: 'https://turismo.ms.gov.br/capacita/certificado' },
+        { id: 'qr-main-portal', url: 'https://turismo.ms.gov.br/guata-capacita' }
+      ];
+
+      qrTargets.forEach(item => {
+        createQRCode(item.id, item.url);
+      });
+    }
+
+    function createQRCode(containerId, textUrl) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      new QRCode(container, {
+        text: textUrl,
+        width: 128,
+        height: 128,
+        colorDark : "#0f172a",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+      });
+    }
+
+    function openQrModal(targetId) {
+      currentActiveTargetId = targetId;
+      document.getElementById('qrModal').classList.remove('hidden');
+    }
+
+    function closeQrModal() {
+      document.getElementById('qrModal').classList.add('hidden');
+    }
+
+    function applyQrCode() {
+      const url = document.getElementById('qrTargetUrl').value.trim();
+      if (!url) return;
+      createQRCode(currentActiveTargetId, url);
+      closeQrModal();
+    }
+
+    // Dynamic Module Creation (Admin)
+    let customModulesCount = 0;
+
+    function openModuleModal() {
+      document.getElementById('moduleModal').classList.remove('hidden');
+    }
+
+    function closeModuleModal() {
+      document.getElementById('moduleModal').classList.add('hidden');
+    }
+
+    function handleCreateModule(e) {
+      e.preventDefault();
+
+      const num = document.getElementById('modNum').value.trim();
+      const title = document.getElementById('modTitle').value.trim();
+      const hours = document.getElementById('modHours').value.trim();
+      const desc = document.getElementById('modDesc').value.trim();
+      const videoUrl = document.getElementById('modVideoUrl').value.trim() || 'https://turismo.ms.gov.br/capacita/modulo-novo-video';
+      const quizUrl = document.getElementById('modQuizUrl').value.trim() || 'https://turismo.ms.gov.br/capacita/modulo-novo-quiz';
+
+      customModulesCount++;
+      const modId = 'custom-mod-' + customModulesCount;
+      const qrVidId = 'qr-cvid-' + customModulesCount;
+      const qrQuizId = 'qr-cquiz-' + customModulesCount;
+
+      const container = document.getElementById('customModulesContainer');
+      const cardHtml = `
+        <div id="${modId}" class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden my-2">
+          <div class="bg-gradient-to-r from-emerald-800 to-emerald-700 text-white p-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="bg-amber-400 text-slate-900 text-xs font-black px-2.5 py-0.5 rounded-full uppercase">${num}</span>
+              <h3 contenteditable="true" class="font-heading font-bold text-sm text-white">${title}</h3>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded border border-emerald-600">${hours}</span>
+              <button onclick="removeCustomModule('${modId}', '${num}')" class="asset-edit-btn no-print hidden bg-rose-500 hover:bg-rose-400 text-white font-bold px-1.5 py-0.5 rounded text-[10px]">
+                Excluir
+              </button>
+            </div>
+          </div>
+
+          <div class="p-4 space-y-3">
+            <p contenteditable="true" class="text-xs text-slate-700">
+              <strong>Objetivo:</strong> ${desc}
+            </p>
+
+            <div class="grid grid-cols-2 gap-3 pt-1">
+              <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+                <button onclick="openQrModal('${qrVidId}')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-emerald-600 text-white p-1 rounded-full text-[9px] shadow">
+                  <i data-lucide="qr-code" class="w-3 h-3"></i>
+                </button>
+                <div id="${qrVidId}" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+                <div>
+                  <span class="text-[10px] uppercase font-bold text-emerald-700 block">Videoaula</span>
+                  <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Escaneie para assistir</span>
+                </div>
+              </div>
+
+              <div class="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center gap-3 relative">
+                <button onclick="openQrModal('${qrQuizId}')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-amber-500 text-slate-900 p-1 rounded-full text-[9px] shadow">
+                  <i data-lucide="qr-code" class="w-3 h-3"></i>
+                </button>
+                <div id="${qrQuizId}" class="qr-holder w-14 h-14 shrink-0 bg-slate-900 p-1 rounded"></div>
+                <div>
+                  <span class="text-[10px] uppercase font-bold text-amber-600 block">Atividade</span>
+                  <span contenteditable="true" class="text-[11px] font-semibold text-slate-900 block leading-tight">Quiz de Fixação</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML += cardHtml;
+
+      const tableBody = document.getElementById('progressTableBody');
+      const rowId = 'row-' + modId;
+      const rowHtml = `
+        <tr id="${rowId}" class="hover:bg-slate-50">
+          <td class="p-3 text-center"><input type="checkbox" class="w-4 h-4 text-emerald-600 rounded"></td>
+          <td class="p-3 font-semibold text-slate-900">${num} - ${title}</td>
+          <td class="p-3 text-center text-slate-500">${hours}</td>
+          <td contenteditable="true" class="p-3 text-center text-slate-400">__/__/2026</td>
+          <td contenteditable="true" class="p-3 text-center text-slate-400">______</td>
+        </tr>
+      `;
+      tableBody.innerHTML += rowHtml;
+
+      setTimeout(() => {
+        createQRCode(qrVidId, videoUrl);
+        createQRCode(qrQuizId, quizUrl);
+        lucide.createIcons();
+      }, 100);
+
+      closeModuleModal();
+      alert(`O ${num} foi criado e adicionado à cartilha atual com sucesso!`);
+    }
+
+    function removeCustomModule(modId, num) {
+      if (confirm(`Tem certeza que deseja remover o ${num}?`)) {
+        const el = document.getElementById(modId);
+        const row = document.getElementById('row-' + modId);
+        if (el) el.remove();
+        if (row) row.remove();
+      }
+    }
+  </script>
+</body>
+</html>
+</user_query>

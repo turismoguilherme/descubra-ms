@@ -310,7 +310,16 @@ const UniversalFooter = () => {
             <h3 className="text-sm font-bold mb-4 text-white">Funcionalidades</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
+                <Link
+                  to="/descubrams/cartilhas"
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Cartilhas
+                </Link>
+              </li>
+              <li>
+                <Link
                   to="/descubrams/guata"
                   className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
                 >

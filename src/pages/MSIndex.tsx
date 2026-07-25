@@ -5,6 +5,7 @@ import EventosDestaqueSection from "@/components/home/EventosDestaqueSection";
 import RoteiroPersonalizadoBanner from "@/components/home/RoteiroPersonalizadoBanner";
 import AvataresSection from "@/components/home/AvataresSection";
 import GuataVideosSection from "@/components/home/GuataVideosSection";
+import CartilhasSection from "@/components/home/CartilhasSection";
 
 const MSIndex = () => {
   return (
@@ -14,6 +15,7 @@ const MSIndex = () => {
       <EventosDestaqueSection />
       <RoteiroPersonalizadoBanner />
       <AvataresSection />
+      <CartilhasSection />
       <GuataVideosSection />
     </UniversalLayout>
   );

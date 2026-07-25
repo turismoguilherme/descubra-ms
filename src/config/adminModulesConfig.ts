@@ -205,6 +205,17 @@ export const adminModulesConfig: AdminModule[] = [
             helpText: 'Adicione vídeos do YouTube colando o link e o título. A miniatura é gerada automaticamente.',
           },
           {
+            id: 'guata-cartilhas',
+            label: 'Cartilhas Guatá',
+            icon: BookOpen,
+            path: '/viajar/admin/descubra-ms/guata-cartilhas',
+            permission: 'content',
+            platform: 'descubra-ms',
+            title: 'Cartilhas do Guatá Capacita',
+            description: 'Cadastre cartilhas HTML para a home e a biblioteca pública',
+            helpText: 'Envie o arquivo HTML (ou informe o caminho), capa, destaque na home e status. O progresso do aluno logado é salvo na nuvem.',
+          },
+          {
             id: 'passport',
             label: 'Passaporte Digital',
             icon: Stamp,

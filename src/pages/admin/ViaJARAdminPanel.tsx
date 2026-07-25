@@ -26,6 +26,7 @@ const PartnersAdminModule = lazy(() => import('@/components/admin/descubra_ms/Pa
 const PartnerTermsAcceptances = lazy(() => import('@/components/admin/descubra_ms/PartnerTermsAcceptances'));
 const PantanalAvatarsManager = lazy(() => import('@/components/admin/descubra_ms/PantanalAvatarsManager'));
 const GuataVideosManager = lazy(() => import('@/components/admin/GuataVideosManager'));
+const GuataCartilhasManager = lazy(() => import('@/components/admin/GuataCartilhasManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const TouristRegionsManager = lazy(() => import('@/components/admin/descubra_ms/TouristRegionsManager'));
 const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
@@ -180,6 +181,11 @@ export default function ViaJARAdminPanel() {
             <Route path="descubra-ms/guata-videos" element={
               <Suspense fallback={<LoadingFallback />}>
                 <GuataVideosManager />
+              </Suspense>
+            } />
+            <Route path="descubra-ms/guata-cartilhas" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <GuataCartilhasManager />
               </Suspense>
             } />
             

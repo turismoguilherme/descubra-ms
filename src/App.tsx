@@ -97,6 +97,8 @@ const EventPaymentSuccess = lazy(() => import("@/pages/ms/EventPaymentSuccess"))
 const EventStatus = lazy(() => import("@/pages/ms/EventStatus"));
 import AuthPage from "@/pages/AuthPage";
 import SobreMS from "@/pages/ms/SobreMS";
+import CartilhasMS from "@/pages/ms/CartilhasMS";
+import CartilhaViewer from "@/pages/ms/CartilhaViewer";
 import SejaUmParceiroMS from "@/pages/ms/SejaUmParceiroMS";
 import PartnerDashboard from "@/components/partners/PartnerDashboard";
 import PartnerLoginPage from "@/pages/PartnerLoginPage";
@@ -345,6 +347,8 @@ function AppRoutes() {
                                 <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                                 <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                                 <Route path="/descubrams/sobre" element={<SobreMS />} />
+                                <Route path="/descubrams/cartilhas" element={<CartilhasMS />} />
+                                <Route path="/descubrams/cartilhas/:slug" element={<CartilhaViewer />} />
                                 <Route path="/descubrams/guata" element={<Guata />} />
                                 <Route path="/descubrams/chatguata" element={<ChatGuata />} />
                                 <Route path={CHAT_GUATA_MS_TEST_PATH} element={<ChatGuata />} />
