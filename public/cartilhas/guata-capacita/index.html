@@ -161,22 +161,50 @@
 
     /* Print Setup for PDF Export */
     @media print {
-      body {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+
+      html, body {
         background: white !important;
         padding: 0 !important;
+        margin: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
       }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+
       .no-print {
         display: none !important;
       }
+
       .a4-page {
         margin: 0 !important;
         box-shadow: none !important;
         width: 210mm !important;
         height: 297mm !important;
+        max-width: 210mm !important;
         page-break-after: always !important;
+        break-after: page !important;
+        overflow: hidden !important;
       }
+
+      .a4-page:last-of-type {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+
       .page-container {
         padding: 0 !important;
+        max-width: none !important;
+        margin: 0 !important;
       }
     }
 
@@ -1181,7 +1209,7 @@
             <i data-lucide="printer" class="w-4 h-4"></i> 1. Impressão Física da CARTILHA
           </h4>
           <p contenteditable="true">
-            Clique em <strong>"Imprimir / Baixar PDF"</strong>. Selecione o destino como "Salvar como PDF" ou escolha sua impressora A4.
+            Clique em <strong>"Imprimir / Baixar PDF"</strong>. Destino: "Salvar como PDF". Layout: <strong>Retrato</strong>. Em "Mais definições", ative <strong>Gráficos de fundo</strong> se as cores ainda não aparecerem.
           </p>
         </div>
 
@@ -1504,6 +1532,7 @@
     };
 
     function triggerPdfPrint() {
+      // Preferência: Retrato + gráficos de fundo (o CSS já força cores quando o browser permitir)
       window.print();
     }
 
