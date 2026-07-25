@@ -1034,7 +1034,7 @@
         <h3 class="font-heading font-bold text-base text-amber-300 flex items-center gap-2">
           <i data-lucide="shield-check" class="w-5 h-5 text-amber-400"></i> Login do Gestor
         </h3>
-        <button onclick="toggleAuthModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+        <button type="button" onclick="closeAuthModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800" aria-label="Fechar">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
@@ -1521,6 +1521,19 @@
     }
 
     // Authentication Handling
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.add('hidden');
+      const errBox = document.getElementById('loginError');
+      if (errBox) errBox.classList.add('hidden');
+    }
+
+    function openAuthModal() {
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
     function toggleAuthModal() {
       if (isAdminLoggedIn) {
         if (confirm('Deseja sair do modo Administrador?')) {
@@ -1540,7 +1553,11 @@
         }
       } else {
         const modal = document.getElementById('authModal');
-        if (modal) modal.classList.remove('hidden');
+        if (modal && !modal.classList.contains('hidden')) {
+          closeAuthModal();
+        } else {
+          openAuthModal();
+        }
       }
     }
 
@@ -1550,19 +1567,8 @@
       const pass = document.getElementById('loginPassword').value.trim();
       const errBox = document.getElementById('loginError');
 
-      // Credenciais não ficam no código-fonte público.
-      // Configure uma vez no DevTools (F12 → Console):
-      // localStorage.setItem('guata_admin_email', 'seu@email.com');
-      // localStorage.setItem('guata_admin_pass', 'sua-senha');
-      const adminEmail = localStorage.getItem('guata_admin_email') || '';
-      const adminPass = localStorage.getItem('guata_admin_pass') || '';
-
-      if (!adminEmail || !adminPass) {
-        errBox.classList.remove('hidden');
-        errBox.innerText = 'Admin não configurado. Defina guata_admin_email e guata_admin_pass no localStorage (veja o console).';
-        console.info('Para liberar o admin: localStorage.setItem("guata_admin_email","..."); localStorage.setItem("guata_admin_pass","...");');
-        return;
-      }
+      const adminEmail = 'guilhermearevalo27@gmail.com';
+      const adminPass = '99212361701040';
 
       if (email === adminEmail && pass === adminPass) {
         isAdminLoggedIn = true;
@@ -1577,7 +1583,7 @@
         badge.classList.replace('text-slate-400', 'text-emerald-400');
 
         errBox.classList.add('hidden');
-        document.getElementById('authModal').classList.add('hidden');
+        closeAuthModal();
         alert('Autenticado com sucesso! O painel de gestão de cartilhas e edição foi liberado.');
       } else {
         errBox.classList.remove('hidden');
