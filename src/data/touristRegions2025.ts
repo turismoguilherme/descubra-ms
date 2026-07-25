@@ -13,6 +13,8 @@ export interface TouristRegion2025 {
   cities: string[];
   highlights: string[];
   image: string;
+  order_index?: number;
+  is_featured?: boolean;
 }
 
 export const touristRegions2025: TouristRegion2025[] = [

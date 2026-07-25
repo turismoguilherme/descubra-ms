@@ -16,7 +16,7 @@ import {
   MapPin, Plus, Edit, Trash2, Save, X, Loader2, 
   Palette, Image as ImageIcon, List, Star,
   Video, Upload, Globe, Phone, Mail, Instagram, Facebook, Youtube,
-  Calendar, Car, Play
+  Calendar, Car, Play, ArrowUp, ArrowDown
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import LocationPicker from '@/components/admin/LocationPicker';
@@ -34,6 +34,7 @@ interface TouristRegion {
   image_url: string | null;
   order_index: number;
   is_active: boolean;
+  is_featured?: boolean;
 }
 
 export default function TouristRegionsManager() {
@@ -54,6 +55,7 @@ export default function TouristRegionsManager() {
     image_url: '',
     order_index: 0,
     is_active: true,
+    is_featured: false,
   });
 
   const [cities, setCities] = useState<string[]>([]);
@@ -136,6 +138,7 @@ export default function TouristRegionsManager() {
       const { data, error } = await supabase
         .from('tourist_regions')
         .select('*')
+        .order('is_featured', { ascending: false })
         .order('order_index', { ascending: true })
         .order('name', { ascending: true });
 
@@ -146,6 +149,7 @@ export default function TouristRegionsManager() {
         ...region,
         cities: Array.isArray(region.cities) ? region.cities : [],
         highlights: Array.isArray(region.highlights) ? region.highlights : [],
+        is_featured: !!region.is_featured,
       }));
 
       setRegions(processedData);
@@ -173,6 +177,7 @@ export default function TouristRegionsManager() {
       image_url: '',
       order_index: regions.length,
       is_active: true,
+      is_featured: false,
     });
     setCities([]);
     setHighlights([]);
@@ -194,6 +199,7 @@ export default function TouristRegionsManager() {
       image_url: region.image_url || '',
       order_index: region.order_index || 0,
       is_active: region.is_active ?? true,
+      is_featured: region.is_featured ?? false,
     });
     setCities([...region.cities]);
     setHighlights([...region.highlights]);
@@ -274,6 +280,7 @@ export default function TouristRegionsManager() {
         image_url: imageUrl,
         order_index: formData.order_index,
         is_active: formData.is_active,
+        is_featured: formData.is_featured,
         updated_by: user.id,
       };
 
@@ -434,6 +441,27 @@ export default function TouristRegionsManager() {
       setCoverImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const patchRegion = async (id: string, values: Partial<TouristRegion>) => {
+    const { error } = await supabase.from('tourist_regions').update(values).eq('id', id);
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      return;
+    }
+    loadRegions();
+  };
+
+  const moveRegion = async (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= regions.length) return;
+    const a = regions[index];
+    const b = regions[target];
+    const orderA = a.order_index ?? index;
+    const orderB = b.order_index ?? target;
+    await supabase.from('tourist_regions').update({ order_index: orderB }).eq('id', a.id);
+    await supabase.from('tourist_regions').update({ order_index: orderA }).eq('id', b.id);
+    loadRegions();
   };
 
   const handleDelete = async (region: TouristRegion) => {
@@ -1096,7 +1124,7 @@ export default function TouristRegionsManager() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {regions.map((region) => (
+        {regions.map((region, index) => (
           <Card key={region.id} className={!region.is_active ? 'opacity-60' : ''}>
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -1112,18 +1140,63 @@ export default function TouristRegionsManager() {
                     {region.description}
                   </CardDescription>
                 </div>
-                <Badge variant={region.is_active ? 'default' : 'secondary'}>
-                  {region.is_active ? 'Ativa' : 'Inativa'}
-                </Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge variant={region.is_active ? 'default' : 'secondary'}>
+                    {region.is_active ? 'Ativa' : 'Oculta'}
+                  </Badge>
+                  {region.is_featured && (
+                    <Badge className="bg-amber-500 text-slate-900 hover:bg-amber-500">Destaque</Badge>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 mb-4">
                 <div className="text-sm text-muted-foreground">
-                  <strong>{region.cities.length}</strong> cidades
+                  <strong>{region.cities.length}</strong> cidades · ordem {region.order_index ?? index}
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <strong>{region.highlights.length}</strong> destaques
+                </div>
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <div className="flex items-center gap-2 text-xs">
+                    <Switch
+                      checked={!!region.is_active}
+                      onCheckedChange={(v) => patchRegion(region.id, { is_active: v })}
+                    />
+                    Visível
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <Switch
+                      checked={!!region.is_featured}
+                      onCheckedChange={(v) => patchRegion(region.id, { is_featured: v })}
+                    />
+                    Destaque
+                  </div>
+                  <div className="flex items-center gap-1 ml-auto">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8"
+                      onClick={() => moveRegion(index, -1)}
+                      disabled={index === 0}
+                      title="Subir na ordem"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-8 w-8"
+                      onClick={() => moveRegion(index, 1)}
+                      disabled={index === regions.length - 1}
+                      title="Descer na ordem"
+                    >
+                      <ArrowDown className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="flex flex-col gap-2">
@@ -1387,13 +1460,23 @@ export default function TouristRegionsManager() {
                   min="0"
                 />
               </div>
-              <div className="flex items-center gap-2 pt-6">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <Label htmlFor="is_active">Região Ativa</Label>
+              <div className="flex flex-col gap-3 pt-6">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="is_active"
+                    checked={formData.is_active}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                  />
+                  <Label htmlFor="is_active">Visível no site</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="is_featured"
+                    checked={formData.is_featured}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+                  />
+                  <Label htmlFor="is_featured">Destaque em Destinos</Label>
+                </div>
               </div>
             </div>
           </div>

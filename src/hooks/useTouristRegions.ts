@@ -18,6 +18,7 @@ export interface TouristRegion {
   image: string;
   order_index?: number;
   is_active?: boolean;
+  is_featured?: boolean;
 }
 
 // Converter região do banco para formato esperado pelo componente
@@ -34,6 +35,8 @@ const convertDbRegionToComponent = (dbRegion: Record<string, unknown>): TouristR
     cities: Array.isArray(dbRegion.cities) ? dbRegion.cities as string[] : [],
     highlights: Array.isArray(dbRegion.highlights) ? dbRegion.highlights as string[] : [],
     image: (dbRegion.image_url || '') as string,
+    order_index: typeof dbRegion.order_index === 'number' ? dbRegion.order_index : 0,
+    is_featured: !!dbRegion.is_featured,
   };
 };
 
@@ -54,6 +57,7 @@ export function useTouristRegions(language?: LanguageCode) {
         .from('tourist_regions')
         .select('*')
         .eq('is_active', true)
+        .order('is_featured', { ascending: false })
         .order('order_index', { ascending: true })
         .order('name', { ascending: true });
 

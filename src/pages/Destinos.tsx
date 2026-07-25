@@ -153,6 +153,11 @@ const Destinos = () => {
                       <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm text-gray-900 px-4 py-2 rounded-full text-xs font-bold shadow-xl">
                         {regiao.cities.length} {regiao.cities.length === 1 ? 'cidade' : 'cidades'}
                       </div>
+                      {regiao.is_featured && (
+                        <div className="absolute top-4 left-4 bg-amber-400 text-slate-900 px-3 py-1.5 rounded-full text-xs font-extrabold shadow-xl">
+                          Destaque
+                        </div>
+                      )}
                     </div>
                     <div className="p-6">
                       <h3 className="text-xl font-bold text-ms-primary-blue mb-3 group-hover:text-ms-discovery-teal transition-colors duration-300">
