@@ -88,6 +88,8 @@ export class RAGService {
   }
 
   private async retrieveRelevantDocuments(question: string): Promise<DocumentChunk[]> {
+    // Client-side SELECT on document_chunks is restricted (admins/managers only).
+    // Production Guatá RAG uses the guata-web-rag edge function with service_role.
     try {
       const { data: chunks, error } = await supabase
         .from('document_chunks')
