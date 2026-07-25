@@ -164,6 +164,7 @@ const PassportDocument: React.FC<PassportDocumentProps> = ({ routeId: routeIdPro
                 {/* Seções "Suas Conquistas" e "Estatísticas do Passaporte"
                     removidas do estado vazio a pedido do produto — o foco
                     aqui é levar o usuário à lista de rotas. */}
+              </div>
             </>
           )}
         </CardContent>
