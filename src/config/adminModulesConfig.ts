@@ -213,7 +213,7 @@ export const adminModulesConfig: AdminModule[] = [
             platform: 'descubra-ms',
             title: 'Cartilhas do Guatá Capacita',
             description: 'Cadastre cartilhas HTML para a home e a biblioteca pública',
-            helpText: 'Envie o arquivo HTML (ou informe o caminho), capa, destaque na home e status. O progresso do aluno logado é salvo na nuvem.',
+            helpText: 'Crie a cartilha e decida: home, ordem, visível e Em breve. O conteúdo HTML continua separado; aqui você só publica.',
           },
           {
             id: 'passport',

@@ -12,14 +12,14 @@ import {
   ArrowDown,
   ArrowUp,
   BookOpen,
+  ChevronDown,
+  ChevronRight,
   Loader2,
   Plus,
   Trash2,
-  Upload,
 } from 'lucide-react';
 
 const COVER_MAX = 2 * 1024 * 1024;
-const HTML_MAX = 8 * 1024 * 1024;
 const COVER_MIME = ['image/jpeg', 'image/png', 'image/webp'];
 
 interface GuataCartilha {
@@ -47,11 +47,13 @@ function slugify(value: string) {
     .slice(0, 80);
 }
 
-async function uploadFile(file: File, folder: string) {
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'bin';
-  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+async function uploadCover(file: File) {
+  if (!COVER_MIME.includes(file.type)) throw new Error('Capa: use JPG, PNG ou WebP.');
+  if (file.size > COVER_MAX) throw new Error('Capa acima de 2 MB.');
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const path = `covers/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from('guata-cartilhas').upload(path, file, {
-    contentType: file.type || 'application/octet-stream',
+    contentType: file.type,
     upsert: true,
   });
   if (error) throw new Error(error.message);
@@ -63,23 +65,24 @@ const emptyForm = {
   title: '',
   subtitle: '',
   audience: '',
-  slug: '',
   theme: 'pantanal',
-  status: 'available' as 'available' | 'coming_soon',
   is_featured: true,
-  htmlPathManual: '',
+  is_active: true,
+  status: 'coming_soon' as 'available' | 'coming_soon',
+  openLink: '',
 };
 
 const GuataCartilhasManager = () => {
   const { toast } = useToast();
   const coverRef = useRef<HTMLInputElement>(null);
-  const htmlRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<GuataCartilha[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [htmlFile, setHtmlFile] = useState<File | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
+  const [linkDraft, setLinkDraft] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -104,41 +107,27 @@ const GuataCartilhasManager = () => {
       toast({ title: 'Informe o título', variant: 'destructive' });
       return;
     }
-    const slug = (form.slug.trim() || slugify(form.title)).trim();
+
+    const slug = slugify(form.title);
     if (!slug) {
-      toast({ title: 'Slug inválido', variant: 'destructive' });
+      toast({ title: 'Título inválido', variant: 'destructive' });
       return;
+    }
+
+    const openLink = form.openLink.trim() || null;
+    let status = form.status;
+    if (status === 'available' && !openLink) {
+      status = 'coming_soon';
+      toast({
+        title: 'Salva como Em breve',
+        description: 'Para ficar Disponível/Abrir, informe o link da cartilha em Opções avançadas.',
+      });
     }
 
     setSaving(true);
     try {
       let coverUrl: string | null = null;
-      let htmlUrl: string | null = form.htmlPathManual.trim() || null;
-
-      if (coverFile) {
-        if (!COVER_MIME.includes(coverFile.type)) throw new Error('Capa: use JPG, PNG ou WebP.');
-        if (coverFile.size > COVER_MAX) throw new Error('Capa acima de 2 MB.');
-        coverUrl = await uploadFile(coverFile, 'covers');
-      }
-
-      if (htmlFile) {
-        if (htmlFile.size > HTML_MAX) throw new Error('HTML acima de 8 MB.');
-        const typeOk =
-          htmlFile.type === 'text/html' ||
-          htmlFile.name.toLowerCase().endsWith('.html') ||
-          htmlFile.name.toLowerCase().endsWith('.htm');
-        if (!typeOk) throw new Error('Envie um arquivo .html');
-        htmlUrl = await uploadFile(htmlFile, 'html');
-      }
-
-      if (form.status === 'available' && !htmlUrl) {
-        toast({
-          title: 'Cartilha disponível precisa de HTML',
-          description: 'Envie o arquivo HTML ou informe o caminho (ex.: /cartilhas/minha/index.html).',
-          variant: 'destructive',
-        });
-        return;
-      }
+      if (coverFile) coverUrl = await uploadCover(coverFile);
 
       const nextOrder = (items[items.length - 1]?.display_order ?? -1) + 1;
       const { error } = await supabase.from('guata_cartilhas').insert({
@@ -147,21 +136,20 @@ const GuataCartilhasManager = () => {
         audience: form.audience.trim() || null,
         slug,
         theme: form.theme,
-        status: form.status,
+        status,
         is_featured: form.is_featured,
-        is_active: true,
+        is_active: form.is_active,
         cover_url: coverUrl,
-        html_url: htmlUrl,
+        html_url: openLink,
         display_order: nextOrder,
       });
       if (error) throw new Error(error.message);
 
       setForm(emptyForm);
       setCoverFile(null);
-      setHtmlFile(null);
+      setShowAdvanced(false);
       if (coverRef.current) coverRef.current.value = '';
-      if (htmlRef.current) htmlRef.current.value = '';
-      toast({ title: 'Cartilha adicionada!' });
+      toast({ title: 'Cartilha criada! Agora escolha home, ordem e se está Em breve.' });
       load();
     } catch (e) {
       toast({
@@ -175,12 +163,37 @@ const GuataCartilhasManager = () => {
   };
 
   const patch = async (id: string, values: Partial<GuataCartilha>) => {
+    const item = items.find((i) => i.id === id);
+    if (values.status === 'available' && item && !item.html_url && !values.html_url) {
+      toast({
+        title: 'Falta o link para abrir',
+        description: 'Clique em “Definir link de abertura” antes de marcar como Disponível.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const { error } = await supabase.from('guata_cartilhas').update(values).eq('id', id);
     if (error) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
       return;
     }
     load();
+  };
+
+  const saveOpenLink = async (item: GuataCartilha) => {
+    const link = linkDraft.trim();
+    if (!link) {
+      toast({ title: 'Informe o link', variant: 'destructive' });
+      return;
+    }
+    await patch(item.id, {
+      html_url: link,
+      status: item.status === 'coming_soon' ? 'coming_soon' : 'available',
+    });
+    setEditingLinkId(null);
+    setLinkDraft('');
+    toast({ title: 'Link salvo' });
   };
 
   const handleDelete = async (item: GuataCartilha) => {
@@ -211,9 +224,9 @@ const GuataCartilhasManager = () => {
           <BookOpen className="w-7 h-7 text-ms-pantanal-green" />
           Cartilhas do Guatá Capacita
         </h1>
-        <p className="text-muted-foreground mt-1">
-          Cadastre cartilhas para a home e a página /descubrams/cartilhas. Envie o HTML ou use um
-          caminho já hospedado no site.
+        <p className="text-muted-foreground mt-1 max-w-3xl">
+          Crie a cartilha aqui. Depois decida: aparece na home, ordem, visível no site e se está
+          “Em breve” ou “Disponível” para abrir.
         </p>
       </div>
 
@@ -226,42 +239,27 @@ const GuataCartilhasManager = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
-            <div>
+            <div className="md:col-span-2">
               <Label htmlFor="title">Título</Label>
               <Input
                 id="title"
                 value={form.title}
-                onChange={(e) => {
-                  const title = e.target.value;
-                  setForm((f) => ({
-                    ...f,
-                    title,
-                    slug: f.slug ? f.slug : slugify(title),
-                  }));
-                }}
-                placeholder="Ex: Guatá Capacita"
-              />
-            </div>
-            <div>
-              <Label htmlFor="slug">Slug (URL)</Label>
-              <Input
-                id="slug"
-                value={form.slug}
-                onChange={(e) => setForm((f) => ({ ...f, slug: slugify(e.target.value) }))}
-                placeholder="guata-capacita"
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="Ex: Sabores de MS"
               />
             </div>
             <div className="md:col-span-2">
-              <Label htmlFor="subtitle">Descrição / subtítulo</Label>
+              <Label htmlFor="subtitle">Descrição (aparece na home)</Label>
               <Textarea
                 id="subtitle"
                 value={form.subtitle}
                 onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
                 rows={2}
+                placeholder="Texto curto para o card"
               />
             </div>
             <div>
-              <Label htmlFor="audience">Público</Label>
+              <Label htmlFor="audience">Público / selo</Label>
               <Input
                 id="audience"
                 value={form.audience}
@@ -270,7 +268,7 @@ const GuataCartilhasManager = () => {
               />
             </div>
             <div>
-              <Label htmlFor="theme">Tema visual</Label>
+              <Label htmlFor="theme">Cor do card</Label>
               <select
                 id="theme"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -285,33 +283,6 @@ const GuataCartilhasManager = () => {
               </select>
             </div>
             <div>
-              <Label htmlFor="status">Status</Label>
-              <select
-                id="status"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={form.status}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    status: e.target.value as 'available' | 'coming_soon',
-                  }))
-                }
-              >
-                <option value="available">Disponível</option>
-                <option value="coming_soon">Em breve</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-3 pt-6">
-              <Switch
-                checked={form.is_featured}
-                onCheckedChange={(v) => setForm((f) => ({ ...f, is_featured: v }))}
-              />
-              <Label>Destaque na home</Label>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
               <Label>Capa (opcional)</Label>
               <Input
                 ref={coverRef}
@@ -320,37 +291,68 @@ const GuataCartilhasManager = () => {
                 onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
               />
             </div>
-            <div>
-              <Label>Arquivo HTML da cartilha</Label>
-              <Input
-                ref={htmlRef}
-                type="file"
-                accept=".html,.htm,text/html"
-                onChange={(e) => setHtmlFile(e.target.files?.[0] || null)}
-              />
+            <div className="flex flex-col gap-3 justify-end">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.is_featured}
+                  onCheckedChange={(v) => setForm((f) => ({ ...f, is_featured: v }))}
+                />
+                <Label>Mostrar na home</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.is_active}
+                  onCheckedChange={(v) => setForm((f) => ({ ...f, is_active: v }))}
+                />
+                <Label>Visível no site</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={form.status === 'coming_soon'}
+                  onCheckedChange={(v) =>
+                    setForm((f) => ({ ...f, status: v ? 'coming_soon' : 'available' }))
+                  }
+                />
+                <Label>Em breve (ainda não abre)</Label>
+              </div>
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="htmlPath">Ou caminho/URL do HTML já no site</Label>
-            <Input
-              id="htmlPath"
-              value={form.htmlPathManual}
-              onChange={(e) => setForm((f) => ({ ...f, htmlPathManual: e.target.value }))}
-              placeholder="/cartilhas/guata-capacita/index.html"
-            />
-          </div>
+          <button
+            type="button"
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            onClick={() => setShowAdvanced((v) => !v)}
+          >
+            {showAdvanced ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            Opções avançadas (só se já puder abrir a cartilha)
+          </button>
+
+          {showAdvanced && (
+            <div className="rounded-xl border bg-muted/30 p-4 space-y-2">
+              <Label htmlFor="openLink">Link para abrir a cartilha</Label>
+              <Input
+                id="openLink"
+                value={form.openLink}
+                onChange={(e) => setForm((f) => ({ ...f, openLink: e.target.value }))}
+                placeholder="/cartilhas/guata-capacita/index.html"
+              />
+              <p className="text-xs text-muted-foreground">
+                Só preencha quando a cartilha já existir no site. Ex.: Guatá Capacita usa{' '}
+                <code className="text-[11px]">/cartilhas/guata-capacita/index.html</code>
+              </p>
+            </div>
+          )}
 
           <Button onClick={handleAdd} disabled={saving} className="gap-2">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            Salvar cartilha
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Criar cartilha
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Cartilhas cadastradas</CardTitle>
+          <CardTitle>Suas cartilhas — decida onde ficam</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -358,48 +360,99 @@ const GuataCartilhasManager = () => {
               <Loader2 className="w-6 h-6 animate-spin text-ms-pantanal-green" />
             </div>
           ) : items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma cartilha ainda.</p>
+            <p className="text-sm text-muted-foreground">Nenhuma cartilha ainda. Crie a primeira acima.</p>
           ) : (
             <div className="space-y-3">
-              {items.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col md:flex-row md:items-center gap-3 p-4 border rounded-xl"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold truncate">{item.title}</div>
-                    <div className="text-xs text-muted-foreground truncate">
-                      /{item.slug} · {item.status === 'available' ? 'Disponível' : 'Em breve'} ·{' '}
-                      {item.html_url || 'sem HTML'}
+              {items.map((item, index) => {
+                const canOpen = item.status === 'available' && !!item.html_url;
+                return (
+                  <div key={item.id} className="p-4 border rounded-xl space-y-3">
+                    <div className="flex flex-col md:flex-row md:items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold truncate">{item.title}</div>
+                        <div className="text-xs text-muted-foreground line-clamp-2">
+                          {item.subtitle || 'Sem descrição'}
+                        </div>
+                        <div className="text-xs mt-1">
+                          {canOpen ? (
+                            <span className="text-emerald-700 font-medium">Disponível para abrir</span>
+                          ) : (
+                            <span className="text-amber-700 font-medium">Em breve na home</span>
+                          )}
+                          {!item.html_url && (
+                            <span className="text-muted-foreground"> · sem link de abertura</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2 text-xs">
+                          <Switch
+                            checked={item.is_active}
+                            onCheckedChange={(v) => patch(item.id, { is_active: v })}
+                          />
+                          Visível
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <Switch
+                            checked={item.is_featured}
+                            onCheckedChange={(v) => patch(item.id, { is_featured: v })}
+                          />
+                          Home
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <Switch
+                            checked={item.status === 'coming_soon'}
+                            onCheckedChange={(v) =>
+                              patch(item.id, { status: v ? 'coming_soon' : 'available' })
+                            }
+                          />
+                          Em breve
+                        </div>
+                        <Button size="icon" variant="outline" onClick={() => move(index, -1)}>
+                          <ArrowUp className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="outline" onClick={() => move(index, 1)}>
+                          <ArrowDown className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="destructive" onClick={() => handleDelete(item)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
+
+                    {editingLinkId === item.id ? (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Input
+                          value={linkDraft}
+                          onChange={(e) => setLinkDraft(e.target.value)}
+                          placeholder="/cartilhas/minha-cartilha/index.html"
+                        />
+                        <Button onClick={() => saveOpenLink(item)}>Salvar link</Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setEditingLinkId(null);
+                            setLinkDraft('');
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingLinkId(item.id);
+                          setLinkDraft(item.html_url || '');
+                        }}
+                      >
+                        {item.html_url ? 'Alterar link de abertura' : 'Definir link de abertura'}
+                      </Button>
+                    )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center gap-2 text-xs">
-                      <Switch
-                        checked={item.is_active}
-                        onCheckedChange={(v) => patch(item.id, { is_active: v })}
-                      />
-                      Ativa
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <Switch
-                        checked={item.is_featured}
-                        onCheckedChange={(v) => patch(item.id, { is_featured: v })}
-                      />
-                      Home
-                    </div>
-                    <Button size="icon" variant="outline" onClick={() => move(index, -1)}>
-                      <ArrowUp className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="outline" onClick={() => move(index, 1)}>
-                      <ArrowDown className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="destructive" onClick={() => handleDelete(item)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
