@@ -4,6 +4,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe areas (notch / home indicator) no app Capacitor */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
 /* Custom animations for the new layout */
 @keyframes pulse {
   0%, 100% {

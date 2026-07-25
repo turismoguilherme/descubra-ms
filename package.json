@@ -14,9 +14,21 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "build:app": "npm run build:descubrams && npx cap sync",
+    "cap:sync": "npx cap sync",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios",
+    "assets:generate": "node scripts/generate-native-assets.mjs && npx @capacitor/assets generate --iconBackgroundColor \"#0B3D2E\" --iconBackgroundColorDark \"#0B3D2E\" --splashBackgroundColor \"#0B3D2E\" --splashBackgroundColorDark \"#000000\" && node scripts/finalize-native-assets.mjs",
+    "build:apk": "npm run build:app && node scripts/build-android-apk.mjs"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.5",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.1.2",
@@ -99,6 +111,10 @@
     "zod": "^3.23.3"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/jest-dom": "^6.6.3",
@@ -117,6 +133,7 @@
     "jsdom": "^26.1.0",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.33",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.0.1",

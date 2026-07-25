@@ -17,6 +17,10 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Android APKs de build local (exceto o APK oficial publicado no site)
+*.apk
+!public/downloads/descubra-ms.apk
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -32,3 +36,17 @@ dist-ssr
 
 # Supabase CLI local project link / cache
 supabase/.temp/
+
+# Capacitor / native builds (fonte android/ e ios/ ficam versionadas)
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/local.properties
+android/.idea/
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/DerivedData/
+*.jks
+*.keystore
+!debug.keystore

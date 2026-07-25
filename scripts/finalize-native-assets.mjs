@@ -1,0 +1,61 @@
+/**
+ * Pós-processamento após @capacitor/assets generate:
+ * - copia ícones PWA para public/icons
+ * - corrige cor do adaptive icon Android
+ * - restaura manifest.webmanifest do Descubra MS
+ */
+import { copyFile, mkdir, rm, writeFile } from "fs/promises";
+import { existsSync } from "fs";
+import path from "path";
+
+const iconSizes = [48, 72, 96, 128, 192, 256, 512];
+
+await mkdir("public/icons", { recursive: true });
+
+for (const size of iconSizes) {
+  const from = path.join("icons", `icon-${size}.webp`);
+  const to = path.join("public/icons", `icon-${size}.webp`);
+  if (existsSync(from)) {
+    await copyFile(from, to);
+  }
+}
+
+if (existsSync("icons")) {
+  await rm("icons", { recursive: true, force: true });
+}
+
+await writeFile(
+  "android/app/src/main/res/values/ic_launcher_background.xml",
+  `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#0B3D2E</color>
+</resources>
+`,
+  "utf8"
+);
+
+const manifest = {
+  name: "Descubra MS",
+  short_name: "Descubra MS",
+  description:
+    "Portal oficial de turismo de Mato Grosso do Sul — destinos, eventos, roteiros e o Guatá.",
+  start_url: "/",
+  display: "standalone",
+  background_color: "#0B3D2E",
+  theme_color: "#0B3D2E",
+  lang: "pt-BR",
+  icons: iconSizes.map((size) => ({
+    src: `/icons/icon-${size}.webp`,
+    type: "image/webp",
+    sizes: `${size}x${size}`,
+    purpose: "any",
+  })),
+};
+
+await writeFile(
+  "public/manifest.webmanifest",
+  `${JSON.stringify(manifest, null, 2)}\n`,
+  "utf8"
+);
+
+console.log("Native assets finalized (public/icons + Android background + manifest).");

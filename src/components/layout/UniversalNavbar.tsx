@@ -226,6 +226,20 @@ const UniversalNavbar = () => {
                   Guatá
                 </Link>
               )}
+
+              {/* Baixar App */}
+              {isMS && (
+                <Link
+                  to="/descubrams/baixar-app"
+                  className={`text-sm font-medium transition-colors hover:text-ms-primary-blue ${
+                    isActivePath('/descubrams/baixar-app')
+                      ? "text-ms-primary-blue border-b-2 border-ms-primary-blue pb-1"
+                      : "text-gray-700"
+                  }`}
+                >
+                  Baixar App
+                </Link>
+              )}
             </div>
           )}
 
@@ -384,6 +398,20 @@ const UniversalNavbar = () => {
                       }`}
                     >
                       Guatá
+                    </Link>
+                  )}
+
+                  {isMS && (
+                    <Link
+                      to="/descubrams/baixar-app"
+                      onClick={() => setIsOpen(false)}
+                      className={`block px-3 py-2 text-base font-medium transition-colors ${
+                        isActivePath('/descubrams/baixar-app')
+                          ? "text-ms-primary-blue bg-blue-50"
+                          : "text-gray-700 hover:text-ms-primary-blue hover:bg-gray-50"
+                      }`}
+                    >
+                      Baixar App
                     </Link>
                   )}
                 </>

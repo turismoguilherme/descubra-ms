@@ -97,6 +97,7 @@ const EventPaymentSuccess = lazy(() => import("@/pages/ms/EventPaymentSuccess"))
 const EventStatus = lazy(() => import("@/pages/ms/EventStatus"));
 import AuthPage from "@/pages/AuthPage";
 import SobreMS from "@/pages/ms/SobreMS";
+import BaixarAppMS from "@/pages/ms/BaixarAppMS";
 import CartilhasMS from "@/pages/ms/CartilhasMS";
 import CartilhaViewer from "@/pages/ms/CartilhaViewer";
 import SejaUmParceiroMS from "@/pages/ms/SejaUmParceiroMS";
@@ -347,6 +348,8 @@ function AppRoutes() {
                                 <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                                 <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                                 <Route path="/descubrams/sobre" element={<SobreMS />} />
+                                <Route path="/descubrams/baixar-app" element={<BaixarAppMS />} />
+                                <Route path="/baixar-app" element={<Navigate to="/descubrams/baixar-app" replace />} />
                                 <Route path="/descubrams/cartilhas" element={<CartilhasMS />} />
                                 <Route path="/descubrams/cartilhas/:slug" element={<CartilhaViewer />} />
                                 <Route path="/descubrams/guata" element={<Guata />} />

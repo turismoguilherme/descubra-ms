@@ -328,6 +328,15 @@ const UniversalFooter = () => {
                 </Link>
               </li>
               <li>
+                <Link
+                  to="/descubrams/baixar-app"
+                  className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"
+                >
+                  <ArrowRight className="h-3 w-3" />
+                  Baixar App
+                </Link>
+              </li>
+              <li>
                 <Link 
                   to="/descubrams/passaporte"
                   className="text-blue-100 hover:text-white text-sm transition-colors flex items-center gap-2 justify-center lg:justify-start"

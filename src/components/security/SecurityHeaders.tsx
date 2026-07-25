@@ -50,7 +50,7 @@ export const SecurityHeaders = () => {
       { httpEquiv: 'X-XSS-Protection', content: '1; mode=block' },
       { httpEquiv: 'Strict-Transport-Security', content: 'max-age=31536000; includeSubDomains; preload' },
       { httpEquiv: 'Permissions-Policy', content: 'camera=(), microphone=(), geolocation=(self)' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+      { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
     ];
 
     // Adicionar meta tags (inserir no início do head para garantir prioridade)

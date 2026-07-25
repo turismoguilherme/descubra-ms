@@ -14,7 +14,7 @@
       "destination": "/api/evento/:id"
     },
     {
-      "source": "/((?!assets|_next|favicon.ico|robots.txt|sitemap.xml|api).*)",
+      "source": "/((?!assets|_next|favicon.ico|robots.txt|sitemap.xml|api|downloads|branding|images|icons|cartilhas).*)",
       "destination": "/index.html"
     }
   ],
@@ -132,6 +132,23 @@
   ],
   "headers": [
     {
+      "source": "/downloads/(.*).apk",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"descubra-ms.apk\""
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
       "source": "/assets/:path*",
       "headers": [
         {
@@ -158,7 +175,7 @@
       ]
     },
     {
-      "source": "/((?!assets|_next|favicon.ico|robots.txt|sitemap.xml|api|cartilhas).*)",
+      "source": "/((?!assets|_next|favicon.ico|robots.txt|sitemap.xml|api|cartilhas|downloads).*)",
       "headers": [
         {
           "key": "Cache-Control",
