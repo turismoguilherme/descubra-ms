@@ -135,12 +135,23 @@ export default function TouristRegionsManager() {
   const loadRegions = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('tourist_regions')
         .select('*')
         .order('is_featured', { ascending: false })
         .order('order_index', { ascending: true })
         .order('name', { ascending: true });
+
+      // Se a migration de is_featured ainda não rodou, tenta sem essa coluna
+      if (error && /is_featured/i.test(error.message || '')) {
+        const fallback = await supabase
+          .from('tourist_regions')
+          .select('*')
+          .order('order_index', { ascending: true })
+          .order('name', { ascending: true });
+        data = fallback.data;
+        error = fallback.error;
+      }
 
       if (error) throw error;
 

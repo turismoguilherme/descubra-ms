@@ -53,13 +53,24 @@ export function useTouristRegions(language?: LanguageCode) {
       setError(null);
 
       // Tentar buscar do banco de dados
-      const { data: dbRegions, error: dbError } = await supabase
+      let { data: dbRegions, error: dbError } = await supabase
         .from('tourist_regions')
         .select('*')
         .eq('is_active', true)
         .order('is_featured', { ascending: false })
         .order('order_index', { ascending: true })
         .order('name', { ascending: true });
+
+      if (dbError && /is_featured/i.test(dbError.message || '')) {
+        const fallback = await supabase
+          .from('tourist_regions')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true })
+          .order('name', { ascending: true });
+        dbRegions = fallback.data;
+        dbError = fallback.error;
+      }
 
       if (dbError) {
         console.warn('Erro ao carregar regiões do banco:', dbError);
