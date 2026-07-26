@@ -10,12 +10,12 @@ import { useLocation } from "react-router-dom";
 const BRANDS = {
   ms: {
     title: "Descubra Mato Grosso do Sul",
-    favicon: "/branding/descubra-ms-mark.png",
+    favicon: "/images/logo-descubra-ms.png",
     faviconType: "image/png",
   },
   guata: {
     title: "Guatá Labs",
-    favicon: "/branding/descubra-ms-mark.png",
+    favicon: "/images/logo-descubra-ms.png",
     faviconType: "image/png",
   },
 } as const;

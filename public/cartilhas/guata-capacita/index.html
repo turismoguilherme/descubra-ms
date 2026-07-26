@@ -366,12 +366,51 @@
         flex-shrink: 0 !important;
       }
 
+      /* Certificado e portal final: QR grande de novo */
+      .a4-page #qr-cert.qr-holder {
+        width: 5.5rem !important;
+        height: 5.5rem !important;
+      }
+      .a4-page #qr-main-portal.qr-holder {
+        width: 8rem !important;
+        height: 8rem !important;
+      }
+
       .a4-page .qr-holder canvas,
       .a4-page .qr-holder img {
         width: 100% !important;
         height: 100% !important;
         max-width: 100% !important;
         max-height: 100% !important;
+      }
+
+      /* Bloco do certificado: empilha e centraliza no celular */
+      .a4-page .cert-qr-row {
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+      }
+      .a4-page .cert-qr-row .cert-qr-box {
+        margin-top: 0.75rem;
+      }
+      .a4-page .cert-qr-box .qr-open-link {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        display: inline-flex !important;
+      }
+
+      /* "Até breve..." centralizado no celular */
+      .a4-page .closing-banner {
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        gap: 0.75rem !important;
+      }
+      .a4-page .closing-banner .closing-ate-breve {
+        justify-content: center;
+        text-align: center;
+        width: 100%;
       }
 
       /* Rodapés compactos e empilhados no celular */
@@ -558,41 +597,6 @@
           </button>
 
         </div>
-      </div>
-
-      <!-- Bottom Row: Navigation Tabs for Pages -->
-      <div class="flex items-center justify-between border-t border-slate-800/80 pt-2 text-xs">
-        <span class="text-slate-400 font-semibold text-[11px] flex items-center gap-1.5 shrink-0">
-          <i data-lucide="layers" class="w-3.5 h-3.5 text-emerald-400"></i>
-          Navegação Rápida:
-        </span>
-
-        <nav class="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none max-w-full">
-          <a href="#page1" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
-            <span class="w-4 h-4 rounded-md bg-emerald-500/20 text-emerald-400 font-bold text-[10px] flex items-center justify-center">1</span> Capa
-          </a>
-          <a href="#page2" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
-            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">2</span> Apresentação
-          </a>
-          <a href="#page3" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
-            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">3</span> Metodologia
-          </a>
-          <a href="#page4" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
-            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">4</span> Mód. 01 e 02
-          </a>
-          <a href="#page5" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
-            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">5</span> Mód. 03 e 04
-          </a>
-          <a href="#page6" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
-            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">6</span> Mód. 05, 06 & Dicas
-          </a>
-          <a href="#page7" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
-            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">7</span> Progresso
-          </a>
-          <a href="#page8" class="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800/80 hover:bg-emerald-600/30 hover:text-emerald-300 border border-slate-700/60 text-slate-300 font-medium text-[11px] transition whitespace-nowrap">
-            <span class="w-4 h-4 rounded-md bg-slate-700 text-slate-300 font-bold text-[10px] flex items-center justify-center">8</span> Contatos
-          </a>
-        </nav>
       </div>
 
     </div>
@@ -1177,7 +1181,7 @@
         </table>
       </div>
 
-      <div class="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-amber-500/10 border-2 border-amber-400/60 p-5 rounded-2xl flex items-center justify-between gap-4 my-2">
+      <div class="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-amber-500/10 border-2 border-amber-400/60 p-5 rounded-2xl flex items-center justify-between gap-4 my-2 cert-qr-row">
         <div class="space-y-1.5 flex-1">
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[10px] font-black uppercase">
             <i data-lucide="award" class="w-3.5 h-3.5"></i> Emissão de Certificado
@@ -1186,16 +1190,16 @@
             Concluiu todos os módulos?
           </h3>
           <p contenteditable="true" class="text-xs text-slate-700 leading-relaxed">
-            Escaneie o QR Code ao lado para validar seu progresso e solicitar seu <strong>Certificado Oficial</strong>.
+            Escaneie o QR Code ou toque no botão para validar seu progresso e solicitar seu <strong>Certificado Oficial</strong>.
           </p>
         </div>
 
-        <div class="bg-white p-3 rounded-2xl border border-amber-300 shadow-md text-center shrink-0 relative">
+        <div class="bg-white p-3 rounded-2xl border border-amber-300 shadow-md text-center shrink-0 relative cert-qr-box">
           <button onclick="openQrModal('qr-cert')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-amber-500 text-slate-900 p-1 rounded-full text-[9px] shadow">
             <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
           </button>
           
-          <div id="qr-cert" class="qr-holder w-20 h-20 bg-slate-900 p-1 rounded mx-auto flex items-center justify-center"></div>
+          <div id="qr-cert" class="qr-holder w-28 h-28 bg-slate-900 p-1 rounded mx-auto flex items-center justify-center"></div>
           <span class="text-[9px] font-extrabold text-amber-700 uppercase block mt-1">Certificado</span>
         </div>
       </div>
@@ -1232,7 +1236,7 @@
         <span class="text-xs uppercase font-extrabold text-amber-300 tracking-wider block">Acesse o Portal do Aluno</span>
         
         <div class="bg-white p-3 rounded-2xl inline-block shadow-lg">
-          <div id="qr-main-portal" class="qr-holder w-32 h-32 bg-slate-900 p-1.5 rounded-xl flex items-center justify-center"></div>
+          <div id="qr-main-portal" class="qr-holder w-40 h-40 bg-slate-900 p-1.5 rounded-xl flex items-center justify-center"></div>
         </div>
 
         <p contenteditable="true" class="text-xs font-mono text-emerald-200">
@@ -1274,7 +1278,7 @@
         </div>
       </div>
 
-      <div class="relative z-10 flex items-center justify-between border-t border-emerald-500/30 pt-3">
+      <div class="relative z-10 flex items-center justify-between border-t border-emerald-500/30 pt-3 closing-banner">
         <div class="flex items-center gap-2">
           <svg class="w-16 h-16 drop-shadow-md" viewBox="0 0 100 100" fill="none">
             <path d="M30,20 C50,10 70,30 65,70 C60,90 40,95 30,80 Z" fill="#1D3557"/>
@@ -1289,7 +1293,7 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2 bg-emerald-900/80 px-3 py-1.5 rounded-2xl border border-emerald-600">
+        <div class="flex items-center gap-2 bg-emerald-900/80 px-3 py-1.5 rounded-2xl border border-emerald-600 closing-ate-breve">
           <span class="text-xs text-amber-300 font-bold">Até breve na nossa rede de atendimento!</span>
         </div>
       </div>
@@ -1504,16 +1508,23 @@
 
       <div class="space-y-3 text-xs">
         <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2">
-          <span class="font-bold text-emerald-400 block">Adicionar Novo Parceiro / Logo</span>
-          <input type="text" id="newPartnerName" placeholder="Nome da Instituição (ex: EMBRATUR)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
-          <input type="url" id="newPartnerLogoUrl" placeholder="Link/URL do Logo PNG (Opcional)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
-          <button onclick="addPartner()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs transition">
-            + Adicionar à Capa
+          <span class="font-bold text-emerald-400 block">Adicionar parceiro / logo</span>
+          <input type="text" id="newPartnerName" placeholder="Nome da Instituição (ex: FUNDTUR-MS)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+          <div class="space-y-1.5">
+            <span class="font-semibold text-slate-300 block">Enviar logo (PNG/JPG/WebP)</span>
+            <input type="file" id="newPartnerLogoFile" accept="image/png,image/jpeg,image/webp,image/*" class="w-full text-xs text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500">
+          </div>
+          <div class="space-y-1.5">
+            <span class="font-semibold text-slate-400 block">Ou cole a URL da logo (opcional)</span>
+            <input type="url" id="newPartnerLogoUrl" placeholder="https://…/logo.png" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+          </div>
+          <button id="addPartnerBtn" onclick="addPartner()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-lg text-xs transition">
+            + Adicionar à capa
           </button>
         </div>
 
         <div class="space-y-1.5 max-h-48 overflow-y-auto pt-2">
-          <span class="font-bold text-slate-400 text-[10px] uppercase block">Parceiros Atuais:</span>
+          <span class="font-bold text-slate-400 text-[10px] uppercase block">Parceiros atuais:</span>
           <div id="partnerManageList" class="space-y-1.5"></div>
         </div>
       </div>
@@ -1534,22 +1545,26 @@
 
       <div class="space-y-3 text-xs">
         <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2">
-          <span class="font-bold text-emerald-400 block">Opção 1: Enviar Imagem do seu computador/Canva</span>
-          <input type="file" id="mascotFileInput" accept="image/*" class="text-xs text-slate-300 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500">
+          <span class="font-bold text-emerald-400 block">Enviar imagem do personagem (PNG/JPG/WebP)</span>
+          <p class="text-[10px] text-slate-400 leading-relaxed">A imagem aparece na capa e na página de boas-vindas. Preferível fundo transparente.</p>
+          <input type="file" id="mascotFileInput" accept="image/png,image/jpeg,image/webp,image/*" class="w-full text-xs text-slate-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500">
+          <div id="mascotPreviewWrap" class="hidden mt-2 rounded-xl border border-slate-600 bg-slate-950/60 p-3 flex justify-center">
+            <img id="mascotPreviewImg" alt="Prévia" class="max-h-28 object-contain">
+          </div>
         </div>
 
         <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2">
-          <span class="font-bold text-emerald-400 block">Opção 2: Link de Imagem da Web (URL)</span>
-          <input type="url" id="mascotUrlInput" placeholder="https://exemplo.com/mascote.png" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+          <span class="font-bold text-slate-400 block">Ou cole a URL da imagem (opcional)</span>
+          <input type="url" id="mascotUrlInput" placeholder="https://exemplo.com/guata.png" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
         </div>
       </div>
 
       <div class="flex items-center gap-2 pt-2">
-        <button onclick="applyMascotImage()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs transition">
-          Aplicar Imagem
+        <button id="applyMascotBtn" onclick="applyMascotImage()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 rounded-xl text-xs transition">
+          Aplicar personagem
         </button>
         <button onclick="restoreMascotDefault()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-semibold px-3 py-2 rounded-xl text-xs transition">
-          Restaurar Vetor Padrão
+          Restaurar padrão
         </button>
       </div>
     </div>
@@ -1912,6 +1927,7 @@
       generateDefaultQRCodes();
       renderSavedBookletsList();
       bindProgressListeners();
+      bindMascotPreview();
 
       try {
         const progressStored = localStorage.getItem(PROGRESS_STORAGE_KEY);
@@ -2156,6 +2172,15 @@
     }
 
     // Partner Management
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+        reader.readAsDataURL(file);
+      });
+    }
+
     function renderPartners() {
       const grid = document.getElementById('partnerLogosGrid');
       const manageList = document.getElementById('partnerManageList');
@@ -2166,17 +2191,25 @@
 
       partners.forEach(partner => {
         const itemHtml = `
-          <div class="bg-white/5 border border-white/10 rounded-lg p-2 font-semibold text-emerald-100 flex items-center justify-center min-h-[36px] relative group">
-            ${partner.logoUrl ? `<img src="${partner.logoUrl}" alt="${partner.name}" class="max-h-6 object-contain mx-auto">` : `<span>${partner.name}</span>`}
+          <div class="bg-white/10 border border-white/15 rounded-xl p-2.5 font-semibold text-emerald-100 flex flex-col items-center justify-center min-h-[52px] gap-1">
+            ${partner.logoUrl
+              ? `<img src="${partner.logoUrl}" alt="${partner.name}" class="max-h-12 w-auto max-w-full object-contain mx-auto">`
+              : `<span class="text-center leading-tight">${partner.name}</span>`}
+            ${partner.logoUrl ? `<span class="text-[8px] text-emerald-200/80 font-medium text-center leading-tight">${partner.name}</span>` : ''}
           </div>
         `;
         grid.innerHTML += itemHtml;
 
         if (manageList) {
           const manageItem = `
-            <div class="flex items-center justify-between bg-slate-800 p-2 rounded-lg border border-slate-700">
-              <span class="font-medium text-slate-200">${partner.name}</span>
-              <button onclick="removePartner('${partner.id}')" class="text-rose-400 hover:text-rose-300 font-bold p-1 rounded">
+            <div class="flex items-center justify-between gap-2 bg-slate-800 p-2 rounded-lg border border-slate-700">
+              <div class="flex items-center gap-2 min-w-0">
+                ${partner.logoUrl
+                  ? `<img src="${partner.logoUrl}" alt="" class="h-8 w-8 object-contain rounded bg-white/10 shrink-0">`
+                  : `<span class="h-8 w-8 rounded bg-slate-700 flex items-center justify-center text-[9px] text-slate-400 shrink-0">—</span>`}
+                <span class="font-medium text-slate-200 truncate">${partner.name}</span>
+              </div>
+              <button onclick="removePartner('${partner.id}')" class="text-rose-400 hover:text-rose-300 font-bold p-1 rounded shrink-0">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
               </button>
             </div>
@@ -2188,22 +2221,43 @@
       lucide.createIcons();
     }
 
-    function addPartner() {
+    async function addPartner() {
       const nameInput = document.getElementById('newPartnerName');
       const urlInput = document.getElementById('newPartnerLogoUrl');
+      const fileInput = document.getElementById('newPartnerLogoFile');
+      const btn = document.getElementById('addPartnerBtn');
       const name = nameInput.value.trim();
-      const logoUrl = urlInput.value.trim();
+      let logoUrl = urlInput.value.trim();
 
       if (!name) {
         alert('Por favor, digite o nome do parceiro.');
         return;
       }
 
-      partners.push({ id: Date.now().toString(), name: name, logoUrl: logoUrl });
-      nameInput.value = '';
-      urlInput.value = '';
-      renderPartners();
-      saveBookletContent(false);
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Enviando…';
+        }
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          const dataUrl = await readFileAsDataUrl(fileInput.files[0]);
+          const uploaded = await requestUploadImage(dataUrl, 'partner-' + Date.now());
+          logoUrl = uploaded || dataUrl;
+        }
+        partners.push({ id: Date.now().toString(), name: name, logoUrl: logoUrl });
+        nameInput.value = '';
+        urlInput.value = '';
+        if (fileInput) fileInput.value = '';
+        renderPartners();
+        saveBookletContent(false);
+      } catch (e) {
+        alert('Não foi possível enviar a logo. Tente de novo.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '+ Adicionar à capa';
+        }
+      }
     }
 
     function removePartner(id) {
@@ -2214,6 +2268,7 @@
 
     function openPartnerModal() {
       document.getElementById('partnerModal').classList.remove('hidden');
+      lucide.createIcons();
     }
 
     function closePartnerModal() {
@@ -2223,51 +2278,93 @@
     // Mascot Functions
     function openImageModal(targetId) {
       currentActiveTargetId = targetId;
+      const fileInput = document.getElementById('mascotFileInput');
+      const urlInput = document.getElementById('mascotUrlInput');
+      const previewWrap = document.getElementById('mascotPreviewWrap');
+      if (fileInput) fileInput.value = '';
+      if (urlInput) urlInput.value = '';
+      if (previewWrap) previewWrap.classList.add('hidden');
       document.getElementById('imageModal').classList.remove('hidden');
+      lucide.createIcons();
     }
 
     function closeImageModal() {
       document.getElementById('imageModal').classList.add('hidden');
     }
 
-    function applyMascotImage() {
+    function bindMascotPreview() {
+      const fileInput = document.getElementById('mascotFileInput');
+      if (!fileInput || fileInput.dataset.previewBound === '1') return;
+      fileInput.dataset.previewBound = '1';
+      fileInput.addEventListener('change', async () => {
+        const previewWrap = document.getElementById('mascotPreviewWrap');
+        const previewImg = document.getElementById('mascotPreviewImg');
+        if (!fileInput.files || !fileInput.files[0] || !previewWrap || !previewImg) {
+          if (previewWrap) previewWrap.classList.add('hidden');
+          return;
+        }
+        try {
+          const dataUrl = await readFileAsDataUrl(fileInput.files[0]);
+          previewImg.src = dataUrl;
+          previewWrap.classList.remove('hidden');
+        } catch (e) {
+          previewWrap.classList.add('hidden');
+        }
+      });
+    }
+
+    async function applyMascotImage() {
       const fileInput = document.getElementById('mascotFileInput');
       const urlInput = document.getElementById('mascotUrlInput').value.trim();
-      const container = document.getElementById(currentActiveTargetId);
-      const targetId = currentActiveTargetId;
-
-      if (!container || !targetId) return;
+      const btn = document.getElementById('applyMascotBtn');
+      const targets = ['mascot-cover', 'mascot-p2'];
 
       const finish = (url) => {
         if (!url) {
           alert('Não foi possível aplicar a imagem.');
           return;
         }
-        setMascotFromUrl(targetId, url);
+        // Aplica nas duas aparições do personagem (capa + boas-vindas)
+        targets.forEach((id) => {
+          if (document.getElementById(id)) setMascotFromUrl(id, url);
+        });
         closeImageModal();
-        saveBookletContent(false);
+        saveBookletContent(true);
       };
 
-      if (fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          const dataUrl = e.target.result;
-          const uploaded = await requestUploadImage(dataUrl, targetId);
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Enviando…';
+        }
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+          const dataUrl = await readFileAsDataUrl(fileInput.files[0]);
+          const uploaded = await requestUploadImage(dataUrl, currentActiveTargetId || 'mascot-cover');
           finish(uploaded || dataUrl);
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-      } else if (urlInput !== '') {
-        finish(urlInput);
+        } else if (urlInput !== '') {
+          finish(urlInput);
+        } else {
+          alert('Selecione um arquivo de imagem ou informe uma URL.');
+        }
+      } catch (e) {
+        alert('Falha no upload da imagem.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Aplicar personagem';
+        }
       }
     }
 
     function restoreMascotDefault() {
-      if (currentActiveTargetId && defaultMascotVectorHTML[currentActiveTargetId]) {
-        document.getElementById(currentActiveTargetId).innerHTML = defaultMascotVectorHTML[currentActiveTargetId];
-        delete mascotUrlMap[currentActiveTargetId];
-        saveBookletContent(false);
-      }
+      ['mascot-cover', 'mascot-p2'].forEach((id) => {
+        if (defaultMascotVectorHTML[id] && document.getElementById(id)) {
+          document.getElementById(id).innerHTML = defaultMascotVectorHTML[id];
+          delete mascotUrlMap[id];
+        }
+      });
       closeImageModal();
+      saveBookletContent(false);
     }
 
     // QR Codes
@@ -2302,7 +2399,12 @@
       qrUrlMap[containerId] = textUrl;
       removeQrOpenLink(containerId);
       container.innerHTML = '';
-      const size = Math.max(48, Math.min(128, container.clientWidth || 56));
+      const isFeatured = containerId === 'qr-cert' || containerId === 'qr-main-portal';
+      const fallback = isFeatured ? (containerId === 'qr-main-portal' ? 160 : 112) : 56;
+      const size = Math.max(
+        isFeatured ? 96 : 48,
+        Math.min(isFeatured ? 168 : 128, container.clientWidth || fallback)
+      );
       new QRCode(container, {
         text: textUrl,
         width: size,
@@ -2320,14 +2422,19 @@
         openEl.className = 'qr-open-link';
         openEl.style.background = '#475569';
         openEl.style.opacity = '0.85';
-        openEl.textContent = 'Aula em breve';
+        openEl.textContent = containerId === 'qr-cert' ? 'Certificado em breve' : 'Aula em breve';
       } else {
         openEl = document.createElement('a');
         openEl.href = textUrl;
         openEl.target = '_blank';
         openEl.rel = 'noopener noreferrer';
         openEl.className = 'qr-open-link';
-        openEl.textContent = 'Abrir aula';
+        openEl.textContent =
+          containerId === 'qr-cert'
+            ? 'Abrir certificado'
+            : containerId === 'qr-main-portal'
+              ? 'Abrir portal'
+              : 'Abrir aula';
         openEl.addEventListener('click', (ev) => {
           if (window.parent && window.parent !== window) {
             ev.preventDefault();
