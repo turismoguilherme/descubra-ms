@@ -8774,6 +8774,10 @@ export type Database = {
         Args: { p_email: string; p_role: string }
         Returns: boolean
       }
+      purge_old_security_audit_logs: {
+        Args: { _days?: number }
+        Returns: number
+      }
       reset_user_route_progress: {
         Args: { p_route_id: string; p_user_id: string }
         Returns: number
