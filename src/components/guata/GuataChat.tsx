@@ -64,7 +64,7 @@ const GuataChat = ({
       />
 
       {showInlineSuggestions && onSuggestionClick && (
-        <div className="px-4 pb-3 lg:hidden border-t border-white/10 flex-shrink-0">
+        <div className="px-4 pb-3 lg:hidden border-t border-white/10 flex-shrink-0 flex justify-center">
           <SuggestionQuestions
             variant="inline"
             onSuggestionClick={onSuggestionClick}
