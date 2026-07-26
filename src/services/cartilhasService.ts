@@ -41,13 +41,16 @@ export async function upsertCartilhaProgress(
   progressData: unknown
 ) {
   const { error } = await supabase.from('guata_cartilha_progress').upsert(
-    {
-      cartilha_id: cartilhaId,
-      user_id: userId,
-      progress_data: progressData,
-      updated_at: new Date().toISOString(),
-    },
+    [
+      {
+        cartilha_id: cartilhaId,
+        user_id: userId,
+        progress_data: progressData as never,
+        updated_at: new Date().toISOString(),
+      },
+    ],
     { onConflict: 'user_id,cartilha_id' }
   );
+
   if (error) throw error;
 }
