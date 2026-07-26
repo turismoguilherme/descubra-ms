@@ -361,29 +361,33 @@
       }
 
       .a4-page .qr-holder {
-        width: 3.25rem !important;
-        height: 3.25rem !important;
-        margin-bottom: 0 !important;
-        overflow: hidden !important;
+        width: auto !important;
+        height: auto !important;
+        min-width: 6.75rem !important;
+        min-height: 6.75rem !important;
+        margin-bottom: 0.35rem !important;
+        overflow: visible !important;
         flex-shrink: 0 !important;
       }
 
       /* Certificado e portal final: QR grande de novo */
       .a4-page #qr-cert.qr-holder {
-        width: 5.5rem !important;
-        height: 5.5rem !important;
-      }
-      .a4-page #qr-main-portal.qr-holder {
         width: 8rem !important;
         height: 8rem !important;
       }
+      .a4-page #qr-main-portal.qr-holder {
+        width: 10rem !important;
+        height: 10rem !important;
+      }
 
+      /* NÃO esticar o canvas — isso impede a câmera do celular de ler o QR na tela */
       .a4-page .qr-holder canvas,
       .a4-page .qr-holder img {
-        width: 100% !important;
-        height: 100% !important;
-        max-width: 100% !important;
-        max-height: 100% !important;
+        width: auto !important;
+        height: auto !important;
+        max-width: none !important;
+        max-height: none !important;
+        object-fit: none !important;
       }
 
       /* Bloco do certificado: QR e texto centralizados */
@@ -511,11 +515,25 @@
     ::-webkit-scrollbar-track { background: #1e293b; }
     ::-webkit-scrollbar-thumb { background: #2d6a4f; border-radius: 4px; }
 
-    /* QR Container styling for auto-canvas */
-    .qr-holder canvas, .qr-holder img {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: contain;
+    /* QR: pixels nativos (escaneável pela câmera do celular na tela do PC) */
+    .qr-holder {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      overflow: visible !important;
+      background: #ffffff !important;
+      padding: 6px !important;
+    }
+    .qr-holder canvas,
+    .qr-holder img {
+      width: auto !important;
+      height: auto !important;
+      max-width: none !important;
+      max-height: none !important;
+      object-fit: none !important;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: block !important;
     }
   </style>
 </head>
@@ -2721,22 +2739,26 @@
       removeQrOpenLink(containerId);
       container.innerHTML = '';
 
+      // Tamanhos fixos em pixels (não depender de clientWidth nem esticar no CSS)
       const isFeatured = containerId === 'qr-cert' || containerId === 'qr-main-portal';
-      const fallback = isFeatured ? (containerId === 'qr-main-portal' ? 160 : 112) : 64;
-      let size = Math.max(
-        isFeatured ? 96 : 56,
-        Math.min(isFeatured ? 168 : 128, container.clientWidth || fallback),
-      );
-      if (!size || size < 48) size = fallback;
+      const size =
+        containerId === 'qr-main-portal' ? 168 :
+        containerId === 'qr-cert' ? 136 :
+        96;
+
+      container.style.width = size + 12 + 'px';
+      container.style.height = size + 12 + 'px';
+      container.style.minWidth = size + 12 + 'px';
+      container.style.minHeight = size + 12 + 'px';
 
       try {
-        // URLs longas: nível M evita falha silenciosa do QRCode.js
-        const level = url.length > 90 ? QRCode.CorrectLevel.M : QRCode.CorrectLevel.H;
+        // L = mais fácil de ler pela câmera; M se URL for muito longa
+        const level = url.length > 120 ? QRCode.CorrectLevel.M : QRCode.CorrectLevel.L;
         new QRCode(container, {
           text: url,
           width: size,
           height: size,
-          colorDark: '#0f172a',
+          colorDark: '#000000',
           colorLight: '#ffffff',
           correctLevel: level,
         });
@@ -2747,11 +2769,15 @@
         return false;
       }
 
-      const canvas = container.querySelector('canvas');
-      const img = container.querySelector('img');
-      if (!canvas && !img) {
-        cartilhaLog('createQRCode: sem canvas/img após gerar', containerId);
-      }
+      // Travar tamanho intrínseco do canvas/img (anti-distorção)
+      container.querySelectorAll('canvas, img').forEach((node) => {
+        node.style.width = size + 'px';
+        node.style.height = size + 'px';
+        node.removeAttribute('width');
+        node.removeAttribute('height');
+        node.setAttribute('width', String(size));
+        node.setAttribute('height', String(size));
+      });
 
       const placeholder = isPlaceholderUrl(url);
       let openEl;
@@ -2783,7 +2809,7 @@
       }
       openEl.setAttribute('data-for', containerId);
       container.insertAdjacentElement('afterend', openEl);
-      cartilhaLog('createQRCode OK', containerId, url.slice(0, 80), 'placeholder=', placeholder);
+      cartilhaLog('createQRCode OK', containerId, 'px=', size, url.slice(0, 80), 'placeholder=', placeholder);
       return true;
     }
 
