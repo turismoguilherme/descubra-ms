@@ -277,8 +277,8 @@
         gap: 0.35rem !important;
       }
 
-      /* Nenhum elemento pode forçar largura maior que a tela (exceto o canvas do QR) */
-      .a4-page *:not(canvas) {
+      /* Nenhum elemento pode forçar largura maior que a tela (exceto QR) */
+      .a4-page *:not(canvas):not(.qr-holder):not(.qr-holder *) {
         max-width: 100% !important;
       }
 
@@ -2740,21 +2740,29 @@
       container.innerHTML = '';
 
       // Tamanhos fixos em pixels (não depender de clientWidth nem esticar no CSS)
-      const isFeatured = containerId === 'qr-cert' || containerId === 'qr-main-portal';
       const size =
         containerId === 'qr-main-portal' ? 168 :
         containerId === 'qr-cert' ? 136 :
         96;
+      const box = size + 12;
 
-      container.style.width = size + 12 + 'px';
-      container.style.height = size + 12 + 'px';
-      container.style.minWidth = size + 12 + 'px';
-      container.style.minHeight = size + 12 + 'px';
+      container.style.setProperty('width', box + 'px', 'important');
+      container.style.setProperty('height', box + 'px', 'important');
+      container.style.setProperty('min-width', box + 'px', 'important');
+      container.style.setProperty('min-height', box + 'px', 'important');
+
+      // Gera fora do DOM visível e cola só um <img> PNG estático.
+      // Assim evitamos canvas apagado (resize de atributos) e canvas+img
+      // ambos com display:block (QRCode.js esconde o canvas de propósito).
+      const scratch = document.createElement('div');
+      scratch.setAttribute('aria-hidden', 'true');
+      scratch.style.cssText =
+        'position:fixed;left:-9999px;top:0;width:' + size + 'px;height:' + size + 'px;overflow:hidden;';
+      document.body.appendChild(scratch);
 
       try {
-        // L = mais fácil de ler pela câmera; M se URL for muito longa
         const level = url.length > 120 ? QRCode.CorrectLevel.M : QRCode.CorrectLevel.L;
-        new QRCode(container, {
+        new QRCode(scratch, {
           text: url,
           width: size,
           height: size,
@@ -2762,22 +2770,42 @@
           colorLight: '#ffffff',
           correctLevel: level,
         });
+
+        const srcCanvas = scratch.querySelector('canvas');
+        const srcImg = scratch.querySelector('img');
+        let dataUrl = '';
+        if (srcImg && srcImg.getAttribute('src')) {
+          dataUrl = srcImg.getAttribute('src');
+        } else if (srcCanvas && typeof srcCanvas.toDataURL === 'function') {
+          dataUrl = srcCanvas.toDataURL('image/png');
+        }
+
+        if (!dataUrl || dataUrl === 'data:,') {
+          throw new Error('QR sem imagem gerada');
+        }
+
+        const out = document.createElement('img');
+        out.src = dataUrl;
+        out.alt = 'QR Code';
+        out.width = size;
+        out.height = size;
+        out.decoding = 'sync';
+        out.style.setProperty('width', size + 'px', 'important');
+        out.style.setProperty('height', size + 'px', 'important');
+        out.style.setProperty('max-width', 'none', 'important');
+        out.style.setProperty('max-height', 'none', 'important');
+        out.style.setProperty('object-fit', 'none', 'important');
+        out.style.setProperty('display', 'block', 'important');
+        out.style.imageRendering = 'pixelated';
+        container.appendChild(out);
       } catch (err) {
         console.error('[cartilha] falha ao gerar QR', containerId, url, err);
         container.innerHTML =
-          '<span class="text-[9px] text-rose-300 p-1">Erro ao gerar QR</span>';
+          '<span class="text-[9px] text-rose-600 p-1">Erro ao gerar QR</span>';
+        scratch.remove();
         return false;
       }
-
-      // Travar tamanho intrínseco do canvas/img (anti-distorção)
-      container.querySelectorAll('canvas, img').forEach((node) => {
-        node.style.width = size + 'px';
-        node.style.height = size + 'px';
-        node.removeAttribute('width');
-        node.removeAttribute('height');
-        node.setAttribute('width', String(size));
-        node.setAttribute('height', String(size));
-      });
+      scratch.remove();
 
       const placeholder = isPlaceholderUrl(url);
       let openEl;
@@ -2836,15 +2864,14 @@
         alert('Nenhum QR selecionado.');
         return;
       }
-      const ok = createQRCode(currentActiveTargetId, url);
+      const targetId = currentActiveTargetId;
+      const ok = createQRCode(targetId, url);
       if (!ok) {
         alert('Não foi possível gerar o QR com esse link. Verifique a URL e tente de novo.');
         return;
       }
       closeQrModal();
       saveBookletContent(true);
-      // Garante redesenho após layout (evita QR em branco no mobile)
-      requestAnimationFrame(() => createQRCode(currentActiveTargetId, url));
     }
 
     // Dynamic Module Creation (Admin)
