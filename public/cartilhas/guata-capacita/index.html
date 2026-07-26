@@ -1756,27 +1756,49 @@
           action: 'load',
           slug: cloudSlugForBooklet(),
         });
-        if (isMeaningfulContent(data.content_data)) {
-          applyBookletContent(data.content_data);
-          persistContentLocal(data.content_data);
+        const cd = data.content_data || {};
+        cartilhaLog('loadCloudContent', {
+          id: data.id,
+          updated_at: data.updated_at,
+          meaningful: isMeaningfulContent(cd),
+          textKeys: cd.texts ? Object.keys(cd.texts).length : 0,
+          sampleKeys: cd.texts ? Object.keys(cd.texts).slice(0, 8) : [],
+          coverMainTitle: cd.texts && cd.texts.coverMainTitle ? String(cd.texts.coverMainTitle).slice(0, 80) : null,
+          mascots: cd.mascots ? Object.keys(cd.mascots) : [],
+          partners: Array.isArray(cd.partners) ? cd.partners.length : 0,
+        });
+        if (isMeaningfulContent(cd)) {
+          applyBookletContent(cd);
+          persistContentLocal(cd);
           return true;
         }
+        cartilhaLog('loadCloudContent: snapshot ignorado (não meaningful)');
       } catch (e) {
         console.warn('[cartilha] load cloud:', e);
       }
       return false;
     }
 
+    function cartilhaLog(...args) {
+      try {
+        console.log('[cartilha]', ...args);
+      } catch (_) {}
+    }
+
     function lockPublicEditing() {
+      let seq = 0;
       document.querySelectorAll('[contenteditable]').forEach((el) => {
         // Aluno pode preencher datas/visto na tabela de progresso
         if (el.closest('#progressTableBody')) return;
         el.setAttribute('data-admin-editable', 'true');
-        if (!el.id && !el.getAttribute('data-content-key')) {
-          el.setAttribute('data-content-key', 'ce-' + Math.random().toString(36).slice(2, 10));
+        // Chave ESTÁVEL por ordem no documento (antes era Math.random → textos nunca batiam ao voltar)
+        if (!el.id) {
+          el.setAttribute('data-content-key', 'txt-' + seq);
+          seq += 1;
         }
         el.setAttribute('contenteditable', 'false');
       });
+      cartilhaLog('lockPublicEditing: campos=', document.querySelectorAll('[data-admin-editable="true"]').length, 'txtKeys=', seq);
     }
 
     function applyEditMode(enabled) {
@@ -1874,7 +1896,7 @@
       Object.entries(mascotUrlMap).forEach(([id, url]) => {
         if (typeof url === 'string' && url.trim()) mascots[id] = url.trim();
       });
-      return {
+      const data = {
         version: 1,
         updatedAt: new Date().toISOString(),
         theme: document.getElementById('themeSelector')?.value || 'default',
@@ -1883,23 +1905,66 @@
         mascots,
         partners: partners.map((p) => ({ ...p })),
       };
+      cartilhaLog('collectBookletContent', {
+        textKeys: Object.keys(texts).length,
+        sampleTextKeys: Object.keys(texts).slice(0, 8),
+        mascots: Object.keys(mascots),
+        qr: Object.keys(qr).length,
+        partners: partners.length,
+        sampleCover: (texts.coverMainTitle || '').slice(0, 60),
+      });
+      return data;
     }
 
     function applyBookletContent(data) {
       if (!data || typeof data !== 'object') return;
       contentHydrated = true;
+      cartilhaLog('applyBookletContent start', {
+        textKeys: data.texts ? Object.keys(data.texts).length : 0,
+        sampleKeys: data.texts ? Object.keys(data.texts).slice(0, 8) : [],
+        mascots: data.mascots ? Object.keys(data.mascots) : [],
+        partners: Array.isArray(data.partners) ? data.partners.length : 0,
+        qr: data.qr ? Object.keys(data.qr).length : 0,
+      });
       if (data.theme) {
         const themeSelector = document.getElementById('themeSelector');
         if (themeSelector) themeSelector.value = data.theme;
         changeBookletTheme(data.theme);
       }
+      let applied = 0;
+      let missed = 0;
       if (data.texts && typeof data.texts === 'object') {
+        const missedEntries = [];
         Object.entries(data.texts).forEach(([key, html]) => {
           const el =
             document.getElementById(key) ||
             document.querySelector(`[data-content-key="${key}"]`);
-          if (el && typeof html === 'string') el.innerHTML = html;
+          if (el && typeof html === 'string') {
+            el.innerHTML = html;
+            applied += 1;
+          } else {
+            missed += 1;
+            missedEntries.push(key);
+          }
         });
+        // Migração: textos antigos com chave aleatória ce-xxx → aplica por ordem nos campos sem id
+        if (missedEntries.length) {
+          const orderedTargets = Array.from(
+            document.querySelectorAll('[data-admin-editable="true"]'),
+          ).filter((el) => !el.id);
+          const orphanHtmls = missedEntries
+            .map((k) => data.texts[k])
+            .filter((h) => typeof h === 'string');
+          let byOrder = 0;
+          orphanHtmls.forEach((html, i) => {
+            if (!orderedTargets[i]) return;
+            orderedTargets[i].innerHTML = html;
+            byOrder += 1;
+          });
+          cartilhaLog('apply texts: applied=', applied, 'missed=', missed, 'fallbackByOrder=', byOrder, 'missedSample=', missedEntries.slice(0, 5));
+        } else {
+          cartilhaLog('apply texts: applied=', applied, 'missed=', missed);
+        }
       }
       if (data.mascots && typeof data.mascots === 'object') {
         Object.entries(data.mascots).forEach(([id, url]) => {
@@ -1915,6 +1980,7 @@
           if (typeof url === 'string' && url) createQRCode(id, url);
         });
       }
+      cartilhaLog('applyBookletContent done');
     }
 
     function persistContentLocal(data) {
@@ -1933,24 +1999,32 @@
     async function saveBookletContent(showAlert) {
       const data = collectBookletContent();
       persistContentLocal(data);
+      cartilhaLog('saveBookletContent', {
+        showAlert: !!showAlert,
+        hasCreds: !!editorCredentials,
+        textKeys: Object.keys(data.texts || {}).length,
+        coverMainTitle: (data.texts && data.texts.coverMainTitle || '').slice(0, 80),
+      });
 
       // Prioridade: login da cartilha → grava direto na nuvem (igual o site)
       if (editorCredentials) {
         setSaveBtnState('Salvando…', true);
         try {
-          await invokeCartilhaEditor({
+          const result = await invokeCartilhaEditor({
             action: 'save',
             slug: cloudSlugForBooklet(),
             email: editorCredentials.email,
             password: editorCredentials.password,
             content_data: data,
           });
+          cartilhaLog('save cloud OK', result);
           setSaveBtnState('Salvar na nuvem', false);
           if (showAlert) {
             alert('Alterações salvas na nuvem. Elas permanecem ao sair e voltar.');
           }
           return;
         } catch (e) {
+          cartilhaLog('save cloud FAIL', e);
           setSaveBtnState('Salvar na nuvem', false);
           const msg = e instanceof Error ? e.message : 'Falha ao salvar';
           if (showAlert) alert('Não foi possível salvar na nuvem: ' + msg);
@@ -1961,6 +2035,7 @@
       try {
         if (window.parent && window.parent !== window) {
           setSaveBtnState('Salvando…', true);
+          cartilhaLog('save via parent postMessage (sem credenciais da cartilha)');
           window.parent.postMessage({ type: 'guata-cartilha-content-save', payload: data }, '*');
         } else if (showAlert) {
           alert('Faça login do gestor na cartilha para salvar na nuvem.');

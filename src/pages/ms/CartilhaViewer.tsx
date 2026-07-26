@@ -67,7 +67,10 @@ const CartilhaViewer = () => {
   }, [slug]);
 
   const pushContentHydrate = (payload: Record<string, unknown> | null | undefined) => {
-    if (!payload || Object.keys(payload).length === 0) return;
+    if (!payload || Object.keys(payload).length === 0) {
+      console.log('[CartilhaViewer] hydrate skip: empty payload');
+      return;
+    }
     // Ignore snapshots vazios/corrompidos (ex.: {"qr":{"qr-ms":""}})
     const texts = payload.texts && typeof payload.texts === 'object' ? Object.keys(payload.texts as object).length : 0;
     const mascots =
@@ -79,7 +82,11 @@ const CartilhaViewer = () => {
       payload.qr && typeof payload.qr === 'object'
         ? Object.values(payload.qr as Record<string, unknown>).some((u) => typeof u === 'string' && u.trim())
         : false;
-    if (!texts && !mascots && !partners && !qr) return;
+    if (!texts && !mascots && !partners && !qr) {
+      console.log('[CartilhaViewer] hydrate skip: not meaningful', payload);
+      return;
+    }
+    console.log('[CartilhaViewer] hydrate push', { texts, mascots, partners, qr });
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'guata-cartilha-content-hydrate', payload },
       '*'
@@ -96,7 +103,7 @@ const CartilhaViewer = () => {
         if (!/^https?:\/\//i.test(url)) return;
         try {
           if (native) {
-            const { Browser } = await import('@capacitor/browser');
+            const { Browser } = await import(/* @vite-ignore */ '@capacitor/browser');
             await Browser.open({ url });
           } else {
             window.open(url, '_blank', 'noopener,noreferrer');
