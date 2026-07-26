@@ -8,6 +8,29 @@ export type PushPrefs = {
 
 const PREFS_KEY = 'descubra_push_prefs';
 const PROMPT_KEY = 'descubra_push_prompt_done';
+const TOKEN_KEY = 'descubra_push_fcm_token';
+const CITY_KEY = 'descubra_push_city';
+
+export function getStoredPushToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredPushCity(): string | null {
+  try {
+    return localStorage.getItem(CITY_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storePushSession(token: string, city?: string | null) {
+  localStorage.setItem(TOKEN_KEY, token);
+  if (city) localStorage.setItem(CITY_KEY, city);
+}
 
 export function getStoredPushPrefs(): PushPrefs {
   try {
@@ -136,15 +159,55 @@ export async function enableGuataEventPush(): Promise<{
       city_name: city,
       latitude,
       longitude,
-      events_nearby: prefs.eventsNearby,
+      events_nearby: true,
       guata_tips: prefs.guataTips,
     });
 
+    storePushSession(token, city);
     setStoredPushPrefs({ ...prefs, eventsNearby: true });
     markPushPromptDone();
     return { ok: true, city };
   } catch (e) {
     console.warn('[push] enableGuataEventPush', e);
+    return { ok: false, reason: String((e as Error)?.message || e) };
+  }
+}
+
+/** Liga/desliga avisos de eventos (perfil). Requer token já registrado. */
+export async function setEventsNearbyPushEnabled(enabled: boolean): Promise<{
+  ok: boolean;
+  reason?: string;
+}> {
+  if (!Capacitor.isNativePlatform()) {
+    return { ok: false, reason: 'only_native' };
+  }
+
+  const prefs = getStoredPushPrefs();
+  const token = getStoredPushToken();
+
+  if (enabled) {
+    const res = await enableGuataEventPush();
+    return { ok: res.ok, reason: res.reason };
+  }
+
+  if (!token) {
+    setStoredPushPrefs({ ...prefs, eventsNearby: false });
+    return { ok: true };
+  }
+
+  try {
+    const platform = Capacitor.getPlatform() === 'ios' ? 'ios' : 'android';
+    await registerPushTokenWithBackend({
+      token,
+      platform,
+      city_name: getStoredPushCity(),
+      events_nearby: false,
+      guata_tips: prefs.guataTips,
+    });
+    setStoredPushPrefs({ ...prefs, eventsNearby: false });
+    return { ok: true };
+  } catch (e) {
+    console.warn('[push] setEventsNearbyPushEnabled', e);
     return { ok: false, reason: String((e as Error)?.message || e) };
   }
 }

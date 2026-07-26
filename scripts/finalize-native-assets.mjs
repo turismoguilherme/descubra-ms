@@ -1,7 +1,7 @@
 /**
  * Pós-processamento após @capacitor/assets generate:
- * - copia ícones PWA para public/icons
- * - corrige cor do adaptive icon Android
+ * - copia ícones PWA para public/icons (se gerados)
+ * - adaptive icon Android sem inset (verde cobre o círculo inteiro)
  * - restaura manifest.webmanifest do Descubra MS
  */
 import { copyFile, mkdir, rm, writeFile } from "fs/promises";
@@ -34,6 +34,24 @@ await writeFile(
   "utf8"
 );
 
+const adaptiveIcon = `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+`;
+
+await writeFile(
+  "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+  adaptiveIcon,
+  "utf8"
+);
+await writeFile(
+  "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+  adaptiveIcon,
+  "utf8"
+);
+
 const manifest = {
   name: "Descubra MS",
   short_name: "Descubra MS",
@@ -58,4 +76,6 @@ await writeFile(
   "utf8"
 );
 
-console.log("Native assets finalized (public/icons + Android background + manifest).");
+console.log(
+  "Native assets finalized (adaptive icon full-bleed + public/icons + manifest)."
+);

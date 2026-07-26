@@ -111,12 +111,17 @@ function siteIdentityPlugin(brand: SiteBrand): Plugin {
         },
         {
           tag: "link",
+          attrs: { rel: "icon", href: "/favicon.ico", sizes: "any" },
+          injectTo: "head" as const,
+        },
+        {
+          tag: "link",
           attrs: { rel: "icon", href: profile.favicon, type: brand === "guata-labs" ? "image/svg+xml" : "image/png" },
           injectTo: "head" as const,
         },
         {
           tag: "link",
-          attrs: { rel: "apple-touch-icon", href: profile.favicon },
+          attrs: { rel: "apple-touch-icon", href: brand === "guata-labs" ? profile.favicon : "/apple-touch-icon.png" },
           injectTo: "head" as const,
         },
         { tag: "meta", attrs: { property: "og:site_name", content: brand === "guata-labs" ? "Guatá Labs" : "Descubra Mato Grosso do Sul" }, injectTo: "head" as const },

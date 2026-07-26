@@ -15,15 +15,21 @@ const BRANDS = {
   },
   guata: {
     title: "Guatá Labs",
-    favicon: "/branding/guata-labs-mark.svg",
-    faviconType: "image/svg+xml",
+    favicon: "/branding/descubra-ms-mark.png",
+    faviconType: "image/png",
   },
 } as const;
 
 function setFavicon(href: string, type: string) {
   const head = document.head;
-  // Remove todos os icon links existentes para não sobreporem
   head.querySelectorAll('link[rel~="icon"]').forEach((n) => n.remove());
+
+  const ico = document.createElement("link");
+  ico.rel = "icon";
+  ico.href = "/favicon.ico";
+  ico.setAttribute("sizes", "any");
+  head.appendChild(ico);
+
   const link = document.createElement("link");
   link.rel = "icon";
   link.type = type;

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSecureAuth } from '@/hooks/useSecureAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import UniversalLayout from '@/components/layout/UniversalLayout';
 import PantanalAvatarSelector, { PantanalAnimal } from '@/components/profile/PantanalAvatarSelector';
 import UserSettingsModal from '@/components/profile/UserSettingsModal';
 import ShareProfileModal from '@/components/profile/ShareProfileModal';
+import { GuataPushProfileCard } from '@/components/guata/GuataPushProfileCard';
 import { 
   User, 
   Heart, 
@@ -23,6 +25,7 @@ import {
   Pencil,
   Calendar,
   Smartphone,
+  LogOut,
 } from 'lucide-react';
 import UserReservations from '@/components/user/UserReservations';
 import { supabase } from '@/integrations/supabase/client';
@@ -48,6 +51,7 @@ export interface UserProfile {
 
 const ProfilePageFixed: React.FC = () => {
   const { user } = useAuth();
+  const { handleSecureLogout } = useSecureAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -510,11 +514,21 @@ const ProfilePageFixed: React.FC = () => {
                       <Settings className="h-4 w-4 mr-2" />
                       Configurações
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleSecureLogout}
+                      className="text-red-600 border-red-200 hover:bg-red-50 md:hidden"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sair
+                    </Button>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          <GuataPushProfileCard />
 
           {/* Tabs do Perfil */}
           <div className="space-y-3">
