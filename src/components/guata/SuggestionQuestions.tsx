@@ -148,17 +148,18 @@ const SuggestionQuestions = ({
   if (variant === "inline") {
     const displayItems = items.slice(0, 6);
     return (
-      <div className="w-full" aria-label="Sugestões de perguntas">
-        <p className="text-xs text-gray-400 mb-2 px-1">Sugestões de perguntas:</p>
-        <div className="grid grid-cols-2 gap-2">
+      <div className="w-full max-w-md mx-auto text-center" aria-label="Sugestões de perguntas">
+        <p className="text-xs text-gray-300 mb-2">Sugestões de perguntas:</p>
+        <div className="grid grid-cols-2 gap-2 justify-items-stretch">
           {displayItems.map((text, idx) => (
             <button
               key={`${idx}-${text.slice(0, 24)}`}
               type="button"
               onClick={() => onSuggestionClick(text)}
               className={cn(
-                "rounded-lg border border-white/20 bg-white/10 backdrop-blur",
-                "px-3 py-2.5 text-sm text-white text-left leading-snug",
+                "w-full rounded-lg border border-white/20 bg-white/10 backdrop-blur",
+                "px-3 py-2.5 text-sm text-white text-center leading-snug break-words",
+                "flex items-center justify-center",
                 "hover:bg-white/20 hover:border-white/40 active:scale-[0.98]",
                 "transition-all min-h-[3rem]"
               )}
@@ -170,6 +171,7 @@ const SuggestionQuestions = ({
       </div>
     );
   }
+
 
   return (
     <div className="max-w-3xl mx-auto mt-8">
