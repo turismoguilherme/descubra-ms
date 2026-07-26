@@ -11,6 +11,7 @@ import App from './App.tsx'
 import './index.css'
 import '@/utils/elevateToAdmin'
 import { initNativeApp } from '@/native/capacitorBridge'
+import { NativeBootSplash } from '@/native/NativeBootSplash'
 
 // Error handlers globais (sem logs instrumentados para evitar CSP errors)
 
@@ -19,6 +20,7 @@ void initNativeApp()
 const root = createRoot(document.getElementById('root')!)
 root.render(
   <React.StrictMode>
+    <NativeBootSplash />
     <App />
   </React.StrictMode>
 )

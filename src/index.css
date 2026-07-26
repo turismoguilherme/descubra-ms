@@ -18,6 +18,14 @@ body {
   padding-left: env(safe-area-inset-left, 0px);
 }
 
+/* Respiro extra só no celular — desktop inalterado */
+@media (max-width: 767px) {
+  .ms-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
 /* Custom animations for the new layout */
 @keyframes pulse {
   0%, 100% {

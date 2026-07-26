@@ -194,6 +194,53 @@ const UniversalFooter = () => {
   return (
     <footer className="bg-gradient-to-r from-ms-primary-blue to-ms-pantanal-green text-white">
       <div className="ms-container">
+        {/* Mobile: rodapé compacto (desktop abaixo permanece igual) */}
+        <div className="md:hidden py-8 px-1">
+          <div className="flex flex-col items-center text-center gap-4">
+            {(() => {
+              const logoUrl = brandContext && brandContext.isMS ? brandContext.config.logo.src : "/images/logo-descubra-ms.png";
+              const logoAlt = brandContext && brandContext.isMS ? brandContext.config.logo.alt : "Descubra Mato Grosso do Sul";
+              return (
+                <img
+                  src={logoUrl}
+                  alt={logoAlt}
+                  className="h-14 w-auto"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/images/logo-descubra-ms.png";
+                  }}
+                />
+              );
+            })()}
+            <p className="text-blue-100 text-sm leading-relaxed max-w-xs">
+              Viva experiências únicas em Mato Grosso do Sul.
+            </p>
+            <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm font-medium">
+              <Link to="/descubrams" className="text-white/95 hover:text-white">Início</Link>
+              <Link to="/descubrams/guata" className="text-white/95 hover:text-white">Guatá</Link>
+              <Link to="/descubrams/cartilhas" className="text-white/95 hover:text-white">Cartilhas</Link>
+              <Link to="/descubrams/eventos" className="text-white/95 hover:text-white">Eventos</Link>
+              <Link to="/descubrams/baixar-app" className="text-white/95 hover:text-white">Baixar App</Link>
+              <Link to="/descubrams/passaporte" className="text-white/95 hover:text-white">Passaporte</Link>
+            </nav>
+            {(msSettings.phone || msSettings.email) && (
+              <div className="text-blue-100 text-xs space-y-1">
+                {msSettings.phone && <p>{msSettings.phone}</p>}
+                {msSettings.email && <p className="break-all">{msSettings.email}</p>}
+              </div>
+            )}
+            <div className="flex flex-wrap justify-center gap-3 text-[11px] text-blue-200">
+              <Link to="/descubrams/privacidade" className="hover:text-white">Privacidade</Link>
+              <Link to="/descubrams/termos" className="hover:text-white">Termos</Link>
+              <Link to="/descubrams/cookies" className="hover:text-white">Cookies</Link>
+            </div>
+            <p className="text-blue-200/80 text-[10px] leading-snug">
+              {msSettings.copyright || '© 2025 Descubra Mato Grosso do Sul.'}
+            </p>
+          </div>
+        </div>
+
+        {/* Desktop / tablet: layout completo (inalterado) */}
+        <div className="hidden md:block">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 py-12">
           {/* Coluna 1 - Logo, Descrição e Contato */}
           <div className="text-center lg:text-left">
@@ -479,6 +526,7 @@ const UniversalFooter = () => {
               {msSettings.copyright || '© 2025 Descubra Mato Grosso do Sul. Todos os direitos reservados.'}
             </p>
           </div>
+        </div>
         </div>
       </div>
     </footer>

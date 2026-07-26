@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Cloud, ExternalLink, Loader2, LogIn } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,6 +8,7 @@ import {
   upsertCartilhaProgress,
 } from '@/services/cartilhasService';
 import type { CartilhaItem } from '@/data/cartilhasCatalog';
+import { isNativeApp } from '@/native/capacitorBridge';
 
 /** Garante URL same-origin para o iframe (evita bloqueio de frame). */
 function resolveCartilhaEmbedSrc(htmlPath?: string | null): string {
@@ -33,6 +34,7 @@ const CartilhaViewer = () => {
   const [cartilha, setCartilha] = useState<CartilhaItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [cloudStatus, setCloudStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const native = useMemo(() => isNativeApp(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,8 +92,14 @@ const CartilhaViewer = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950 text-white">
-        <Loader2 className="w-8 h-8 animate-spin" />
+      <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 bg-[#0B3D2E] text-white px-6">
+        <img
+          src="/images/logo-descubra-ms.png"
+          alt=""
+          className="w-40 max-w-[55vw] h-auto md:w-24"
+        />
+        <Loader2 className="w-7 h-7 animate-spin text-white/90" />
+        <p className="text-sm text-white/80">Abrindo cartilha…</p>
       </div>
     );
   }
@@ -103,40 +111,47 @@ const CartilhaViewer = () => {
   const embedSrc = resolveCartilhaEmbedSrc(cartilha.htmlPath);
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-slate-950">
-      <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-800 bg-slate-900 text-white shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
+    <div
+      className="fixed inset-0 z-[60] flex flex-col bg-slate-950"
+      style={{
+        paddingTop: native ? 'env(safe-area-inset-top)' : undefined,
+        paddingBottom: native ? 'env(safe-area-inset-bottom)' : undefined,
+      }}
+    >
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-3 py-2.5 sm:px-4 sm:py-3 border-b border-slate-800 bg-slate-900 text-white shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
             to="/descubrams/cartilhas"
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 text-xs font-semibold transition-colors shrink-0"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-2 text-xs font-semibold transition-colors shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
-            Voltar
+            <span className="sm:inline">Voltar</span>
           </Link>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="font-semibold text-sm truncate">{cartilha.title}</h1>
-            <p className="text-[11px] text-slate-400 truncate">
+            <p className="text-[10px] sm:text-[11px] text-slate-400 truncate">
               {user
                 ? cloudStatus === 'saving'
-                  ? 'Salvando progresso na nuvem…'
+                  ? 'Salvando progresso…'
                   : cloudStatus === 'saved'
-                    ? 'Progresso salvo na sua conta'
+                    ? 'Progresso salvo'
                     : cloudStatus === 'error'
-                      ? 'Falha ao salvar na nuvem (mantido neste aparelho)'
-                      : 'Progresso sincroniza com sua conta'
-                : 'Leitura livre · faça login para salvar progresso na nuvem'}
+                      ? 'Falha ao salvar (mantido neste aparelho)'
+                      : 'Progresso na sua conta'
+                : 'Leitura livre · entre para salvar progresso'}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
           {!user ? (
             <Link
               to={`/descubrams/login?redirect=${encodeURIComponent(`/descubrams/cartilhas/${cartilha.slug}`)}`}
-              className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 px-3 py-2 text-xs font-bold transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-900 px-2.5 py-2 text-[11px] sm:text-xs font-bold transition-colors"
             >
               <LogIn className="w-3.5 h-3.5" />
-              Entrar para salvar
+              <span className="sm:hidden">Entrar</span>
+              <span className="hidden sm:inline">Entrar para salvar</span>
             </Link>
           ) : (
             <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-emerald-300 font-semibold px-2">
@@ -144,15 +159,18 @@ const CartilhaViewer = () => {
               Conta conectada
             </span>
           )}
-          <a
-            href={embedSrc || cartilha.htmlPath}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-bold transition-colors"
-          >
-            Nova aba
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+          {/* Nova aba só no desktop do site — no celular/app a leitura fica in-app */}
+          {!native && (
+            <a
+              href={embedSrc || cartilha.htmlPath}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden md:inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-xs font-bold transition-colors"
+            >
+              Nova aba
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
       </header>
 
@@ -160,7 +178,7 @@ const CartilhaViewer = () => {
         ref={iframeRef}
         src={embedSrc}
         title={cartilha.title}
-        className="flex-1 w-full border-0 bg-slate-950"
+        className="flex-1 w-full border-0 bg-slate-950 min-h-0"
         allow="fullscreen"
       />
     </div>

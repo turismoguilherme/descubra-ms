@@ -159,6 +159,50 @@
       page-break-inside: avoid;
     }
 
+    .qr-open-link {
+      display: none;
+    }
+
+    /* Mobile only — desktop/A4 print layout unchanged */
+    @media screen and (max-width: 767px) {
+      body {
+        padding: 0 !important;
+      }
+
+      .page-container {
+        padding: 12px 10px 80px !important;
+        max-width: 100% !important;
+      }
+
+      .a4-page {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        margin: 0 0 16px 0 !important;
+        border-radius: 1rem !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2) !important;
+        padding: 1.25rem !important;
+      }
+
+      .qr-open-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 0.5rem;
+        width: 100%;
+        max-width: 11rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.75rem;
+        background: #0B3D2E;
+        color: #fff !important;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-decoration: none;
+      }
+    }
+
     /* Print Setup for PDF Export */
     @media print {
       @page {
@@ -1887,6 +1931,13 @@
         colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
       });
+      const openLink = document.createElement('a');
+      openLink.href = textUrl;
+      openLink.target = '_blank';
+      openLink.rel = 'noopener noreferrer';
+      openLink.className = 'qr-open-link';
+      openLink.textContent = 'Abrir link';
+      container.appendChild(openLink);
     }
 
     function openQrModal(targetId) {

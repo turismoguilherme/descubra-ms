@@ -41,7 +41,7 @@ await sharp("assets/icon-only.png").png().toFile("assets/logo.png");
 await sharp("assets/icon-only.png").png().toFile("assets/logo-dark.png");
 
 const splash = 2732;
-const splashLogo = Math.round(splash * 0.42);
+const splashLogo = Math.round(splash * 0.58);
 const splashLogoBuf = await sharp(src)
   .resize(splashLogo, splashLogo, { fit: "contain", background: bg })
   .png()
