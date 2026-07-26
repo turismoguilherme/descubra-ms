@@ -1,76 +1,50 @@
-## Escopo aprovado
+## O que eu verifiquei antes de planejar
 
-1. Limpeza completa e profunda de código morto (Descubra MS + Guatá Labs)
-2. Remover a "capa" que aparece rapidamente ao clicar em "Iniciar Rota"
-3. Substituir favicon dos dois sites e corrigir o título da aba
-
----
-
-## 1) Limpeza completa e profunda
-
-### 1a. Raiz do projeto — remoção direta
-- **Scripts obsoletos**: todos os `test_guata_*.bat` (~25 arquivos), `fix_*.bat`, `diagnose_*.bat`, `restore_*.bat`, `verify_*.bat`, `test_*.bat`, `enable_all_components.bat`, `clean_restore.bat`, `clear_cache.bat`, `commit_logo_update.bat`, `force_logo_update.bat`, `open_browser_debug.bat`, `push_vercel.bat`, `atualizar_vercel.bat`, `git_update.bat`, `limpar_cache*.bat`, `forcar_deploy_vercel.bat`, `diagnosticar_vercel.bat`, `merge_preservando_admin_chatbot.cmd`, `update_from_main.bat`, `CORRIGIR_VERCEL_COMPLETO.bat`, `t_guata_protection.bat`, `restore_before_partners.bat`.
-- **PowerShell antigos**: `fix-all-errors.ps1`, `gerar_hash_*.ps1`, `update_main.ps1`.
-- **Docs de trabalho já concluídos**: todos `RESUMO_*.md`, `ANALISE_*.md`, `CORRECOES_APLICADAS.md`, `IMPLEMENTACAO_*.md`, `VERIFICACAO_*.md`, `PROPOSTA_*.md`, `PROGRESSO_*.md`, `PLANO_*.md` (raiz), `SOLUCAO_*.md`, `DIAGNOSTICO_*.md`, `RECOMENDACAO_*.md`, `TROUBLESHOOTING_*.md`, `MELHORIAS_*.md`, `AUDITORIA_*.md`, `ACAO_IMEDIATA_*.md`, `EXPLICACAO_*.md`, `MELHOR_OPCAO_*.md`, `ONDE_PARCEIRO_*.md`, `INSTRUCOES_*.md`, `CONFIGURAR_*.md`, `CONFIGURACAO_*.md`, `COMO_USAR_*.md`, `CONSULTA_*.md`. Manter: `README.md`.
-- **Arquivos soltos**: `temp.html`, `temp_file.tsx`, `test_report.json`, `tsc-errors.txt`, `diagnosticar_versao_servida.html`, `hash-sha256*.txt`, `guata-config*.txt`, `guata-env-config.txt`, `env.example.txt` (manter só se referenciado), `supabase_cli_install_log.txt`.
-- **JS scripts one-off**: `baixar_logo*.js`, `buscar_e_baixar_logo.js`, `check_events.js`, `create_users_script.js`, `criar_parceiro_teste_console.js`, `criar_usuario_parceiro_teste.js`, `debug-translations.js`, `test-google-translate.js`, `test-translation-flow.js`, `test_destinations.js`, `test_edge_function.js`, `generate-missing-translations.js`, `run-migration.js`, `verificar_logo_banco.js`, `fix_prefer_const.py`.
-- **Alternativos App**: `src/App.simple.tsx`, `src/MinimalApp.tsx`, `package-simple.json`, `.env.bak`, `server.js` (se não usado), `deploy.config.js` (se não usado).
-- **Nomes corrompidos**: paths estranhos em `public/images/descubra-ms/` (`.env.bak`, `clean_restore.bat`, `0.7)`, etc.) e nomes como `ersguilhDescubra MSdescubra-ms && git status`, `how 1627771 --name-only`, `rccomponentsadmindashboards...`, `tash show stash...`, `tatus`, `dir`, `copy`, `desabilitados` (verificar antes de remover).
-
-### 1b. Serviços Guatá antigos
-Manter apenas o serviço ativo em produção. Vou identificar qual é o ativo (rastreando `guata-ai` edge function e imports em `src/pages/Guata.tsx` e `src/components/koda/`) e remover os demais dentre:
-`guataInstantService, guataUltraFastIntelligentService, guataUltraFastService, guataSmartHybridService, guataSmartHybridRealService, guataIntelligentService, guataAdaptiveService, guataAdvancedMemoryService, guataEmotionalIntelligenceService, guataFallbackService, guataGeminiService, guataInteractiveService, guataPersonaService, guataRealWebSearchService, guataResponseDepth, guataRestoredService, guataSimpleEdgeService, guataSimpleService, guataSupabaseService, guataTrueApiService, guataIntelligentTourismService`.
-
-Vou também revisar `src/services/ai/` (subpastas `apis/`, `cache/`, `external/`, `feedback/`, `integration/`, `knowledge/`, `learning/`) e remover módulos sem imports.
-
-### 1c. Componentes/hooks/pages órfãos
-Varredura com `rg` para achar `.tsx`/`.ts` em `src/components/`, `src/hooks/`, `src/pages/` que não são importados em nenhum lugar (excluindo entry points e rotas de `App.tsx`). Removo apenas os 100% órfãos. Também remover diretórios `docs/historico/`, `docs/sql-archive/` e `guata-channel/` (WhatsApp export legado) — confirmarei que não são referenciados em runtime.
-
-### 1d. Segurança de limpeza
-- Antes de apagar cada bloco, confirmo com `rg` que não há import/referência no código executável.
-- Nada em `supabase/functions/`, `supabase/migrations/`, `src/integrations/`, `public/branding/`, `public/_redirects` será tocado.
+- **Banco (548 MB no total)**: `security_audit_log` sozinha ocupa **92 MB com 9.108 linhas** (registros de 08/02/2026 a 17/07/2026). É de longe o maior peso e é tabela de log — ou seja, dá para reduzir com segurança. As outras tabelas são pequenas (a segunda maior tem 1 MB).
+- **Storage**: 171 arquivos, **152 MB**.
+- **Repositório**: `public/downloads/descubra-ms.apk` = **82 MB** versionado dentro do projeto.
+- **Cartilha Guatá Capacita**: é um HTML único (`public/cartilhas/guata-capacita/index.html`) exibido em iframe. Os "links das aulas" hoje apontam para URLs de exemplo (`https://turismo.ms.gov.br/capacita/modulo1-video`, etc.) geradas em `generateDefaultQRCodes()`, e o botão "Abrir link" usa `target="_blank"` — que no app nativo (WebView dentro de iframe) normalmente não abre nada.
+- **Sugestões do chat**: `GuataChat.tsx` renderiza `SuggestionQuestions variant="inline"` em grade de 2 colunas alinhada à esquerda (`SuggestionQuestions.tsx`).
 
 ---
 
-## 2) Remover a "capa" ao iniciar rota
+## 1) Limpeza de arquivos (sem risco)
 
-Ao clicar em "Iniciar Rota" em `PassaporteLista.tsx`, é aberta uma rota (`/descubrams/passaporte/:id`) que renderiza um `RoutePreviewCard` (capa com resumo/imagem/botão "Iniciar") e só depois entra em `PassportRouteView` (mapa + checkpoints). Vou:
-- Pular a etapa da capa: renderizar `PassportRouteView` diretamente na abertura da rota.
-- Manter `RoutePreviewCard` no arquivo mas removê-lo do fluxo, ou removê-lo se ficar órfão após a mudança (cai na limpeza da fase 1).
+- Remover o `descubra-ms.apk` (82 MB) do repositório — ele é gerado por `scripts/build-android-apk.mjs`, então não se perde nada; o link de download passa a apontar para o artefato publicado. **Confirmo com você antes de apagar.**
+- Remover docs de trabalho já concluídos e duplicados em `docs/` (RESUMO_*, STATUS_*, CORRECOES_IMPLEMENTADAS_*_FINAL, README_ATUALIZADO, etc.), mantendo os documentos de arquitetura/configuração úteis.
+- Varredura de órfãos em `src/` (arquivos `.ts/.tsx` sem nenhum import), removendo apenas os 100% sem referência.
 
----
+## 2) Limpeza do Supabase
 
-## 3) Favicon e título da aba
+**Etapa A — o ganho real (imediato):**
+- Apagar registros de `security_audit_log` com mais de 90 dias e rodar `VACUUM FULL` na tabela. Expectativa: liberar a maior parte dos 92 MB.
+- Criar uma função de retenção agendada (90 dias) para o log não crescer de novo.
+- Limpar caches expirados: `guata_response_cache` e `koda_response_cache`.
 
-### 3a. Favicon
-Dois sites compartilham o mesmo `index.html`, então o favicon precisa mudar por rota, via JS.
-- Adiciono dois arquivos em `public/`: `favicon-ms.png` (logo oficial do MS que já usamos no header) e `favicon-guata-labs.png` (derivado de `image-27.png` que você enviou).
-- Adiciono um pequeno componente `<DynamicFavicon />` (montado em `App.tsx`) que, com base em `location.pathname.startsWith('/descubrams') ? MS : Guatá Labs`, injeta o `<link rel="icon">` correto.
-- Removo o `public/favicon.ico` padrão do Lovable.
+**Etapa B — tabelas legadas (só depois de conferir com você):**
+Existem tabelas antigas praticamente vazias (grupo `flowtrip_*`, `master_*`, `workflow_definitions`, `automated_tasks`, `ai_master_insights`, `ai_proactive_insights`). Elas ocupam pouquíssimo espaço, então **não vale o risco de remover às cegas**. Vou levantar a lista das que não têm nenhuma leitura/escrita no código e te mostrar antes de qualquer `DROP`. Nada é apagado sem sua aprovação nominal.
 
-### 3b. Título da aba
-Hoje `index.html` não tem `<title>` nenhum, então quando o usuário navega Guatá Labs → Descubra MS, o navegador mantém o último título (é o bug que você viu).
-- Adiciono `<title>` inicial em `index.html`.
-- Adiciono um `<DynamicTitle />` (mesmo componente que o favicon) que aplica títulos por plataforma:
-  - Guatá Labs (rotas fora de `/descubrams`): **"Guatá Labs — IA para o turismo"**
-  - Descubra MS (`/descubrams/*` e `/`  quando é home MS): **"Descubra MS — Turismo em Mato Grosso do Sul"**
-- Páginas que já usam `<Helmet>` (Termos, Privacidade, Cookies) continuam sobrescrevendo.
+## 3) Guatá Capacita no app (layout + links das aulas)
 
-**Sugestões de título (você escolhe agora ou aceito estes como padrão):**
-- Descubra MS → `Descubra MS — Turismo em Mato Grosso do Sul`
-- Guatá Labs → `Guatá Labs — IA para o turismo`
+- **Links das aulas**: trocar o `target="_blank"` por abertura compatível com o app (no nativo, abre no navegador do sistema via ponte do Capacitor; no site, continua em nova aba) e transformar o bloco QR + botão em um cartão que não vaza da coluna no celular.
+- **Textos saindo para fora**: aplicar `overflow-wrap/break-words`, remover `whitespace-nowrap` das barras de navegação em telas pequenas (hoje as pílulas "Página 1..8" forçam scroll horizontal), e ajustar grids fixos (`grid-cols-2`, tabelas e cabeçalhos) para empilhar abaixo de 768px. Ajustes ficam dentro do bloco `@media screen and (max-width: 767px)`, sem alterar o layout A4/impressão.
+- **URLs de exemplo**: as URLs dos módulos são placeholders. Se você já tem os links reais das aulas/quizzes, me manda que eu coloco; senão, deixo o botão desabilitado com aviso "aula em breve" em vez de abrir link quebrado.
+
+## 4) Chat Guatá — sugestões centralizadas no app
+
+- Em `SuggestionQuestions.tsx` (variante `inline`): centralizar o título e os chips, com os cartões em largura consistente e texto centralizado, mantendo o toque confortável.
+- Em `GuataChat.tsx`: centralizar o bloco no container e limitar a largura máxima para não colar nas bordas.
+- Conferir os balões de mensagem no app (`ChatMessage.tsx`) para garantir alinhamento e quebra de texto correta em telas estreitas.
 
 ---
 
 ## Ordem de execução
-1. Confirmar quais serviços Guatá estão em uso ativo (rastrear `import` em `Guata.tsx`, edge functions e `services/ai/index.ts`)
-2. Limpeza 1a (raiz) + 1b (serviços)
-3. Limpeza 1c (órfãos com varredura)
-4. Fase 2: remover capa de rota
-5. Fase 3: favicons + títulos dinâmicos
-6. Build de verificação após cada fase
+1. Limpeza do `security_audit_log` + retenção + caches (migration)
+2. Correções de layout do Guatá Capacita e links das aulas
+3. Centralização das sugestões e revisão dos balões no app
+4. Limpeza de arquivos do repositório (após seu OK sobre o APK)
+5. Lista de tabelas legadas para sua aprovação
 
 ## Detalhes técnicos
-- Nenhuma migration, nenhuma mudança em RLS, nenhuma edge function tocada.
-- Nenhum arquivo em `.lovable/`, `supabase/`, `src/integrations/supabase/types.ts` será removido.
-- Todos os removidos são confirmados como "sem import" antes de sair. Se houver dúvida, o arquivo fica.
+- A migration só apaga linhas de log/cache e cria a função de retenção; nenhum schema de negócio é alterado.
+- As correções da cartilha ficam restritas ao CSS mobile e à função `createQRCode` do HTML — layout de impressão/A4 intocado.
