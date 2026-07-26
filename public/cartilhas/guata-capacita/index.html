@@ -294,12 +294,24 @@
         gap: 0.35rem;
       }
 
-      /* Botão de abrir aula ocupa a largura do cartão e fica tocável */
+      /* Botão de abrir aula: compacto, dentro do cartão, sem quebrar palavras */
       .qr-open-link {
-        max-width: 100% !important;
-        min-height: 2.5rem;
-        font-size: 0.8rem;
+        position: static !important;
+        width: auto !important;
+        max-width: none !important;
+        white-space: nowrap !important;
+        font-size: 0.7rem !important;
+        padding: 0.4rem 0.6rem !important;
+        margin: 0.4rem auto 0 !important;
       }
+
+      .a4-page .qr-holder {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        width: auto !important;
+      }
+
     }
 
 
