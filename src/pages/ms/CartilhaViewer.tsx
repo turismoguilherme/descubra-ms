@@ -68,6 +68,18 @@ const CartilhaViewer = () => {
 
   const pushContentHydrate = (payload: Record<string, unknown> | null | undefined) => {
     if (!payload || Object.keys(payload).length === 0) return;
+    // Ignore snapshots vazios/corrompidos (ex.: {"qr":{"qr-ms":""}})
+    const texts = payload.texts && typeof payload.texts === 'object' ? Object.keys(payload.texts as object).length : 0;
+    const mascots =
+      payload.mascots && typeof payload.mascots === 'object'
+        ? Object.values(payload.mascots as Record<string, unknown>).some((u) => typeof u === 'string' && u.trim())
+        : false;
+    const partners = Array.isArray(payload.partners) && payload.partners.length > 0;
+    const qr =
+      payload.qr && typeof payload.qr === 'object'
+        ? Object.values(payload.qr as Record<string, unknown>).some((u) => typeof u === 'string' && u.trim())
+        : false;
+    if (!texts && !mascots && !partners && !qr) return;
     iframeRef.current?.contentWindow?.postMessage(
       { type: 'guata-cartilha-content-hydrate', payload },
       '*'

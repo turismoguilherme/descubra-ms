@@ -311,13 +311,15 @@
         overflow: visible !important;
       }
 
-      /* Elementos absolutos decorativos não empurram o conteúdo */
+      /* Decorativos absolutos não capturam clique; botões/links de edição SIM */
       .a4-page .absolute {
         pointer-events: none;
       }
       .a4-page .absolute a,
-      .a4-page .absolute button {
-        pointer-events: auto;
+      .a4-page .absolute button,
+      .a4-page a.absolute,
+      .a4-page button.absolute {
+        pointer-events: auto !important;
       }
 
       /* Tabelas com rolagem própria em vez de estourar */
@@ -1657,7 +1659,113 @@
     let mascotUrlMap = {};
     let canSaveCloud = false;
     let contentHydrated = false;
+    let editorCredentials = null; // { email, password } após login da cartilha
     const pendingUploads = {};
+    const SUPABASE_URL = 'https://hvtrpkbjgbuypkskqcqm.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q';
+    const CARTILHA_CLOUD_SLUG = 'guata-capacita';
+
+    function cloudSlugForBooklet() {
+      if (currentBookletId === 'guata-cat' || currentBookletId === 'guata-capacita') {
+        return CARTILHA_CLOUD_SLUG;
+      }
+      return CARTILHA_CLOUD_SLUG;
+    }
+
+    function isMeaningfulContent(data) {
+      if (!data || typeof data !== 'object') return false;
+      if (data.texts && Object.keys(data.texts).length > 0) return true;
+      if (data.mascots && Object.values(data.mascots).some((u) => typeof u === 'string' && u.trim())) return true;
+      if (Array.isArray(data.partners) && data.partners.some((p) => p && (p.logoUrl || p.name))) return true;
+      if (data.qr && Object.values(data.qr).some((u) => typeof u === 'string' && u.trim())) return true;
+      return false;
+    }
+
+    async function invokeCartilhaEditor(body) {
+      // Preferência: RPC no banco (não depende de deploy de Edge Function)
+      if (body.action === 'save') {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/save_guata_cartilha_content`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            p_slug: body.slug || cloudSlugForBooklet(),
+            p_email: body.email,
+            p_password: body.password,
+            p_content: body.content_data,
+          }),
+        });
+        const text = await res.text();
+        let json = null;
+        try { json = text ? JSON.parse(text) : null; } catch (_) {}
+        if (!res.ok) {
+          const errMsg =
+            (json && (json.message || json.error || json.hint)) ||
+            text ||
+            `Falha na nuvem (${res.status})`;
+          throw new Error(errMsg);
+        }
+        return { ok: true, ...(json && typeof json === 'object' ? json : {}) };
+      }
+
+      if (body.action === 'load') {
+        const slug = encodeURIComponent(body.slug || cloudSlugForBooklet());
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/guata_cartilhas?slug=eq.${slug}&select=id,content_data,updated_at`,
+          {
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            },
+          }
+        );
+        if (!res.ok) throw new Error(`Falha ao carregar (${res.status})`);
+        const rows = await res.json();
+        const row = Array.isArray(rows) ? rows[0] : null;
+        return {
+          ok: true,
+          id: row?.id ?? null,
+          content_data: row?.content_data ?? {},
+          updated_at: row?.updated_at ?? null,
+        };
+      }
+
+      // Upload: Edge opcional; se falhar, o caller usa data URL embutida no content_data
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/guata-cartilha-editor`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || `Falha na nuvem (${res.status})`);
+      }
+      return json;
+    }
+
+    async function loadCloudContent() {
+      try {
+        const data = await invokeCartilhaEditor({
+          action: 'load',
+          slug: cloudSlugForBooklet(),
+        });
+        if (isMeaningfulContent(data.content_data)) {
+          applyBookletContent(data.content_data);
+          persistContentLocal(data.content_data);
+          return true;
+        }
+      } catch (e) {
+        console.warn('[cartilha] load cloud:', e);
+      }
+      return false;
+    }
 
     function lockPublicEditing() {
       document.querySelectorAll('[contenteditable]').forEach((el) => {
@@ -1758,13 +1866,21 @@
         if (!key) return;
         texts[key] = el.innerHTML;
       });
+      const qr = {};
+      Object.entries(qrUrlMap).forEach(([id, url]) => {
+        if (typeof url === 'string' && url.trim()) qr[id] = url.trim();
+      });
+      const mascots = {};
+      Object.entries(mascotUrlMap).forEach(([id, url]) => {
+        if (typeof url === 'string' && url.trim()) mascots[id] = url.trim();
+      });
       return {
         version: 1,
         updatedAt: new Date().toISOString(),
         theme: document.getElementById('themeSelector')?.value || 'default',
         texts,
-        qr: { ...qrUrlMap },
-        mascots: { ...mascotUrlMap },
+        qr,
+        mascots,
         partners: partners.map((p) => ({ ...p })),
       };
     }
@@ -1814,15 +1930,40 @@
       if (btn) btn.disabled = !!busy;
     }
 
-    function saveBookletContent(showAlert) {
+    async function saveBookletContent(showAlert) {
       const data = collectBookletContent();
       persistContentLocal(data);
+
+      // Prioridade: login da cartilha → grava direto na nuvem (igual o site)
+      if (editorCredentials) {
+        setSaveBtnState('Salvando…', true);
+        try {
+          await invokeCartilhaEditor({
+            action: 'save',
+            slug: cloudSlugForBooklet(),
+            email: editorCredentials.email,
+            password: editorCredentials.password,
+            content_data: data,
+          });
+          setSaveBtnState('Salvar na nuvem', false);
+          if (showAlert) {
+            alert('Alterações salvas na nuvem. Elas permanecem ao sair e voltar.');
+          }
+          return;
+        } catch (e) {
+          setSaveBtnState('Salvar na nuvem', false);
+          const msg = e instanceof Error ? e.message : 'Falha ao salvar';
+          if (showAlert) alert('Não foi possível salvar na nuvem: ' + msg);
+          return;
+        }
+      }
+
       try {
         if (window.parent && window.parent !== window) {
           setSaveBtnState('Salvando…', true);
           window.parent.postMessage({ type: 'guata-cartilha-content-save', payload: data }, '*');
         } else if (showAlert) {
-          alert('Salvo neste aparelho. Abra a cartilha pelo Descubra MS logado como admin para gravar na nuvem.');
+          alert('Faça login do gestor na cartilha para salvar na nuvem.');
         }
       } catch (e) {
         if (showAlert) alert('Salvo apenas neste aparelho.');
@@ -1830,7 +1971,23 @@
     }
 
     function requestUploadImage(dataUrl, targetId) {
-      return new Promise((resolve, reject) => {
+      return new Promise(async (resolve, reject) => {
+        if (editorCredentials) {
+          try {
+            const result = await invokeCartilhaEditor({
+              action: 'upload',
+              email: editorCredentials.email,
+              password: editorCredentials.password,
+              dataUrl,
+              targetId,
+            });
+            resolve(result.url || null);
+          } catch (e) {
+            console.warn('[cartilha] upload cloud:', e);
+            resolve(dataUrl);
+          }
+          return;
+        }
         if (!(window.parent && window.parent !== window)) {
           resolve(dataUrl);
           return;
@@ -1844,9 +2001,9 @@
         setTimeout(() => {
           if (pendingUploads[requestId]) {
             delete pendingUploads[requestId];
-            resolve(dataUrl);
+            resolve(null);
           }
-        }, 20000);
+        }, 45000);
       });
     }
 
@@ -1863,7 +2020,7 @@
       }
 
       if (msg.type === 'guata-cartilha-content-hydrate') {
-        if (msg.payload) {
+        if (isMeaningfulContent(msg.payload)) {
           applyBookletContent(msg.payload);
           persistContentLocal(msg.payload);
         }
@@ -1893,7 +2050,7 @@
       }
     });
 
-    window.onload = function() {
+    window.onload = async function() {
       lockPublicEditing();
 
       // Load saved booklets from LocalStorage if available
@@ -1927,10 +2084,14 @@
 
       try {
         const contentStored = localStorage.getItem(CONTENT_STORAGE_KEY);
-        if (contentStored) applyBookletContent(JSON.parse(contentStored));
+        const parsed = contentStored ? JSON.parse(contentStored) : null;
+        if (isMeaningfulContent(parsed)) applyBookletContent(parsed);
       } catch (e) {}
 
-      // Pede progresso e conteúdo da nuvem ao app pai (Descubra MS)
+      // Conteúdo da nuvem (funciona com login da cartilha, sem precisar do admin Descubra)
+      await loadCloudContent();
+
+      // Também pede ao app pai (Descubra MS) se estiver embutida
       try {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: 'guata-cartilha-progress-request', cartilhaId: currentBookletId }, '*');
@@ -1976,6 +2137,8 @@
         if (confirm('Deseja sair do modo Administrador?')) {
           isAdminLoggedIn = false;
           isEditMode = false;
+          editorCredentials = null;
+          canSaveCloud = false;
           applyEditMode(false);
           document.body.classList.remove('admin-logged-in', 'editable-active');
           document.getElementById('authBtnText').innerText = 'Entrar como Administrador';
@@ -2009,6 +2172,8 @@
 
       if (email === adminEmail && pass === adminPass) {
         isAdminLoggedIn = true;
+        editorCredentials = { email: adminEmail, password: adminPass };
+        canSaveCloud = true;
         document.body.classList.add('admin-logged-in');
         document.getElementById('authBtnText').innerText = 'Sair do ADM (Logado)';
         document.getElementById('authBtn').classList.replace('bg-amber-500', 'bg-emerald-500');
@@ -2021,7 +2186,7 @@
 
         errBox.classList.add('hidden');
         closeAuthModal();
-        alert('Autenticado com sucesso! O painel de gestão de cartilhas e edição foi liberado.');
+        alert('Autenticado! Agora "Salvar na nuvem" grava para todos (mascote, QR, textos e logos).');
       } else {
         errBox.classList.remove('hidden');
         errBox.innerText = 'E-mail ou senha incorretos. Verifique suas credenciais.';
@@ -2444,6 +2609,8 @@
 
     function openQrModal(targetId) {
       currentActiveTargetId = targetId;
+      const input = document.getElementById('qrTargetUrl');
+      if (input) input.value = qrUrlMap[targetId] || '';
       document.getElementById('qrModal').classList.remove('hidden');
     }
 
@@ -2453,10 +2620,13 @@
 
     function applyQrCode() {
       const url = document.getElementById('qrTargetUrl').value.trim();
-      if (!url) return;
+      if (!url) {
+        alert('Cole a URL do QR Code antes de aplicar.');
+        return;
+      }
       createQRCode(currentActiveTargetId, url);
       closeQrModal();
-      saveBookletContent(false);
+      saveBookletContent(true);
     }
 
     // Dynamic Module Creation (Admin)
