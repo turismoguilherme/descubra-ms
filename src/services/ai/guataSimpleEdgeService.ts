@@ -8,6 +8,7 @@ import type { TrueApiQuery, TrueApiResponse } from "./guataTrueApiService";
 import { MSKnowledgeBase } from "./search/msKnowledgeBase";
 import { isGenericGuataFallback } from "./search/msKnowledgeTopics";
 import { isGuataTransactionalIntent } from "@/utils/guataTransactionalIntent";
+import { formatGuataChatHistory } from "@/utils/formatGuataChatHistory";
 
 interface WebRagResult {
   answer?: string;
@@ -78,7 +79,7 @@ class GuataSimpleEdgeService {
   }
 
   private rewriteQuery(prompt: string, history?: string[]): string {
-    const tail = (history || []).slice(-3).join(" | ").trim();
+    const tail = formatGuataChatHistory(history || [], 4).replace(/\n/g, " | ").trim();
     if (!tail) return prompt;
     const isShort = prompt.trim().length < 24;
     if (isShort || /isso|ali|lá|então|qual|quanto|quando|onde|como/i.test(prompt)) {
@@ -162,7 +163,7 @@ class GuataSimpleEdgeService {
           prompt,
           knowledgeBase,
           userContext: query.userLocation ? `Localização: ${query.userLocation}` : "",
-          chatHistory: (query.conversationHistory || []).slice(-6).join("\n"),
+          chatHistory: formatGuataChatHistory(query.conversationHistory || [], 12),
           mode: "tourist",
           enable_tools: true,
           user_authenticated: query.userId && query.userId !== "convidado" && query.userId !== "publico",

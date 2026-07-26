@@ -14,15 +14,6 @@ import { isChatGuataTotemPath } from "@/utils/chatGuataTest";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 
-const CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS = [
-  "Quero cadastrar um evento ou reservar um passeio",
-  "O que fazer em Campo Grande em um dia?",
-  "Quais parques e áreas verdes visitar em Campo Grande?",
-  "Onde experimentar comidas típicas em Campo Grande?",
-  "Quais museus e centros culturais conhecer em Campo Grande?",
-  "Qual o melhor roteiro noturno em Campo Grande?"
-];
-
 const ChatGuata = () => {
   const location = useLocation();
   const isChatGuataRoute = isChatGuataTotemPath(location.pathname);
@@ -280,7 +271,6 @@ const ChatGuata = () => {
                 handleKeyDown={handleKeyDown}
                 enviarFeedback={enviarFeedback}
                 onSuggestionClick={handleSuggestionClick}
-                suggestionsOverride={isChatGuataRoute ? CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS : undefined}
                 showInlineSuggestions={mensagens.filter((m) => m.isUser).length === 0 && !isLoading}
                 conversationHistory={conversationHistory}
               />
@@ -307,7 +297,6 @@ const ChatGuata = () => {
               <SuggestionQuestions
                 variant="sidebar"
                 onSuggestionClick={handleSuggestionClick}
-                suggestionsOverride={isChatGuataRoute ? CHAT_GUATA_CAMPO_GRANDE_SUGGESTIONS : undefined}
               />
             </div>
           </div>

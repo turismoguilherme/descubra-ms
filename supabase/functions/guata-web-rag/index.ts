@@ -288,7 +288,15 @@ serve(async (req) => {
       response = `${quickAgenda}\n\nQuer que eu detalhe horários ou como chegar?`
     } else {
       const chatHistory = Array.isArray(body.conversation_history)
-        ? body.conversation_history.slice(-6).join('\n')
+        ? body.conversation_history
+            .map((line: unknown) => (typeof line === 'string' ? line.trim() : ''))
+            .filter(Boolean)
+            .slice(-12)
+            .map((line: string, index: number) => {
+              if (/^(usuário|usuario|guatá|guata|user|assistant)\s*:/i.test(line)) return line
+              return `${index % 2 === 0 ? 'Usuário' : 'Guatá'}: ${line}`
+            })
+            .join('\n')
         : ''
       const gen = await generateResponse(
         question,

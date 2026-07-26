@@ -82,7 +82,14 @@ Exemplo de tom (pergunta simples):
 ✅ "O Bioparque é nosso aquário do Pantanal em Campo Grande – você vê peixes e jacarés de pertinho. Quer o horário atualizado ou prefere dicas de como chegar?"`;
 
   const historyBlock = chatHistory && chatHistory.trim().length > 0 
-    ? `\n\nContexto recente da conversa (use para manter continuidade e preferências do usuário):\n${chatHistory}`
+    ? `\n\nContexto recente da conversa (OBRIGATÓRIO para continuidade):
+- Trate a mensagem atual como continuação deste histórico (papéis Usuário:/Guatá:).
+- Resolva pronomes e referências ("esse", "aquele", "lá", "quanto custa", "e o horário?") pelo último tema/lugar/parceiro mencionado.
+- Não reinicie a conversa nem peça de novo o que o usuário já informou, salvo se estiver ambíguo.
+- Mantenha preferências já ditas (cidade, data, nº de pessoas, estilo).
+
+Histórico:
+${chatHistory}`
     : '';
 
   const finalPrompt = contextContent

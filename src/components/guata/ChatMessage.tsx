@@ -23,6 +23,34 @@ const ACTION_LABEL: Record<string, string> = {
   pagar: "concluir o pagamento",
 };
 
+function extractImageUrls(text: string): { images: string[]; withoutImages: string } {
+  const images: string[] = [];
+  let withoutImages = text;
+
+  // Tag explícita do upload no chat
+  withoutImages = withoutImages.replace(
+    /\[imagem enviada pelo usuário:\s*(https?:\/\/[^\]]+)\]/gi,
+    (_m, url: string) => {
+      images.push(url.trim());
+      return "";
+    },
+  );
+
+  // URLs de imagem soltas
+  withoutImages = withoutImages.replace(
+    /(https?:\/\/[^\s]+\.(?:png|jpe?g|webp|gif)(?:\?[^\s]*)?)/gi,
+    (url: string) => {
+      images.push(url);
+      return "";
+    },
+  );
+
+  return {
+    images: [...new Set(images)],
+    withoutImages: withoutImages.replace(/\n{3,}/g, "\n\n").trim(),
+  };
+}
+
 function renderTextWithLinks(text: string): React.ReactNode[] {
   const parts = text.split(/(https?:\/\/[^\s]+)/g);
   return parts.map((part, i) =>
@@ -59,12 +87,15 @@ const ChatMessage = ({
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string>("/guata-mascote.jpg");
 
-  const { plain, requiredAction } = useMemo(() => {
+  const { plain, requiredAction, images } = useMemo(() => {
     const raw = message.text ?? "";
     const match = raw.match(REQUIRE_LOGIN_RE);
     const cleaned = raw.replace(REQUIRE_LOGIN_RE, "").trim();
+    const stripped = stripChatMarkdown(cleaned);
+    const { images: imgs, withoutImages } = extractImageUrls(stripped);
     return {
-      plain: stripChatMarkdown(cleaned),
+      plain: withoutImages,
+      images: imgs,
       requiredAction: match ? match[1] : null,
     };
   }, [message.text]);
@@ -147,9 +178,31 @@ const ChatMessage = ({
           </div>
         ) : (
           <>
-            <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
-              {renderTextWithLinks(plain)}
-            </p>
+            {images.length > 0 && (
+              <div className="mb-2 flex flex-col gap-2">
+                {images.map((src) => (
+                  <a
+                    key={src}
+                    href={src}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <img
+                      src={src}
+                      alt="Imagem enviada"
+                      className="max-h-56 w-auto max-w-full rounded-lg border border-white/20 object-contain bg-black/20"
+                      loading="lazy"
+                    />
+                  </a>
+                ))}
+              </div>
+            )}
+            {plain ? (
+              <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
+                {renderTextWithLinks(plain)}
+              </p>
+            ) : null}
             {isGuata && requiredAction && (
               <div className="mt-3">
                 <Button

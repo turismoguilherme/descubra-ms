@@ -229,8 +229,8 @@ const Guata = () => {
   };
 
   const handleSuggestionClick = (pergunta: string) => {
-    setInputMensagem(pergunta);
     enviarMensagem(pergunta);
+    setInputMensagem("");
   };
 
   const enviarMensagemRef = useRef(enviarMensagem);

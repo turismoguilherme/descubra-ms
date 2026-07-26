@@ -7,7 +7,7 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@0.468.0"></script>
   <!-- QRCode.js Library for dynamic QR Code generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
@@ -384,14 +384,15 @@
         max-height: 100% !important;
       }
 
-      /* Bloco do certificado: empilha e centraliza no celular */
+      /* Bloco do certificado: QR e texto centralizados */
       .a4-page .cert-qr-row {
         flex-direction: column !important;
         align-items: center !important;
         text-align: center !important;
       }
       .a4-page .cert-qr-row .cert-qr-box {
-        margin-top: 0.75rem;
+        margin-left: auto !important;
+        margin-right: auto !important;
       }
       .a4-page .cert-qr-box .qr-open-link {
         margin-left: auto !important;
@@ -1181,8 +1182,8 @@
         </table>
       </div>
 
-      <div class="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-amber-500/10 border-2 border-amber-400/60 p-5 rounded-2xl flex items-center justify-between gap-4 my-2 cert-qr-row">
-        <div class="space-y-1.5 flex-1">
+      <div class="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-amber-500/10 border-2 border-amber-400/60 p-5 rounded-2xl flex flex-col items-center text-center gap-4 my-2 cert-qr-row">
+        <div class="space-y-1.5 max-w-xl">
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[10px] font-black uppercase">
             <i data-lucide="award" class="w-3.5 h-3.5"></i> Emissão de Certificado
           </div>
@@ -1194,7 +1195,7 @@
           </p>
         </div>
 
-        <div class="bg-white p-3 rounded-2xl border border-amber-300 shadow-md text-center shrink-0 relative cert-qr-box">
+        <div class="bg-white p-3 rounded-2xl border border-amber-300 shadow-md text-center shrink-0 relative cert-qr-box mx-auto">
           <button onclick="openQrModal('qr-cert')" class="asset-edit-btn no-print absolute -top-2 -right-2 z-20 hidden bg-amber-500 text-slate-900 p-1 rounded-full text-[9px] shadow">
             <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
           </button>
@@ -1254,7 +1255,11 @@
         </div>
 
         <div class="bg-white/5 border border-white/10 p-3 rounded-xl flex items-center gap-3">
-          <i data-lucide="instagram" class="w-5 h-5 text-amber-400 shrink-0"></i>
+          <svg class="w-5 h-5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+          </svg>
           <div>
             <span class="text-[9px] uppercase text-emerald-300 font-bold block">Instagram</span>
             <span contenteditable="true" class="text-xs font-medium text-white">@turismoms • @fundturms</span>
