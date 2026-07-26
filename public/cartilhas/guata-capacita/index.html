@@ -236,10 +236,9 @@
       }
 
       .a4-page, .a4-page * {
-        overflow-wrap: anywhere !important;
-        word-break: break-word !important;
-        hyphens: auto;
+        overflow-wrap: break-word !important;
       }
+
 
       /* Nenhum elemento pode forçar largura maior que a tela */
       .a4-page * {
@@ -295,12 +294,23 @@
         gap: 0.35rem;
       }
 
-      /* Botão de abrir aula ocupa a largura do cartão e fica tocável */
+      /* Botão de abrir aula: compacto, dentro do cartão, sem quebrar palavras */
       .qr-open-link {
-        max-width: 100% !important;
-        min-height: 2.5rem;
-        font-size: 0.8rem;
+        position: static !important;
+        width: auto !important;
+        max-width: none !important;
+        white-space: nowrap !important;
+        font-size: 0.7rem !important;
+        padding: 0.4rem 0.6rem !important;
+        margin: 0.4rem auto 0 !important;
       }
+
+      /* Espaço extra abaixo do QR para o rótulo/botão caber dentro do cartão */
+      .a4-page .qr-holder {
+        margin-bottom: 2.25rem !important;
+        overflow: visible !important;
+      }
+
     }
 
 
