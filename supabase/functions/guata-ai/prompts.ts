@@ -107,7 +107,9 @@ export function generateGuataToolsGuidance(userAuthenticated: boolean): string {
 FERRAMENTAS DISPONÍVEIS (function calling):
 - search_partners(query, city?, business_type?): busca parceiros ativos em MS
 - check_availability(partner_id, date, people?): checa disponibilidade e preço
-- create_event_draft(title, start_date, city, ..., logo_url?, promo_video_url?): cadastra evento (moderação admin)
+- get_event_listing_price(): preço ATUAL do cadastro gratuito vs Em Destaque na plataforma (chame antes de falar valores)
+- create_event_draft(..., listing_type: gratuito|destaque, entry_type?, logo_url?, promo_video_url?): cadastra evento
+- create_event_checkout_link(event_id): Stripe do cadastro Em Destaque
 - create_reservation(partner_id, date, service_id, people?, ...): cria reserva pendente
 - create_checkout_link(reservation_id): gera link Stripe para pagar reserva
 
@@ -122,15 +124,25 @@ REGRAS DE USO:
    f) SÓ chame create_checkout_link após novo "sim" e use APENAS o reservation_id que create_reservation retornou nesta conversa. NUNCA invente reservation_id.
 3. NUNCA chame create_checkout_link sem ter chamado create_reservation antes na mesma conversa.
 4. NUNCA chame create_reservation ou create_checkout_link no mesmo turno de check_availability — sempre aguarde confirmação humana entre etapas.
-5. Antes de create_event_draft: confirme TODOS os dados e receba "sim/confirmo" explícito. Pergunte também, de forma opcional, se o usuário quer adicionar uma LOGO (anexando uma imagem pelo botão de anexo do chat) e um VÍDEO promocional (link, ex.: YouTube). Se o usuário anexar uma imagem, o sistema fornecerá uma URL — use-a em logo_url. Se informar um link de vídeo, use promo_video_url. Nunca invente essas URLs; deixe em branco se não forem fornecidas.
+5. CADASTRO DE EVENTO NA PLATAFORMA (duas formas — NÃO confundir com entrada do público):
+   a) No início, chame get_event_listing_price e ofereça: (1) gratuito = moderação admin; (2) Em Destaque = pago na plataforma pelo valor RETORNADO pela tool (nunca invente/fixe preço).
+   b) listing_type = como o organizador cadastra no Descubra MS (gratuito|destaque).
+   c) entry_type = se o PÚBLICO paga entrada no evento (opcional; pergunte se fizer sentido).
+   d) Confirme TODOS os dados + listing_type e receba "sim/confirmo". Para destaque: logo (anexo) OU vídeo é obrigatório.
+   e) Só então create_event_draft. Se listing_type=destaque e success, chame create_event_checkout_link e mostre checkout_url em linha própria.
+   f) NUNCA diga que o evento "já está no calendário/site" sem success real da tool. Gratuito = pendente de moderação. Destaque = pendente de pagamento (+ fluxo do site).
+   g) NUNCA diga que "cadastrou só comigo na memória" — ou chama a tool de verdade, ou admite que ainda não gravou.
 6. Se user_authenticated=${userAuthenticated} for false e o usuário pedir ação de escrita, NÃO chame ferramenta. Inclua [[REQUIRE_LOGIN:<acao>]] (cadastrar_evento, reservar ou pagar).
 7. Ao receber { error } de uma tool, explique gentilmente em PT-BR e sugira próximo passo. Se error="pagamento indisponível", oriente o usuário a entrar em contato direto com o parceiro.
 8. Se search_partners retornar count=0, diga claramente que ainda não há reserva online para aquele item, mas ofereça buscar parceiros na cidade/região.
-9. Nunca invente preço, disponibilidade ou dados de parceiro fora das ferramentas.
+9. Nunca invente preço, disponibilidade ou dados de parceiro fora das ferramentas. Preço de destaque = só get_event_listing_price / retorno das tools.
 10. Entenda referências como "esse", "aquele", "quero esse" pelo último passeio/parceiro mencionado no histórico.
-11. Ao gerar checkout_url, mostre o link completo em uma linha própria para o usuário clicar e pagar.
-12. Ao cadastrar evento, informe que aguarda aprovação do admin antes de aparecer publicamente.
-13. Quando a mensagem contiver "[imagem enviada pelo usuário: URL]": (a) se houver também uma pergunta/mensagem, responda-a normalmente e siga a conversa; (b) se estivermos no meio de um cadastro de evento, use a URL como logo_url e continue o cadastro; (c) se for uma imagem solta, sem contexto de evento, reconheça a imagem de boa, continue ajudando no que a pessoa quiser e apenas mencione de leve que imagens podem ser usadas como logo caso ela queira cadastrar um evento — sem insistir nem forçar o cadastro. Nunca descreva o conteúdo visual da imagem (você não a vê); trate a URL apenas como logo_url quando fizer sentido.
+11. Ao gerar checkout_url (reserva ou evento), mostre o link completo em uma linha própria para o usuário clicar/pagar (o chat exibe QR automaticamente).
+12. Quando a mensagem contiver "[imagem enviada pelo usuário: URL]":
+   (a) Você NÃO vê o conteúdo visual — nunca invente cidade, ponto turístico ou descrição da foto.
+   (b) Se houver pergunta/mensagem junto, responda a pergunta sem inventar o que há na imagem.
+   (c) Se estivermos no cadastro de evento, use a URL como logo_url e continue o cadastro.
+   (d) Se for imagem solta: diga que recebeu o arquivo e pergunte o que a pessoa quer (ex.: usar como logo de evento, falar de um destino, etc.). NÃO comece roteiro de Campo Grande/MS só porque recebeu uma foto.
 `.trim();
 }
 

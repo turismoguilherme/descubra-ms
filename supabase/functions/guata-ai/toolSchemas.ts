@@ -31,9 +31,19 @@ export const guataToolDeclarations = [
     },
   },
   {
+    name: "get_event_listing_price",
+    description:
+      "Retorna o preço ATUAL do cadastro de evento na plataforma (gratuito vs Em Destaque). Chame SEMPRE antes de explicar valores ou oferecer destaque. Nunca invente preço — o admin pode alterar event_sponsor_price a qualquer momento.",
+    parameters: {
+      type: "object",
+      properties: {},
+      required: [],
+    },
+  },
+  {
     name: "create_event_draft",
     description:
-      "Cadastra um evento turístico. Vai para moderação (aprovação admin) — nunca é publicado direto. Só chame após confirmar TODOS os dados em linguagem natural com o usuário e receber um 'sim/confirmo' explícito no turno anterior.",
+      "Cadastra um evento na plataforma Descubra MS. listing_type=gratuito (moderação admin) ou listing_type=destaque (pago na plataforma). NÃO confunda com entry_type (se o público paga entrada). Só chame após confirmar TODOS os dados + listing_type + 'sim/confirmo' explícito. Se destaque, depois chame create_event_checkout_link.",
     parameters: {
       type: "object",
       properties: {
@@ -45,11 +55,24 @@ export const guataToolDeclarations = [
         description: { type: "string", description: "Descrição resumida do evento." },
         category: { type: "string", description: "Categoria (ex.: 'música', 'gastronomia', 'esporte', 'cultura')." },
         organizer: { type: "string", description: "Organizador ou responsável (opcional)." },
-        entry_type: { type: "string", description: "'gratuito' ou 'pago' (opcional)." },
-        logo_url: { type: "string", description: "URL http(s) da logo/imagem do evento (opcional). Use a URL fornecida quando o usuário anexar uma imagem no chat." },
-        promo_video_url: { type: "string", description: "URL http(s) de um vídeo promocional do evento, ex.: YouTube (opcional)." },
+        entry_type: { type: "string", description: "Entrada do PÚBLICO no evento: 'gratuito', 'pago' ou 'misto' (opcional). NÃO é a taxa da plataforma." },
+        listing_type: { type: "string", description: "Forma de CADASTRO na plataforma: 'gratuito' ou 'destaque'. Obrigatório." },
+        logo_url: { type: "string", description: "URL http(s) da logo/imagem do evento. Obrigatório se listing_type=destaque (ou promo_video_url)." },
+        promo_video_url: { type: "string", description: "URL http(s) de vídeo promocional (YouTube etc.). Obrigatório se listing_type=destaque sem logo." },
       },
-      required: ["title", "start_date", "city"],
+      required: ["title", "start_date", "city", "listing_type"],
+    },
+  },
+  {
+    name: "create_event_checkout_link",
+    description:
+      "Gera link Stripe para pagar o cadastro Em Destaque de um evento já criado com listing_type=destaque. Use o event_id retornado por create_event_draft. O preço cobrado é sempre o atual de site_settings.",
+    parameters: {
+      type: "object",
+      properties: {
+        event_id: { type: "string", description: "UUID do evento retornado por create_event_draft." },
+      },
+      required: ["event_id"],
     },
   },
   {

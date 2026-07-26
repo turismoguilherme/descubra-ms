@@ -1,5 +1,6 @@
 import type { GuataAuthContext } from "../../_shared/guataAuth.ts";
 import { checkWriteRateLimit, logAction } from "../../_shared/guataAuth.ts";
+import { getEventSponsorPriceBrl } from "../../_shared/eventSponsorPrice.ts";
 
 export interface CreateEventDraftInput {
   title: string;
@@ -10,7 +11,10 @@ export interface CreateEventDraftInput {
   description?: string;
   category?: string;
   organizer?: string;
+  /** Entrada do público no evento (não é a taxa da plataforma). */
   entry_type?: string;
+  /** Forma de cadastro na plataforma: gratuito | destaque */
+  listing_type?: string;
   logo_url?: string;
   promo_video_url?: string;
 }
@@ -40,9 +44,13 @@ export async function createEventDraft(
     return output;
   }
 
-  // Validação básica
   const title = String(input.title || "").trim();
   const city = String(input.city || "").trim();
+  const listingRaw = String(input.listing_type || "gratuito").trim().toLowerCase();
+  const listingType = listingRaw === "destaque" || listingRaw === "pago" || listingRaw === "sponsored"
+    ? "destaque"
+    : "gratuito";
+
   if (title.length < 3 || title.length > 200) {
     const output = { error: "título inválido", hint: "Peça um título entre 3 e 200 caracteres." };
     await logAction(ctx, "create_event_draft", input, output, "error", "invalid title");
@@ -74,7 +82,15 @@ export async function createEventDraft(
     return output;
   }
 
-  // Rate limit
+  if (listingType === "destaque" && !input.logo_url && !input.promo_video_url) {
+    const output = {
+      error: "mídia obrigatória para destaque",
+      hint: "Para Em Destaque, peça logo (anexo no chat) OU link de vídeo promocional antes de cadastrar.",
+    };
+    await logAction(ctx, "create_event_draft", input, output, "error", "destaque media required");
+    return output;
+  }
+
   const rl = await checkWriteRateLimit(ctx, "create_event_draft");
   if (!rl.ok) {
     const output = { error: "rate_limited", hint: `Limite de 5 ações/hora atingido (${rl.used} usadas).` };
@@ -82,30 +98,42 @@ export async function createEventDraft(
     return output;
   }
 
+  const price = listingType === "destaque"
+    ? await getEventSponsorPriceBrl(ctx.supabaseAdmin)
+    : null;
+
   const externalId = `guata-${crypto.randomUUID()}`;
+
+  const insertRow: Record<string, unknown> = {
+    external_id: externalId,
+    titulo: title,
+    descricao: input.description ?? null,
+    data_inicio: input.start_date,
+    data_fim: input.end_date ?? null,
+    local: input.location ?? null,
+    cidade: city,
+    estado: "Mato Grosso do Sul",
+    categoria: input.category ?? null,
+    tipo_entrada: input.entry_type ?? null,
+    organizador: input.organizer ?? null,
+    logo_evento: input.logo_url ?? null,
+    imagem_principal: input.logo_url ?? null,
+    video_promocional: input.promo_video_url ?? null,
+    fonte: "guata_chat",
+    source: "guata_chat",
+    approval_status: "pending",
+    is_visible: false,
+    created_by: ctx.userId,
+    is_sponsored: listingType === "destaque",
+    sponsor_payment_status: listingType === "destaque" ? "pending" : null,
+    sponsor_tier: listingType === "destaque" ? "destaque" : null,
+    sponsor_amount: price?.price_brl ?? null,
+  };
 
   const { data, error } = await ctx.supabaseAdmin
     .from("events")
-    .insert({
-      external_id: externalId,
-      titulo: title,
-      descricao: input.description ?? null,
-      data_inicio: input.start_date,
-      data_fim: input.end_date ?? null,
-      local: input.location ?? null,
-      cidade: city,
-      estado: "Mato Grosso do Sul",
-      categoria: input.category ?? null,
-      tipo_entrada: input.entry_type ?? null,
-      organizador: input.organizer ?? null,
-      logo_evento: input.logo_url ?? null,
-      video_promocional: input.promo_video_url ?? null,
-      fonte: "guata_chat",
-      source: "guata_chat",
-      approval_status: "pending",
-      created_by: ctx.userId,
-    })
-    .select("id, titulo, cidade, data_inicio, approval_status")
+    .insert(insertRow)
+    .select("id, titulo, cidade, data_inicio, approval_status, is_sponsored, sponsor_payment_status")
     .single();
 
   if (error || !data) {
@@ -114,11 +142,31 @@ export async function createEventDraft(
     return output;
   }
 
+  if (listingType === "destaque") {
+    const output = {
+      success: true,
+      event_id: data.id,
+      listing_type: "destaque",
+      status: data.approval_status,
+      sponsor_payment_status: data.sponsor_payment_status,
+      price_brl: price!.price_brl,
+      price_formatted: `R$ ${price!.price_brl.toFixed(2).replace(".", ",")}`,
+      duration_days: price!.duration_days,
+      next_step: "create_event_checkout_link",
+      message:
+        `Evento Em Destaque criado (id=${data.id}). Próximo passo OBRIGATÓRIO: chame create_event_checkout_link com este event_id e mostre o checkout_url (link + QR no chat). Valor: R$ ${price!.price_brl.toFixed(2).replace(".", ",")} / ${price!.duration_days} dias. NÃO diga que já está no calendário até o pagamento.`,
+    };
+    await logAction(ctx, "create_event_draft", input, output, "success");
+    return output;
+  }
+
   const output = {
     success: true,
     event_id: data.id,
+    listing_type: "gratuito",
     status: data.approval_status,
-    message: "Evento enviado para moderação. Um administrador irá revisar em breve.",
+    message:
+      "Evento gratuito enviado para moderação do admin. Informe o event_id e que só aparece no calendário após aprovação. NÃO diga que já está publicado no site.",
   };
   await logAction(ctx, "create_event_draft", input, output, "success");
   return output;

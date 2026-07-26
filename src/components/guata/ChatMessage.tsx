@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import QRCode from "react-qr-code";
 import { AIMessage } from "@/types/ai";
 import { cn } from "@/lib/utils";
-import { ThumbsUp, ThumbsDown, LogIn } from "lucide-react";
+import { ThumbsUp, ThumbsDown, LogIn, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -23,11 +24,14 @@ const ACTION_LABEL: Record<string, string> = {
   pagar: "concluir o pagamento",
 };
 
+function isCheckoutUrl(url: string): boolean {
+  return /checkout\.stripe\.com|stripe\.com\/.*(pay|checkout)|buy\.stripe\.com/i.test(url);
+}
+
 function extractImageUrls(text: string): { images: string[]; withoutImages: string } {
   const images: string[] = [];
   let withoutImages = text;
 
-  // Tag explícita do upload no chat
   withoutImages = withoutImages.replace(
     /\[imagem enviada pelo usuário:\s*(https?:\/\/[^\]]+)\]/gi,
     (_m, url: string) => {
@@ -36,7 +40,6 @@ function extractImageUrls(text: string): { images: string[]; withoutImages: stri
     },
   );
 
-  // URLs de imagem soltas
   withoutImages = withoutImages.replace(
     /(https?:\/\/[^\s]+\.(?:png|jpe?g|webp|gif)(?:\?[^\s]*)?)/gi,
     (url: string) => {
@@ -48,6 +51,21 @@ function extractImageUrls(text: string): { images: string[]; withoutImages: stri
   return {
     images: [...new Set(images)],
     withoutImages: withoutImages.replace(/\n{3,}/g, "\n\n").trim(),
+  };
+}
+
+function extractCheckoutUrls(text: string): { checkouts: string[]; withoutCheckouts: string } {
+  const checkouts: string[] = [];
+  const withoutCheckouts = text.replace(/(https?:\/\/[^\s]+)/gi, (url) => {
+    if (isCheckoutUrl(url)) {
+      checkouts.push(url.replace(/[.,;:!?)]+$/, ""));
+      return "";
+    }
+    return url;
+  });
+  return {
+    checkouts: [...new Set(checkouts)],
+    withoutCheckouts: withoutCheckouts.replace(/\n{3,}/g, "\n\n").trim(),
   };
 }
 
@@ -87,15 +105,17 @@ const ChatMessage = ({
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string>("/guata-mascote.jpg");
 
-  const { plain, requiredAction, images } = useMemo(() => {
+  const { plain, requiredAction, images, checkouts } = useMemo(() => {
     const raw = message.text ?? "";
     const match = raw.match(REQUIRE_LOGIN_RE);
     const cleaned = raw.replace(REQUIRE_LOGIN_RE, "").trim();
     const stripped = stripChatMarkdown(cleaned);
     const { images: imgs, withoutImages } = extractImageUrls(stripped);
+    const { checkouts: pays, withoutCheckouts } = extractCheckoutUrls(withoutImages);
     return {
-      plain: withoutImages,
+      plain: withoutCheckouts,
       images: imgs,
+      checkouts: pays,
       requiredAction: match ? match[1] : null,
     };
   }, [message.text]);
@@ -203,6 +223,43 @@ const ChatMessage = ({
                 {renderTextWithLinks(plain)}
               </p>
             ) : null}
+            {isGuata && checkouts.length > 0 && (
+              <div className="mt-3 flex flex-col gap-3">
+                {checkouts.map((url) => (
+                  <div
+                    key={url}
+                    className="rounded-xl border border-emerald-400/40 bg-emerald-950/40 p-3 flex flex-col sm:flex-row items-center gap-3"
+                  >
+                    <div className="bg-white p-2 rounded-lg shrink-0">
+                      <QRCode value={url} size={112} level="M" />
+                    </div>
+                    <div className="flex-1 text-center sm:text-left space-y-2 min-w-0">
+                      <p className="text-xs text-emerald-100 font-medium">
+                        Escaneie o QR ou toque no botão para pagar com segurança (Stripe).
+                      </p>
+                      <Button
+                        asChild
+                        size="sm"
+                        className="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold gap-2"
+                      >
+                        <a href={url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink size={14} />
+                          Abrir pagamento
+                        </a>
+                      </Button>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-[10px] text-sky-300 underline break-all"
+                      >
+                        {url}
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {isGuata && requiredAction && (
               <div className="mt-3">
                 <Button
