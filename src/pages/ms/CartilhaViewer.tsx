@@ -107,7 +107,7 @@ const CartilhaViewer = () => {
 
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [cartilha?.id, user]);
+  }, [cartilha?.id, user, native]);
 
   if (loading) {
     return (
