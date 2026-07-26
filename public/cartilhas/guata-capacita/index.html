@@ -2032,14 +2032,38 @@
         colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
       });
+      // Link placeholder (aula ainda não publicada) fica desabilitado em vez de abrir 404
+      const isPlaceholder = /turismo\.ms\.gov\.br\/capacita\//i.test(textUrl);
+
+      if (isPlaceholder) {
+        const soon = document.createElement('span');
+        soon.className = 'qr-open-link';
+        soon.style.background = '#475569';
+        soon.style.opacity = '0.85';
+        soon.textContent = 'Aula em breve';
+        container.appendChild(soon);
+        return;
+      }
+
       const openLink = document.createElement('a');
       openLink.href = textUrl;
       openLink.target = '_blank';
       openLink.rel = 'noopener noreferrer';
       openLink.className = 'qr-open-link';
-      openLink.textContent = 'Abrir link';
+      openLink.textContent = 'Abrir aula';
+      // Dentro do app (iframe/WebView) o _blank é bloqueado: pedimos ao app para abrir
+      openLink.addEventListener('click', (ev) => {
+        if (window.parent && window.parent !== window) {
+          ev.preventDefault();
+          window.parent.postMessage(
+            { type: 'guata-cartilha-open-link', url: textUrl },
+            '*'
+          );
+        }
+      });
       container.appendChild(openLink);
     }
+
 
     function openQrModal(targetId) {
       currentActiveTargetId = targetId;
