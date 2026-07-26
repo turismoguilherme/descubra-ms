@@ -1226,7 +1226,7 @@
       
       <div class="relative z-10 flex justify-between items-center border-b border-emerald-500/30 pb-3">
         <span class="font-heading font-bold text-xs text-emerald-300 uppercase tracking-wider">08 | Encerramento e Suporte</span>
-        <span class="text-[10px] bg-white/10 px-2.5 py-0.5 rounded text-white font-mono">www.turismo.ms.gov.br</span>
+        <span class="text-[10px] bg-white/10 px-2.5 py-0.5 rounded text-white font-mono">www.descubrams.com</span>
       </div>
 
       <div class="relative z-10 text-center space-y-3 my-2">
@@ -1250,7 +1250,7 @@
         </div>
 
         <p id="closingPortalUrl" contenteditable="true" class="text-xs font-mono text-emerald-200">
-          turismo.ms.gov.br/guata-capacita
+          descubrams.com/descubrams/cartilhas/guata-capacita
         </p>
       </div>
 
@@ -1259,7 +1259,7 @@
           <i data-lucide="globe" class="w-5 h-5 text-amber-400 shrink-0"></i>
           <div>
             <span class="text-[9px] uppercase text-emerald-300 font-bold block">Site Oficial</span>
-            <span contenteditable="true" class="text-xs font-medium text-white">www.turismo.ms.gov.br</span>
+            <span contenteditable="true" class="text-xs font-medium text-white">www.descubrams.com</span>
           </div>
         </div>
 
@@ -1287,7 +1287,7 @@
           <i data-lucide="mail" class="w-5 h-5 text-amber-400 shrink-0"></i>
           <div>
             <span class="text-[9px] uppercase text-emerald-300 font-bold block">Suporte Técnico</span>
-            <span contenteditable="true" class="text-xs font-medium text-white">capacitacao@turismo.ms.gov.br</span>
+            <span contenteditable="true" class="text-xs font-medium text-white">contato@descubrams.com</span>
           </div>
         </div>
       </div>
@@ -2636,18 +2636,18 @@
 
     // QR Codes
     const DEFAULT_QR_TARGETS = [
-      { id: 'qr-m1-video', url: 'https://turismo.ms.gov.br/capacita/modulo1-video' },
-      { id: 'qr-m1-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo1-quiz' },
-      { id: 'qr-m2-video', url: 'https://turismo.ms.gov.br/capacita/modulo2-video' },
-      { id: 'qr-m2-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo2-quiz' },
-      { id: 'qr-m3-video', url: 'https://turismo.ms.gov.br/capacita/modulo3-video' },
-      { id: 'qr-m3-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo3-quiz' },
-      { id: 'qr-m4-video', url: 'https://turismo.ms.gov.br/capacita/modulo4-video' },
-      { id: 'qr-m4-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo4-quiz' },
-      { id: 'qr-m5', url: 'https://turismo.ms.gov.br/capacita/modulo5' },
-      { id: 'qr-m6', url: 'https://turismo.ms.gov.br/capacita/modulo6' },
-      { id: 'qr-cert', url: 'https://turismo.ms.gov.br/capacita/certificado' },
-      { id: 'qr-main-portal', url: 'https://turismo.ms.gov.br/guata-capacita' }
+      { id: 'qr-m1-video', url: 'https://descubrams.com/capacita/modulo1-video' },
+      { id: 'qr-m1-quiz', url: 'https://descubrams.com/capacita/modulo1-quiz' },
+      { id: 'qr-m2-video', url: 'https://descubrams.com/capacita/modulo2-video' },
+      { id: 'qr-m2-quiz', url: 'https://descubrams.com/capacita/modulo2-quiz' },
+      { id: 'qr-m3-video', url: 'https://descubrams.com/capacita/modulo3-video' },
+      { id: 'qr-m3-quiz', url: 'https://descubrams.com/capacita/modulo3-quiz' },
+      { id: 'qr-m4-video', url: 'https://descubrams.com/capacita/modulo4-video' },
+      { id: 'qr-m4-quiz', url: 'https://descubrams.com/capacita/modulo4-quiz' },
+      { id: 'qr-m5', url: 'https://descubrams.com/capacita/modulo5' },
+      { id: 'qr-m6', url: 'https://descubrams.com/capacita/modulo6' },
+      { id: 'qr-cert', url: 'https://descubrams.com/capacita/certificado' },
+      { id: 'qr-main-portal', url: 'https://descubrams.com/descubrams/cartilhas/guata-capacita' }
     ];
 
     function normalizeQrUrl(raw) {
@@ -2657,10 +2657,13 @@
       return u;
     }
 
-    /** Só stubs oficiais ainda não publicados — qualquer outro link abre de verdade. */
+    /** Só stubs de aula/certificado ainda não publicados — portal e links reais abrem de verdade. */
     function isPlaceholderUrl(url) {
-      return /^https?:\/\/(www\.)?turismo\.ms\.gov\.br\/capacita\/(modulo\d+(?:-(?:video|quiz))?|certificado)\/?$/i.test(
-        String(url || '').trim(),
+      const u = String(url || '').trim();
+      // Legado (turismo.ms.gov.br) e stubs atuais (descubrams.com/capacita/...)
+      return (
+        /^https?:\/\/(www\.)?turismo\.ms\.gov\.br\/capacita\//i.test(u) ||
+        /^https?:\/\/(www\.)?descubrams\.com\/capacita\/(modulo[\w-]+(?:-(?:video|quiz))?|certificado)\/?$/i.test(u)
       );
     }
 
@@ -2892,8 +2895,8 @@
       const title = document.getElementById('modTitle').value.trim();
       const hours = document.getElementById('modHours').value.trim();
       const desc = document.getElementById('modDesc').value.trim();
-      const videoUrl = document.getElementById('modVideoUrl').value.trim() || 'https://turismo.ms.gov.br/capacita/modulo-novo-video';
-      const quizUrl = document.getElementById('modQuizUrl').value.trim() || 'https://turismo.ms.gov.br/capacita/modulo-novo-quiz';
+      const videoUrl = document.getElementById('modVideoUrl').value.trim() || 'https://descubrams.com/capacita/modulo-novo-video';
+      const quizUrl = document.getElementById('modQuizUrl').value.trim() || 'https://descubrams.com/capacita/modulo-novo-quiz';
 
       customModulesCount++;
       const modId = 'custom-mod-' + customModulesCount;
