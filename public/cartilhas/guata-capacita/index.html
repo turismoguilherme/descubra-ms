@@ -228,7 +228,81 @@
       .a4-page .qr-holder {
         margin-bottom: 0.35rem;
       }
+
+      /* ===== Correções de estouro de texto/layout no celular e no app ===== */
+      html, body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+      }
+
+      .a4-page, .a4-page * {
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        hyphens: auto;
+      }
+
+      /* Nenhum elemento pode forçar largura maior que a tela */
+      .a4-page * {
+        max-width: 100% !important;
+      }
+
+      /* Textos que no A4 usam nowrap precisam quebrar no celular */
+      .a4-page .whitespace-nowrap {
+        white-space: normal !important;
+      }
+
+      /* Grades fixas empilham */
+      .a4-page .grid.grid-cols-3,
+      .a4-page .grid.grid-cols-4,
+      .a4-page .grid.md\:grid-cols-2,
+      .a4-page .grid.md\:grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+      }
+
+      /* Elementos absolutos decorativos não empurram o conteúdo */
+      .a4-page .absolute {
+        pointer-events: none;
+      }
+      .a4-page .absolute a,
+      .a4-page .absolute button {
+        pointer-events: auto;
+      }
+
+      /* Tabelas com rolagem própria em vez de estourar */
+      .a4-page table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* Navegação rápida do topo: quebra em linhas em vez de rolagem lateral */
+      header.no-print nav {
+        flex-wrap: wrap !important;
+        overflow-x: visible !important;
+        justify-content: flex-start;
+        row-gap: 0.35rem;
+      }
+
+      header.no-print nav a {
+        white-space: normal !important;
+      }
+
+      header.no-print .flex.items-center.justify-between.border-t {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.35rem;
+      }
+
+      /* Botão de abrir aula ocupa a largura do cartão e fica tocável */
+      .qr-open-link {
+        max-width: 100% !important;
+        min-height: 2.5rem;
+        font-size: 0.8rem;
+      }
     }
+
 
     /* Print Setup for PDF Export */
     @media print {
@@ -1958,14 +2032,38 @@
         colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
       });
+      // Link placeholder (aula ainda não publicada) fica desabilitado em vez de abrir 404
+      const isPlaceholder = /turismo\.ms\.gov\.br\/capacita\//i.test(textUrl);
+
+      if (isPlaceholder) {
+        const soon = document.createElement('span');
+        soon.className = 'qr-open-link';
+        soon.style.background = '#475569';
+        soon.style.opacity = '0.85';
+        soon.textContent = 'Aula em breve';
+        container.appendChild(soon);
+        return;
+      }
+
       const openLink = document.createElement('a');
       openLink.href = textUrl;
       openLink.target = '_blank';
       openLink.rel = 'noopener noreferrer';
       openLink.className = 'qr-open-link';
-      openLink.textContent = 'Abrir link';
+      openLink.textContent = 'Abrir aula';
+      // Dentro do app (iframe/WebView) o _blank é bloqueado: pedimos ao app para abrir
+      openLink.addEventListener('click', (ev) => {
+        if (window.parent && window.parent !== window) {
+          ev.preventDefault();
+          window.parent.postMessage(
+            { type: 'guata-cartilha-open-link', url: textUrl },
+            '*'
+          );
+        }
+      });
       container.appendChild(openLink);
     }
+
 
     function openQrModal(targetId) {
       currentActiveTargetId = targetId;

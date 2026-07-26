@@ -54,7 +54,26 @@ const CartilhaViewer = () => {
     const onMessage = async (event: MessageEvent) => {
       const msg = event.data;
       if (!msg || typeof msg !== 'object') return;
+
+      // Abrir links das aulas: dentro do app o target="_blank" do iframe é bloqueado
+      if (msg.type === 'guata-cartilha-open-link' && typeof msg.url === 'string') {
+        const url: string = msg.url;
+        if (!/^https?:\/\//i.test(url)) return;
+        try {
+          if (native) {
+            const { Browser } = await import('@capacitor/browser');
+            await Browser.open({ url });
+          } else {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        } catch {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+        return;
+      }
+
       if (!cartilha?.id) return;
+
 
       if (msg.type === 'guata-cartilha-progress-request') {
         if (!user) return;
@@ -88,7 +107,7 @@ const CartilhaViewer = () => {
 
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [cartilha?.id, user]);
+  }, [cartilha?.id, user, native]);
 
   if (loading) {
     return (
