@@ -46,11 +46,23 @@ export async function notifyGuataChannelEvent(
 
 /** @deprecated Use notifyGuataChannelEvent({ eventId, action: 'published' }) */
 export async function notifyGuataChannelEventPublished(eventId: string): Promise<void> {
-  return notifyGuataChannelEvent({ eventId, action: 'published' });
+  await notifyGuataChannelEvent({ eventId, action: 'published' });
+  try {
+    const { notifyAppEventPush } = await import('@/services/events/appEventPushService');
+    await notifyAppEventPush({ eventId, kind: 'event_new' });
+  } catch {
+    /* opcional */
+  }
 }
 
 export async function notifyGuataChannelEventApproved(eventId: string): Promise<void> {
-  return notifyGuataChannelEvent({ eventId, action: 'approved' });
+  await notifyGuataChannelEvent({ eventId, action: 'approved' });
+  try {
+    const { notifyAppEventPush } = await import('@/services/events/appEventPushService');
+    await notifyAppEventPush({ eventId, kind: 'event_new' });
+  } catch {
+    /* opcional */
+  }
 }
 
 export async function notifyGuataChannelEventRejected(

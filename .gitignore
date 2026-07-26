@@ -17,6 +17,11 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Firebase service account (never commit)
+.secrets/
+**/fcm-service-account*.json
+**/firebase-adminsdk*.json
+
 # Android APKs de build local (exceto o APK oficial publicado no site)
 *.apk
 !public/downloads/descubra-ms.apk
