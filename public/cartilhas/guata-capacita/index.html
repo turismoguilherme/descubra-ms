@@ -605,7 +605,10 @@
     </div>
   </header>
 
-  <main class="page-container py-8 px-2 sm:px-4 max-w-7xl mx-auto flex flex-col items-center">
+  <main id="bookletMain" class="page-container py-8 px-2 sm:px-4 max-w-7xl mx-auto flex flex-col items-center opacity-0 transition-opacity duration-200" aria-busy="true">
+    <div id="bookletBootLoader" class="no-print fixed inset-0 z-[40] flex items-center justify-center bg-slate-950/80 text-white text-sm font-semibold tracking-wide">
+      Carregando cartilha…
+    </div>
 
     <!-- PÁGINA 1: CAPA INSTITUCIONAL -->
     <section id="page1" class="a4-page rounded-2xl relative overflow-hidden bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-900 text-white p-10 flex flex-col justify-between">
@@ -2127,7 +2130,6 @@
     window.onload = async function() {
       lockPublicEditing();
 
-      // Load saved booklets from LocalStorage if available
       const stored = localStorage.getItem('guata_cartilhas_data');
       if (stored) {
         try {
@@ -2146,7 +2148,6 @@
       });
 
       renderPartners();
-      generateDefaultQRCodes();
       renderSavedBookletsList();
       bindProgressListeners();
       bindMascotPreview();
@@ -2156,26 +2157,40 @@
         if (progressStored) applyProgressData(JSON.parse(progressStored));
       } catch (e) {}
 
+      // 1) Nuvem primeiro (evita flash do conteúdo antigo)
+      let cloudOk = false;
       try {
-        // Descarta cache antigo que embaralhava textos
-        localStorage.removeItem('guata_cartilha_content_v1');
-        const contentStored = localStorage.getItem(CONTENT_STORAGE_KEY);
-        const parsed = contentStored ? JSON.parse(contentStored) : null;
-        if (parsed && isMeaningfulContent(parsed)) {
-          applyBookletContent({ ...parsed, texts: sanitizeTextsMap(parsed.texts) });
-        }
-      } catch (e) {}
+        cloudOk = await loadCloudContent();
+      } catch (e) {
+        cartilhaLog('boot cloud error', e);
+      }
 
-      // Conteúdo da nuvem (funciona com login da cartilha, sem precisar do admin Descubra)
-      await loadCloudContent();
+      // 2) Só usa cache local se a nuvem não trouxe nada útil
+      if (!cloudOk) {
+        try {
+          localStorage.removeItem('guata_cartilha_content_v1');
+          const contentStored = localStorage.getItem(CONTENT_STORAGE_KEY);
+          const parsed = contentStored ? JSON.parse(contentStored) : null;
+          if (parsed && isMeaningfulContent(parsed)) {
+            applyBookletContent({ ...parsed, texts: sanitizeTextsMap(parsed.texts) });
+          }
+        } catch (e) {}
+      }
 
-      // Também pede ao app pai (Descubra MS) se estiver embutida
+      // 3) Preenche QRs faltantes com padrão e redesenha todos (QR funcional)
+      generateDefaultQRCodes();
+      redrawAllQrCodes();
+
       try {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: 'guata-cartilha-progress-request', cartilhaId: currentBookletId }, '*');
           window.parent.postMessage({ type: 'guata-cartilha-content-request', cartilhaId: currentBookletId }, '*');
         }
       } catch (e) {}
+
+      revealBooklet();
+      // Após revelar, redesenha QRs com tamanho real do layout
+      requestAnimationFrame(() => redrawAllQrCodes());
     };
 
     function triggerPdfPrint() {
@@ -2602,24 +2617,82 @@
     }
 
     // QR Codes
-    function generateDefaultQRCodes() {
-      const qrTargets = [
-        { id: 'qr-m1-video', url: 'https://turismo.ms.gov.br/capacita/modulo1-video' },
-        { id: 'qr-m1-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo1-quiz' },
-        { id: 'qr-m2-video', url: 'https://turismo.ms.gov.br/capacita/modulo2-video' },
-        { id: 'qr-m2-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo2-quiz' },
-        { id: 'qr-m3-video', url: 'https://turismo.ms.gov.br/capacita/modulo3-video' },
-        { id: 'qr-m3-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo3-quiz' },
-        { id: 'qr-m4-video', url: 'https://turismo.ms.gov.br/capacita/modulo4-video' },
-        { id: 'qr-m4-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo4-quiz' },
-        { id: 'qr-m5', url: 'https://turismo.ms.gov.br/capacita/modulo5' },
-        { id: 'qr-m6', url: 'https://turismo.ms.gov.br/capacita/modulo6' },
-        { id: 'qr-cert', url: 'https://turismo.ms.gov.br/capacita/certificado' },
-        { id: 'qr-main-portal', url: 'https://turismo.ms.gov.br/guata-capacita' }
-      ];
+    const DEFAULT_QR_TARGETS = [
+      { id: 'qr-m1-video', url: 'https://turismo.ms.gov.br/capacita/modulo1-video' },
+      { id: 'qr-m1-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo1-quiz' },
+      { id: 'qr-m2-video', url: 'https://turismo.ms.gov.br/capacita/modulo2-video' },
+      { id: 'qr-m2-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo2-quiz' },
+      { id: 'qr-m3-video', url: 'https://turismo.ms.gov.br/capacita/modulo3-video' },
+      { id: 'qr-m3-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo3-quiz' },
+      { id: 'qr-m4-video', url: 'https://turismo.ms.gov.br/capacita/modulo4-video' },
+      { id: 'qr-m4-quiz', url: 'https://turismo.ms.gov.br/capacita/modulo4-quiz' },
+      { id: 'qr-m5', url: 'https://turismo.ms.gov.br/capacita/modulo5' },
+      { id: 'qr-m6', url: 'https://turismo.ms.gov.br/capacita/modulo6' },
+      { id: 'qr-cert', url: 'https://turismo.ms.gov.br/capacita/certificado' },
+      { id: 'qr-main-portal', url: 'https://turismo.ms.gov.br/guata-capacita' }
+    ];
 
-      qrTargets.forEach(item => {
-        createQRCode(item.id, item.url);
+    function normalizeQrUrl(raw) {
+      let u = String(raw || '').trim();
+      if (!u) return '';
+      if (!/^https?:\/\//i.test(u)) u = 'https://' + u.replace(/^\/+/, '');
+      return u;
+    }
+
+    /** Só stubs oficiais ainda não publicados — qualquer outro link abre de verdade. */
+    function isPlaceholderUrl(url) {
+      return /^https?:\/\/(www\.)?turismo\.ms\.gov\.br\/capacita\/(modulo\d+(?:-(?:video|quiz))?|certificado)\/?$/i.test(
+        String(url || '').trim(),
+      );
+    }
+
+    function openExternalUrl(url) {
+      const target = normalizeQrUrl(url);
+      if (!target || isPlaceholderUrl(target)) {
+        alert('Este QR ainda aponta para um link provisório. Edite o QR e cole a URL real da aula/certificado/portal.');
+        return;
+      }
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'guata-cartilha-open-link', url: target }, '*');
+        }
+      } catch (_) {}
+      try {
+        const win = window.open(target, '_blank', 'noopener,noreferrer');
+        if (!win) {
+          // Popup bloqueado: navega na mesma aba
+          window.location.href = target;
+        }
+      } catch (_) {
+        window.location.href = target;
+      }
+    }
+
+    function revealBooklet() {
+      const main = document.getElementById('bookletMain');
+      const loader = document.getElementById('bookletBootLoader');
+      if (loader) loader.remove();
+      if (main) {
+        main.classList.remove('opacity-0');
+        main.classList.add('opacity-100');
+        main.setAttribute('aria-busy', 'false');
+      }
+    }
+
+    function generateDefaultQRCodes() {
+      DEFAULT_QR_TARGETS.forEach((item) => {
+        if (!qrUrlMap[item.id]) createQRCode(item.id, item.url);
+      });
+    }
+
+    function redrawAllQrCodes() {
+      const ids = new Set([
+        ...DEFAULT_QR_TARGETS.map((t) => t.id),
+        ...Object.keys(qrUrlMap),
+      ]);
+      ids.forEach((id) => {
+        const url = qrUrlMap[id] || DEFAULT_QR_TARGETS.find((t) => t.id === id)?.url;
+        if (url) createQRCode(id, url);
       });
     }
 
@@ -2629,37 +2702,71 @@
 
     function createQRCode(containerId, textUrl) {
       const container = document.getElementById(containerId);
-      if (!container) return;
-      qrUrlMap[containerId] = textUrl;
+      if (!container) {
+        cartilhaLog('createQRCode: container ausente', containerId);
+        return false;
+      }
+      const url = normalizeQrUrl(textUrl);
+      if (!url) {
+        cartilhaLog('createQRCode: URL vazia', containerId);
+        return false;
+      }
+      if (typeof QRCode === 'undefined') {
+        console.error('[cartilha] Biblioteca QRCode.js não carregou');
+        alert('Não foi possível gerar o QR: biblioteca não carregou. Recarregue a página.');
+        return false;
+      }
+
+      qrUrlMap[containerId] = url;
       removeQrOpenLink(containerId);
       container.innerHTML = '';
-      const isFeatured = containerId === 'qr-cert' || containerId === 'qr-main-portal';
-      const fallback = isFeatured ? (containerId === 'qr-main-portal' ? 160 : 112) : 56;
-      const size = Math.max(
-        isFeatured ? 96 : 48,
-        Math.min(isFeatured ? 168 : 128, container.clientWidth || fallback)
-      );
-      new QRCode(container, {
-        text: textUrl,
-        width: size,
-        height: size,
-        colorDark : "#0f172a",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
-      });
-      // Link placeholder (aula ainda não publicada) fica desabilitado em vez de abrir 404
-      const isPlaceholder = /turismo\.ms\.gov\.br\/capacita\//i.test(textUrl);
 
+      const isFeatured = containerId === 'qr-cert' || containerId === 'qr-main-portal';
+      const fallback = isFeatured ? (containerId === 'qr-main-portal' ? 160 : 112) : 64;
+      let size = Math.max(
+        isFeatured ? 96 : 56,
+        Math.min(isFeatured ? 168 : 128, container.clientWidth || fallback),
+      );
+      if (!size || size < 48) size = fallback;
+
+      try {
+        // URLs longas: nível M evita falha silenciosa do QRCode.js
+        const level = url.length > 90 ? QRCode.CorrectLevel.M : QRCode.CorrectLevel.H;
+        new QRCode(container, {
+          text: url,
+          width: size,
+          height: size,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: level,
+        });
+      } catch (err) {
+        console.error('[cartilha] falha ao gerar QR', containerId, url, err);
+        container.innerHTML =
+          '<span class="text-[9px] text-rose-300 p-1">Erro ao gerar QR</span>';
+        return false;
+      }
+
+      const canvas = container.querySelector('canvas');
+      const img = container.querySelector('img');
+      if (!canvas && !img) {
+        cartilhaLog('createQRCode: sem canvas/img após gerar', containerId);
+      }
+
+      const placeholder = isPlaceholderUrl(url);
       let openEl;
-      if (isPlaceholder) {
-        openEl = document.createElement('span');
+      if (placeholder) {
+        openEl = document.createElement('button');
+        openEl.type = 'button';
         openEl.className = 'qr-open-link';
         openEl.style.background = '#475569';
-        openEl.style.opacity = '0.85';
-        openEl.textContent = containerId === 'qr-cert' ? 'Certificado em breve' : 'Aula em breve';
+        openEl.style.opacity = '0.9';
+        openEl.textContent =
+          containerId === 'qr-cert' ? 'Edite o QR (link provisório)' : 'Edite o QR (aula em breve)';
+        openEl.addEventListener('click', () => openQrModal(containerId));
       } else {
         openEl = document.createElement('a');
-        openEl.href = textUrl;
+        openEl.href = url;
         openEl.target = '_blank';
         openEl.rel = 'noopener noreferrer';
         openEl.className = 'qr-open-link';
@@ -2668,28 +2775,24 @@
             ? 'Abrir certificado'
             : containerId === 'qr-main-portal'
               ? 'Abrir portal'
-              : 'Abrir aula';
+              : 'Abrir link do QR';
         openEl.addEventListener('click', (ev) => {
-          if (window.parent && window.parent !== window) {
-            ev.preventDefault();
-            window.parent.postMessage(
-              { type: 'guata-cartilha-open-link', url: textUrl },
-              '*'
-            );
-          }
+          ev.preventDefault();
+          openExternalUrl(url);
         });
       }
       openEl.setAttribute('data-for', containerId);
-      // Fora do .qr-holder para não estourar o box no celular
       container.insertAdjacentElement('afterend', openEl);
+      cartilhaLog('createQRCode OK', containerId, url.slice(0, 80), 'placeholder=', placeholder);
+      return true;
     }
-
 
     function openQrModal(targetId) {
       currentActiveTargetId = targetId;
       const input = document.getElementById('qrTargetUrl');
       if (input) input.value = qrUrlMap[targetId] || '';
       document.getElementById('qrModal').classList.remove('hidden');
+      lucide.createIcons();
     }
 
     function closeQrModal() {
@@ -2697,14 +2800,25 @@
     }
 
     function applyQrCode() {
-      const url = document.getElementById('qrTargetUrl').value.trim();
+      const raw = document.getElementById('qrTargetUrl').value.trim();
+      const url = normalizeQrUrl(raw);
       if (!url) {
         alert('Cole a URL do QR Code antes de aplicar.');
         return;
       }
-      createQRCode(currentActiveTargetId, url);
+      if (!currentActiveTargetId) {
+        alert('Nenhum QR selecionado.');
+        return;
+      }
+      const ok = createQRCode(currentActiveTargetId, url);
+      if (!ok) {
+        alert('Não foi possível gerar o QR com esse link. Verifique a URL e tente de novo.');
+        return;
+      }
       closeQrModal();
       saveBookletContent(true);
+      // Garante redesenho após layout (evita QR em branco no mobile)
+      requestAnimationFrame(() => createQRCode(currentActiveTargetId, url));
     }
 
     // Dynamic Module Creation (Admin)

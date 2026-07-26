@@ -108,7 +108,8 @@ const CartilhaViewer = () => {
           } else {
             window.open(url, '_blank', 'noopener,noreferrer');
           }
-        } catch {
+        } catch (err) {
+          console.warn('[CartilhaViewer] open-link fallback', err);
           window.open(url, '_blank', 'noopener,noreferrer');
         }
         return;
