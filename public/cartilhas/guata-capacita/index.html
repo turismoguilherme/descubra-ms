@@ -1175,10 +1175,10 @@
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-900 text-[10px] font-black uppercase">
             <i data-lucide="award" class="w-3.5 h-3.5"></i> Emissão de Certificado
           </div>
-          <h3 contenteditable="true" class="font-heading font-extrabold text-base text-slate-900">
+          <h3 id="certTitle" contenteditable="true" class="font-heading font-extrabold text-base text-slate-900">
             Concluiu todos os módulos?
           </h3>
-          <p contenteditable="true" class="text-xs text-slate-700 leading-relaxed">
+          <p id="certSubtitle" contenteditable="true" class="text-xs text-slate-700 leading-relaxed">
             Escaneie o QR Code ou toque no botão para validar seu progresso e solicitar seu <strong>Certificado Oficial</strong>.
           </p>
         </div>
@@ -1209,10 +1209,10 @@
       </div>
 
       <div class="relative z-10 text-center space-y-3 my-2">
-        <h2 contenteditable="true" class="font-heading text-3xl font-black text-amber-300 uppercase tracking-tight">
+        <h2 id="closingTitle" contenteditable="true" class="font-heading text-3xl font-black text-amber-300 uppercase tracking-tight">
           Obrigado por Fazer a Diferença!
         </h2>
-        <p contenteditable="true" class="text-xs text-emerald-100/90 max-w-md mx-auto leading-relaxed">
+        <p id="closingSubtitle" contenteditable="true" class="text-xs text-emerald-100/90 max-w-md mx-auto leading-relaxed">
           Sua dedicação em acolher bem os visitantes fortalece nossa região como referência mundial em ecoturismo, cultura e hospitalidade.
         </p>
       </div>
@@ -1228,7 +1228,7 @@
           <div id="qr-main-portal" class="qr-holder w-40 h-40 bg-slate-900 p-1.5 rounded-xl flex items-center justify-center"></div>
         </div>
 
-        <p contenteditable="true" class="text-xs font-mono text-emerald-200">
+        <p id="closingPortalUrl" contenteditable="true" class="text-xs font-mono text-emerald-200">
           turismo.ms.gov.br/guata-capacita
         </p>
       </div>
@@ -1654,7 +1654,7 @@
     let currentActiveTargetId = null;
     let defaultMascotVectorHTML = {};
     const PROGRESS_STORAGE_KEY = 'guata_cartilha_progress_v1';
-    const CONTENT_STORAGE_KEY = 'guata_cartilha_content_v1';
+    const CONTENT_STORAGE_KEY = 'guata_cartilha_content_v2';
     let qrUrlMap = {};
     let mascotUrlMap = {};
     let canSaveCloud = false;
@@ -1768,8 +1768,9 @@
           partners: Array.isArray(cd.partners) ? cd.partners.length : 0,
         });
         if (isMeaningfulContent(cd)) {
-          applyBookletContent(cd);
-          persistContentLocal(cd);
+          const cleaned = { ...cd, texts: sanitizeTextsMap(cd.texts) };
+          applyBookletContent(cleaned);
+          persistContentLocal(cleaned);
           return true;
         }
         cartilhaLog('loadCloudContent: snapshot ignorado (não meaningful)');
@@ -1783,6 +1784,22 @@
       try {
         console.log('[cartilha]', ...args);
       } catch (_) {}
+    }
+
+    /** Descarta chaves aleatórias antigas (ce-xxxx) que embaralhavam textos. */
+    function sanitizeTextsMap(texts) {
+      if (!texts || typeof texts !== 'object') return {};
+      const out = {};
+      let dropped = 0;
+      Object.entries(texts).forEach(([key, html]) => {
+        if (/^ce-[a-z0-9]+$/i.test(key)) {
+          dropped += 1;
+          return;
+        }
+        if (typeof html === 'string') out[key] = html;
+      });
+      if (dropped) cartilhaLog('sanitizeTextsMap: dropped legacy ce-* keys=', dropped);
+      return out;
     }
 
     function lockPublicEditing() {
@@ -1934,8 +1951,8 @@
       let applied = 0;
       let missed = 0;
       if (data.texts && typeof data.texts === 'object') {
-        const missedEntries = [];
-        Object.entries(data.texts).forEach(([key, html]) => {
+        const texts = sanitizeTextsMap(data.texts);
+        Object.entries(texts).forEach(([key, html]) => {
           const el =
             document.getElementById(key) ||
             document.querySelector(`[data-content-key="${key}"]`);
@@ -1944,27 +1961,9 @@
             applied += 1;
           } else {
             missed += 1;
-            missedEntries.push(key);
           }
         });
-        // Migração: textos antigos com chave aleatória ce-xxx → aplica por ordem nos campos sem id
-        if (missedEntries.length) {
-          const orderedTargets = Array.from(
-            document.querySelectorAll('[data-admin-editable="true"]'),
-          ).filter((el) => !el.id);
-          const orphanHtmls = missedEntries
-            .map((k) => data.texts[k])
-            .filter((h) => typeof h === 'string');
-          let byOrder = 0;
-          orphanHtmls.forEach((html, i) => {
-            if (!orderedTargets[i]) return;
-            orderedTargets[i].innerHTML = html;
-            byOrder += 1;
-          });
-          cartilhaLog('apply texts: applied=', applied, 'missed=', missed, 'fallbackByOrder=', byOrder, 'missedSample=', missedEntries.slice(0, 5));
-        } else {
-          cartilhaLog('apply texts: applied=', applied, 'missed=', missed);
-        }
+        cartilhaLog('apply texts: applied=', applied, 'missed=', missed, '(sem fallback por ordem)');
       }
       if (data.mascots && typeof data.mascots === 'object') {
         Object.entries(data.mascots).forEach(([id, url]) => {
@@ -2158,9 +2157,13 @@
       } catch (e) {}
 
       try {
+        // Descarta cache antigo que embaralhava textos
+        localStorage.removeItem('guata_cartilha_content_v1');
         const contentStored = localStorage.getItem(CONTENT_STORAGE_KEY);
         const parsed = contentStored ? JSON.parse(contentStored) : null;
-        if (isMeaningfulContent(parsed)) applyBookletContent(parsed);
+        if (parsed && isMeaningfulContent(parsed)) {
+          applyBookletContent({ ...parsed, texts: sanitizeTextsMap(parsed.texts) });
+        }
       } catch (e) {}
 
       // Conteúdo da nuvem (funciona com login da cartilha, sem precisar do admin Descubra)
