@@ -607,6 +607,92 @@ export type Database = {
         }
         Relationships: []
       }
+      app_push_devices: {
+        Row: {
+          city_name: string | null
+          created_at: string
+          events_nearby: boolean
+          fcm_token: string
+          guata_tips: boolean
+          id: string
+          last_seen_at: string
+          latitude: number | null
+          longitude: number | null
+          platform: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          city_name?: string | null
+          created_at?: string
+          events_nearby?: boolean
+          fcm_token: string
+          guata_tips?: boolean
+          id?: string
+          last_seen_at?: string
+          latitude?: number | null
+          longitude?: number | null
+          platform: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          city_name?: string | null
+          created_at?: string
+          events_nearby?: boolean
+          fcm_token?: string
+          guata_tips?: boolean
+          id?: string
+          last_seen_at?: string
+          latitude?: number | null
+          longitude?: number | null
+          platform?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      app_push_log: {
+        Row: {
+          body: string | null
+          created_at: string
+          deep_link: string | null
+          device_id: string | null
+          event_id: string | null
+          id: string
+          kind: string
+          title: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          deep_link?: string | null
+          device_id?: string | null
+          event_id?: string | null
+          id?: string
+          kind: string
+          title?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          deep_link?: string | null
+          device_id?: string | null
+          event_id?: string | null
+          id?: string
+          kind?: string
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_push_log_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "app_push_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendant_allowed_locations: {
         Row: {
           address: string | null
@@ -2634,6 +2720,92 @@ export type Database = {
           status?: string
           tool_name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      guata_cartilha_progress: {
+        Row: {
+          cartilha_id: string
+          created_at: string
+          id: string
+          progress_data: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cartilha_id: string
+          created_at?: string
+          id?: string
+          progress_data?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cartilha_id?: string
+          created_at?: string
+          id?: string
+          progress_data?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guata_cartilha_progress_cartilha_id_fkey"
+            columns: ["cartilha_id"]
+            isOneToOne: false
+            referencedRelation: "guata_cartilhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guata_cartilhas: {
+        Row: {
+          audience: string | null
+          cover_url: string | null
+          created_at: string
+          display_order: number
+          html_url: string | null
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          slug: string
+          status: string
+          subtitle: string | null
+          theme: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string | null
+          cover_url?: string | null
+          created_at?: string
+          display_order?: number
+          html_url?: string | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          slug: string
+          status?: string
+          subtitle?: string | null
+          theme?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string | null
+          cover_url?: string | null
+          created_at?: string
+          display_order?: number
+          html_url?: string | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          slug?: string
+          status?: string
+          subtitle?: string | null
+          theme?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -7266,6 +7438,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_featured: boolean
           name: string
           order_index: number | null
           slug: string
@@ -7283,6 +7456,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean
           name: string
           order_index?: number | null
           slug: string
@@ -7300,6 +7474,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_featured?: boolean
           name?: string
           order_index?: number | null
           slug?: string
