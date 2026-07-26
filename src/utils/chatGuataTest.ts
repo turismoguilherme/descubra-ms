@@ -1,7 +1,4 @@
-export const CHAT_GUATA_TEST_PATH = '/chatguata-teste';
-export const CHAT_GUATA_MS_TEST_PATH = '/descubrams/chatguata-teste';
-
-/** Totem standalone: /chatguata, /chatguata-teste e equivalentes em /descubrams. */
+/** Totem standalone de produção: /chatguata e /descubrams/chatguata */
 export function isChatGuataTotemPath(pathname: string): boolean {
-  return /\/chatguata(-teste)?\/?$/.test(pathname);
+  return /\/chatguata\/?$/.test(pathname);
 }

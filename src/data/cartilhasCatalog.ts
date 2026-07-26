@@ -12,6 +12,8 @@ export interface CartilhaItem {
   featured: boolean;
   coverUrl?: string | null;
   htmlPath?: string;
+  /** Snapshot editável (mascote, QR, textos) — lido/salvo pelo viewer */
+  contentData?: Record<string, unknown> | null;
 }
 
 /** Fallback local se o Supabase ainda não tiver a migration aplicada. */
@@ -59,6 +61,10 @@ export function mapDbCartilha(row: any): CartilhaItem {
     featured: !!row.is_featured,
     coverUrl: row.cover_url,
     htmlPath: row.html_url || undefined,
+    contentData:
+      row.content_data && typeof row.content_data === 'object'
+        ? (row.content_data as Record<string, unknown>)
+        : null,
   };
 }
 

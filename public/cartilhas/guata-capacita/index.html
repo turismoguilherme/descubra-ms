@@ -236,18 +236,65 @@
       }
 
       .a4-page, .a4-page * {
-        overflow-wrap: break-word !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+        box-sizing: border-box !important;
       }
 
+      /* Títulos grandes do A4: cabem na tela */
+      .a4-page h1,
+      .a4-page h2,
+      .a4-page h3,
+      .a4-page .text-5xl,
+      .a4-page .text-4xl,
+      .a4-page .text-3xl,
+      .a4-page .text-2xl {
+        font-size: clamp(1.05rem, 5.2vw, 1.75rem) !important;
+        line-height: 1.25 !important;
+        max-width: 100% !important;
+      }
 
-      /* Nenhum elemento pode forçar largura maior que a tela */
-      .a4-page * {
+      .a4-page .text-base,
+      .a4-page .text-lg,
+      .a4-page .text-sm,
+      .a4-page .text-xs,
+      .a4-page p,
+      .a4-page span,
+      .a4-page li {
+        max-width: 100% !important;
+      }
+
+      /* Flex rows: empilham e não empurram texto para fora */
+      .a4-page .flex {
+        flex-wrap: wrap !important;
+        max-width: 100% !important;
+      }
+
+      .a4-page .flex.items-center.justify-between,
+      .a4-page .flex.justify-between {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.35rem !important;
+      }
+
+      /* Nenhum elemento pode forçar largura maior que a tela (exceto o canvas do QR) */
+      .a4-page *:not(canvas) {
         max-width: 100% !important;
       }
 
       /* Textos que no A4 usam nowrap precisam quebrar no celular */
-      .a4-page .whitespace-nowrap {
+      .a4-page .whitespace-nowrap,
+      .a4-page .truncate {
         white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+      }
+
+      /* Tracking largo / uppercase: não estoura */
+      .a4-page .tracking-widest,
+      .a4-page .tracking-wider,
+      .a4-page .uppercase {
+        letter-spacing: 0.04em !important;
       }
 
       /* Grades fixas empilham */
@@ -257,6 +304,11 @@
       .a4-page .grid.md\:grid-cols-3 {
         grid-template-columns: 1fr !important;
         gap: 0.75rem !important;
+      }
+
+      /* Cartões de módulo: não cortar QR / botão */
+      .a4-page .overflow-hidden {
+        overflow: visible !important;
       }
 
       /* Elementos absolutos decorativos não empurram o conteúdo */
@@ -294,21 +346,48 @@
         gap: 0.35rem;
       }
 
-      /* Botão de abrir aula: compacto, dentro do cartão, sem quebrar palavras */
+      /* Botão de abrir aula: fora do box do QR, compacto */
       .qr-open-link {
+        display: inline-flex !important;
         position: static !important;
         width: auto !important;
-        max-width: none !important;
+        max-width: 100% !important;
         white-space: nowrap !important;
-        font-size: 0.7rem !important;
-        padding: 0.4rem 0.6rem !important;
-        margin: 0.4rem auto 0 !important;
+        font-size: 0.65rem !important;
+        padding: 0.35rem 0.55rem !important;
+        margin: 0.35rem 0 0 !important;
       }
 
-      /* Espaço extra abaixo do QR para o rótulo/botão caber dentro do cartão */
       .a4-page .qr-holder {
-        margin-bottom: 2.25rem !important;
-        overflow: visible !important;
+        width: 3.25rem !important;
+        height: 3.25rem !important;
+        margin-bottom: 0 !important;
+        overflow: hidden !important;
+        flex-shrink: 0 !important;
+      }
+
+      .a4-page .qr-holder canvas,
+      .a4-page .qr-holder img {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+      }
+
+      /* Rodapés compactos e empilhados no celular */
+      .a4-page .page-footer {
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.1rem !important;
+        font-size: 8px !important;
+        line-height: 1.2 !important;
+        padding-top: 0.4rem !important;
+        text-align: center !important;
+      }
+
+      .a4-page .page-footer span {
+        display: block;
       }
 
     }
@@ -374,6 +453,15 @@
 
     .admin-logged-in .admin-only {
       display: inline-flex !important;
+    }
+
+    /* Botões de mascote / QR / logos só no modo admin */
+    .admin-logged-in .asset-edit-btn {
+      display: inline-flex !important;
+    }
+
+    .page-footer {
+      gap: 0.35rem;
     }
 
     /* Custom Scrollbar */
@@ -456,6 +544,11 @@
           <button id="toggleEditBtn" onclick="toggleEditMode()" class="admin-only hidden items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold transition active:scale-95">
             <i data-lucide="edit-3" class="w-4 h-4 text-emerald-400"></i>
             <span id="editBtnText">Edição de Textos</span>
+          </button>
+
+          <button id="saveCloudBtn" onclick="saveBookletContent(true)" class="admin-only hidden items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-bold px-3 py-2 rounded-xl text-xs transition shadow-lg active:scale-95">
+            <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+            <span id="saveCloudBtnText">Salvar na nuvem</span>
           </button>
 
           <!-- Auth Login / Logout Button -->
@@ -588,10 +681,8 @@
         <div id="partnerLogosGrid" class="grid grid-cols-4 gap-2 text-center text-[10px]"></div>
       </div>
 
-      <div class="relative z-10 flex justify-between items-center text-[10px] text-emerald-300/80 pt-2 border-t border-white/5">
-        <span>www.turismo.ms.gov.br</span>
-        <span>Edição 2026/2027 • Versão A4 Editável</span>
-        <span>Página 01</span>
+      <div class="page-footer relative z-10 flex justify-center items-center text-[10px] text-emerald-300/80 pt-2 border-t border-white/5">
+        <span id="coverBrandLine" contenteditable="true">Guatá Capacita • CATs MS</span>
       </div>
 
     </section>
@@ -678,7 +769,7 @@
         </div>
       </div>
 
-      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+      <div class="page-footer flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
         <span>Capacitação Institucional</span>
         <span>Orientação Inicial</span>
         <span>Página 02</span>
@@ -758,7 +849,7 @@
         </div>
       </div>
 
-      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+      <div class="page-footer flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
         <span>Metodologia</span>
         <span>Passo a Passo de Estudo</span>
         <span>Página 03</span>
@@ -855,7 +946,7 @@
         </div>
       </div>
 
-      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+      <div class="page-footer flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
         <span>Módulos Operacionais</span>
         <span>Módulos 01 & 02</span>
         <span>Página 04</span>
@@ -952,7 +1043,7 @@
         </div>
       </div>
 
-      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+      <div class="page-footer flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
         <span>Módulos Operacionais</span>
         <span>Módulos 03 & 04</span>
         <span>Página 05</span>
@@ -1038,7 +1129,7 @@
         </div>
       </div>
 
-      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+      <div class="page-footer flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
         <span>Atendimento de Excelência</span>
         <span>Dicas & Boas Práticas</span>
         <span>Página 06</span>
@@ -1109,7 +1200,7 @@
         </div>
       </div>
 
-      <div class="flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
+      <div class="page-footer flex justify-between items-center text-[10px] text-slate-400 border-t border-slate-100 pt-3">
         <span>Registro do Atendente</span>
         <span>Acompanhamento & Certificado</span>
         <span>Página 07</span>
@@ -1555,12 +1646,21 @@
     let currentActiveTargetId = null;
     let defaultMascotVectorHTML = {};
     const PROGRESS_STORAGE_KEY = 'guata_cartilha_progress_v1';
+    const CONTENT_STORAGE_KEY = 'guata_cartilha_content_v1';
+    let qrUrlMap = {};
+    let mascotUrlMap = {};
+    let canSaveCloud = false;
+    let contentHydrated = false;
+    const pendingUploads = {};
 
     function lockPublicEditing() {
       document.querySelectorAll('[contenteditable]').forEach((el) => {
         // Aluno pode preencher datas/visto na tabela de progresso
         if (el.closest('#progressTableBody')) return;
         el.setAttribute('data-admin-editable', 'true');
+        if (!el.id && !el.getAttribute('data-content-key')) {
+          el.setAttribute('data-content-key', 'ce-' + Math.random().toString(36).slice(2, 10));
+        }
         el.setAttribute('contenteditable', 'false');
       });
     }
@@ -1638,12 +1738,152 @@
       }, true);
     }
 
+    function setMascotFromUrl(targetId, url) {
+      const container = document.getElementById(targetId);
+      if (!container || !url) return;
+      mascotUrlMap[targetId] = url;
+      container.innerHTML = `<img src="${url}" alt="Mascote" class="w-full h-full object-contain drop-shadow-xl rounded-xl">`;
+    }
+
+    function collectBookletContent() {
+      const texts = {};
+      document.querySelectorAll('[data-admin-editable="true"]').forEach((el) => {
+        const key = el.id || el.getAttribute('data-content-key');
+        if (!key) return;
+        texts[key] = el.innerHTML;
+      });
+      return {
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        theme: document.getElementById('themeSelector')?.value || 'default',
+        texts,
+        qr: { ...qrUrlMap },
+        mascots: { ...mascotUrlMap },
+        partners: partners.map((p) => ({ ...p })),
+      };
+    }
+
+    function applyBookletContent(data) {
+      if (!data || typeof data !== 'object') return;
+      contentHydrated = true;
+      if (data.theme) {
+        const themeSelector = document.getElementById('themeSelector');
+        if (themeSelector) themeSelector.value = data.theme;
+        changeBookletTheme(data.theme);
+      }
+      if (data.texts && typeof data.texts === 'object') {
+        Object.entries(data.texts).forEach(([key, html]) => {
+          const el =
+            document.getElementById(key) ||
+            document.querySelector(`[data-content-key="${key}"]`);
+          if (el && typeof html === 'string') el.innerHTML = html;
+        });
+      }
+      if (data.mascots && typeof data.mascots === 'object') {
+        Object.entries(data.mascots).forEach(([id, url]) => {
+          if (typeof url === 'string' && url) setMascotFromUrl(id, url);
+        });
+      }
+      if (Array.isArray(data.partners)) {
+        partners = data.partners;
+        renderPartners();
+      }
+      if (data.qr && typeof data.qr === 'object') {
+        Object.entries(data.qr).forEach(([id, url]) => {
+          if (typeof url === 'string' && url) createQRCode(id, url);
+        });
+      }
+    }
+
+    function persistContentLocal(data) {
+      try {
+        localStorage.setItem(CONTENT_STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function setSaveBtnState(label, busy) {
+      const el = document.getElementById('saveCloudBtnText');
+      if (el) el.innerText = label;
+      const btn = document.getElementById('saveCloudBtn');
+      if (btn) btn.disabled = !!busy;
+    }
+
+    function saveBookletContent(showAlert) {
+      const data = collectBookletContent();
+      persistContentLocal(data);
+      try {
+        if (window.parent && window.parent !== window) {
+          setSaveBtnState('Salvando…', true);
+          window.parent.postMessage({ type: 'guata-cartilha-content-save', payload: data }, '*');
+        } else if (showAlert) {
+          alert('Salvo neste aparelho. Abra a cartilha pelo Descubra MS logado como admin para gravar na nuvem.');
+        }
+      } catch (e) {
+        if (showAlert) alert('Salvo apenas neste aparelho.');
+      }
+    }
+
+    function requestUploadImage(dataUrl, targetId) {
+      return new Promise((resolve, reject) => {
+        if (!(window.parent && window.parent !== window)) {
+          resolve(dataUrl);
+          return;
+        }
+        const requestId = 'up-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+        pendingUploads[requestId] = { resolve, reject, targetId };
+        window.parent.postMessage(
+          { type: 'guata-cartilha-upload-image', dataUrl, targetId, requestId },
+          '*'
+        );
+        setTimeout(() => {
+          if (pendingUploads[requestId]) {
+            delete pendingUploads[requestId];
+            resolve(dataUrl);
+          }
+        }, 20000);
+      });
+    }
+
     window.addEventListener('message', (event) => {
       const msg = event.data;
-      if (!msg || msg.type !== 'guata-cartilha-progress-hydrate') return;
-      if (msg.payload) {
-        applyProgressData(msg.payload);
-        persistProgressLocal(msg.payload);
+      if (!msg || typeof msg !== 'object') return;
+
+      if (msg.type === 'guata-cartilha-progress-hydrate') {
+        if (msg.payload) {
+          applyProgressData(msg.payload);
+          persistProgressLocal(msg.payload);
+        }
+        return;
+      }
+
+      if (msg.type === 'guata-cartilha-content-hydrate') {
+        if (msg.payload) {
+          applyBookletContent(msg.payload);
+          persistContentLocal(msg.payload);
+        }
+        return;
+      }
+
+      if (msg.type === 'guata-cartilha-content-auth') {
+        canSaveCloud = !!msg.canSaveCloud;
+        return;
+      }
+
+      if (msg.type === 'guata-cartilha-content-save-result') {
+        setSaveBtnState('Salvar na nuvem', false);
+        if (msg.ok) {
+          alert('Alterações salvas na nuvem. Elas permanecem ao sair e voltar.');
+        } else {
+          alert(msg.error || 'Não foi possível salvar na nuvem. Mantido neste aparelho.');
+        }
+        return;
+      }
+
+      if (msg.type === 'guata-cartilha-upload-result' && msg.requestId && pendingUploads[msg.requestId]) {
+        const pending = pendingUploads[msg.requestId];
+        delete pendingUploads[msg.requestId];
+        if (msg.ok && msg.url) pending.resolve(msg.url);
+        else pending.resolve(null);
       }
     });
 
@@ -1678,10 +1918,16 @@
         if (progressStored) applyProgressData(JSON.parse(progressStored));
       } catch (e) {}
 
-      // Pede progresso da nuvem ao app pai (Descubra MS)
+      try {
+        const contentStored = localStorage.getItem(CONTENT_STORAGE_KEY);
+        if (contentStored) applyBookletContent(JSON.parse(contentStored));
+      } catch (e) {}
+
+      // Pede progresso e conteúdo da nuvem ao app pai (Descubra MS)
       try {
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: 'guata-cartilha-progress-request', cartilhaId: currentBookletId }, '*');
+          window.parent.postMessage({ type: 'guata-cartilha-content-request', cartilhaId: currentBookletId }, '*');
         }
       } catch (e) {}
     };
@@ -1790,6 +2036,7 @@
         body.classList.remove('editable-active');
         applyEditMode(false);
         btnText.innerText = 'Edição de Textos';
+        saveBookletContent(true);
       }
     }
 
@@ -1956,11 +2203,13 @@
       nameInput.value = '';
       urlInput.value = '';
       renderPartners();
+      saveBookletContent(false);
     }
 
     function removePartner(id) {
       partners = partners.filter(p => p.id !== id);
       renderPartners();
+      saveBookletContent(false);
     }
 
     function openPartnerModal() {
@@ -1985,25 +2234,38 @@
       const fileInput = document.getElementById('mascotFileInput');
       const urlInput = document.getElementById('mascotUrlInput').value.trim();
       const container = document.getElementById(currentActiveTargetId);
+      const targetId = currentActiveTargetId;
 
-      if (!container) return;
+      if (!container || !targetId) return;
+
+      const finish = (url) => {
+        if (!url) {
+          alert('Não foi possível aplicar a imagem.');
+          return;
+        }
+        setMascotFromUrl(targetId, url);
+        closeImageModal();
+        saveBookletContent(false);
+      };
 
       if (fileInput.files && fileInput.files[0]) {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          container.innerHTML = `<img src="${e.target.result}" alt="Mascote" class="w-full h-full object-contain drop-shadow-xl rounded-xl">`;
-          closeImageModal();
+        reader.onload = async function(e) {
+          const dataUrl = e.target.result;
+          const uploaded = await requestUploadImage(dataUrl, targetId);
+          finish(uploaded || dataUrl);
         };
         reader.readAsDataURL(fileInput.files[0]);
       } else if (urlInput !== '') {
-        container.innerHTML = `<img src="${urlInput}" alt="Mascote" class="w-full h-full object-contain drop-shadow-xl rounded-xl">`;
-        closeImageModal();
+        finish(urlInput);
       }
     }
 
     function restoreMascotDefault() {
       if (currentActiveTargetId && defaultMascotVectorHTML[currentActiveTargetId]) {
         document.getElementById(currentActiveTargetId).innerHTML = defaultMascotVectorHTML[currentActiveTargetId];
+        delete mascotUrlMap[currentActiveTargetId];
+        saveBookletContent(false);
       }
       closeImageModal();
     }
@@ -2030,14 +2292,21 @@
       });
     }
 
+    function removeQrOpenLink(containerId) {
+      document.querySelectorAll(`.qr-open-link[data-for="${containerId}"]`).forEach((el) => el.remove());
+    }
+
     function createQRCode(containerId, textUrl) {
       const container = document.getElementById(containerId);
       if (!container) return;
+      qrUrlMap[containerId] = textUrl;
+      removeQrOpenLink(containerId);
       container.innerHTML = '';
+      const size = Math.max(48, Math.min(128, container.clientWidth || 56));
       new QRCode(container, {
         text: textUrl,
-        width: 128,
-        height: 128,
+        width: size,
+        height: size,
         colorDark : "#0f172a",
         colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
@@ -2045,33 +2314,33 @@
       // Link placeholder (aula ainda não publicada) fica desabilitado em vez de abrir 404
       const isPlaceholder = /turismo\.ms\.gov\.br\/capacita\//i.test(textUrl);
 
+      let openEl;
       if (isPlaceholder) {
-        const soon = document.createElement('span');
-        soon.className = 'qr-open-link';
-        soon.style.background = '#475569';
-        soon.style.opacity = '0.85';
-        soon.textContent = 'Aula em breve';
-        container.appendChild(soon);
-        return;
+        openEl = document.createElement('span');
+        openEl.className = 'qr-open-link';
+        openEl.style.background = '#475569';
+        openEl.style.opacity = '0.85';
+        openEl.textContent = 'Aula em breve';
+      } else {
+        openEl = document.createElement('a');
+        openEl.href = textUrl;
+        openEl.target = '_blank';
+        openEl.rel = 'noopener noreferrer';
+        openEl.className = 'qr-open-link';
+        openEl.textContent = 'Abrir aula';
+        openEl.addEventListener('click', (ev) => {
+          if (window.parent && window.parent !== window) {
+            ev.preventDefault();
+            window.parent.postMessage(
+              { type: 'guata-cartilha-open-link', url: textUrl },
+              '*'
+            );
+          }
+        });
       }
-
-      const openLink = document.createElement('a');
-      openLink.href = textUrl;
-      openLink.target = '_blank';
-      openLink.rel = 'noopener noreferrer';
-      openLink.className = 'qr-open-link';
-      openLink.textContent = 'Abrir aula';
-      // Dentro do app (iframe/WebView) o _blank é bloqueado: pedimos ao app para abrir
-      openLink.addEventListener('click', (ev) => {
-        if (window.parent && window.parent !== window) {
-          ev.preventDefault();
-          window.parent.postMessage(
-            { type: 'guata-cartilha-open-link', url: textUrl },
-            '*'
-          );
-        }
-      });
-      container.appendChild(openLink);
+      openEl.setAttribute('data-for', containerId);
+      // Fora do .qr-holder para não estourar o box no celular
+      container.insertAdjacentElement('afterend', openEl);
     }
 
 
@@ -2089,6 +2358,7 @@
       if (!url) return;
       createQRCode(currentActiveTargetId, url);
       closeQrModal();
+      saveBookletContent(false);
     }
 
     // Dynamic Module Creation (Admin)

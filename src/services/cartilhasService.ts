@@ -10,7 +10,7 @@ export async function fetchPublicCartilhas(): Promise<CartilhaItem[]> {
     const { data, error } = await supabase
       .from('guata_cartilhas')
       .select(
-        'id,slug,title,subtitle,audience,theme,cover_url,html_url,is_featured,is_active,status,display_order'
+        'id,slug,title,subtitle,audience,theme,cover_url,html_url,is_featured,is_active,status,display_order,content_data'
       )
       .eq('is_active', true)
       .order('display_order', { ascending: true });
@@ -53,4 +53,31 @@ export async function upsertCartilhaProgress(
   );
 
   if (error) throw error;
+}
+
+export async function updateCartilhaContentData(
+  cartilhaId: string,
+  contentData: Record<string, unknown>
+) {
+  const { error } = await supabase
+    .from('guata_cartilhas')
+    .update({
+      content_data: contentData as never,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', cartilhaId);
+
+  if (error) throw error;
+}
+
+/** Upload de imagem do mascote (admin) → URL pública no bucket guata-cartilhas */
+export async function uploadCartilhaAsset(file: Blob, filename: string) {
+  const path = `assets/${crypto.randomUUID()}-${filename}`;
+  const { error } = await supabase.storage.from('guata-cartilhas').upload(path, file, {
+    contentType: file.type || 'image/png',
+    upsert: true,
+  });
+  if (error) throw error;
+  const { data } = supabase.storage.from('guata-cartilhas').getPublicUrl(path);
+  return data.publicUrl;
 }

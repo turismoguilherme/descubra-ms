@@ -6,6 +6,8 @@ import {
   fetchPublicCartilhas,
   fetchCartilhaProgress,
   upsertCartilhaProgress,
+  updateCartilhaContentData,
+  uploadCartilhaAsset,
 } from '@/services/cartilhasService';
 import type { CartilhaItem } from '@/data/cartilhasCatalog';
 import { isNativeApp } from '@/native/capacitorBridge';
@@ -27,14 +29,28 @@ function resolveCartilhaEmbedSrc(htmlPath?: string | null): string {
   return htmlPath.startsWith('/') ? htmlPath : `/${htmlPath}`;
 }
 
+function dataUrlToBlob(dataUrl: string): { blob: Blob; filename: string } | null {
+  const match = /^data:([^;]+);base64,(.+)$/i.exec(dataUrl);
+  if (!match) return null;
+  const mime = match[1] || 'image/png';
+  const bin = atob(match[2]);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const ext = mime.includes('jpeg') ? 'jpg' : mime.includes('webp') ? 'webp' : 'png';
+  return { blob: new Blob([bytes], { type: mime }), filename: `mascot.${ext}` };
+}
+
+const ADMIN_ROLES = new Set(['admin', 'tech', 'master_admin', 'diretor_estadual']);
+
 const CartilhaViewer = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [cartilha, setCartilha] = useState<CartilhaItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [cloudStatus, setCloudStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const native = useMemo(() => isNativeApp(), []);
+  const isCloudAdmin = ADMIN_ROLES.has(userProfile?.role || '');
 
   useEffect(() => {
     let cancelled = false;
@@ -50,12 +66,19 @@ const CartilhaViewer = () => {
     };
   }, [slug]);
 
+  const pushContentHydrate = (payload: Record<string, unknown> | null | undefined) => {
+    if (!payload || Object.keys(payload).length === 0) return;
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'guata-cartilha-content-hydrate', payload },
+      '*'
+    );
+  };
+
   useEffect(() => {
     const onMessage = async (event: MessageEvent) => {
       const msg = event.data;
       if (!msg || typeof msg !== 'object') return;
 
-      // Abrir links das aulas: dentro do app o target="_blank" do iframe é bloqueado
       if (msg.type === 'guata-cartilha-open-link' && typeof msg.url === 'string') {
         const url: string = msg.url;
         if (!/^https?:\/\//i.test(url)) return;
@@ -74,6 +97,98 @@ const CartilhaViewer = () => {
 
       if (!cartilha?.id) return;
 
+      if (msg.type === 'guata-cartilha-content-request') {
+        pushContentHydrate(cartilha.contentData || null);
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            type: 'guata-cartilha-content-auth',
+            canSaveCloud: !!(user && isCloudAdmin),
+          },
+          '*'
+        );
+        return;
+      }
+
+      if (msg.type === 'guata-cartilha-content-save') {
+        if (!user || !isCloudAdmin) {
+          iframeRef.current?.contentWindow?.postMessage(
+            {
+              type: 'guata-cartilha-content-save-result',
+              ok: false,
+              error: 'Faça login como administrador no Descubra MS para salvar na nuvem.',
+            },
+            '*'
+          );
+          return;
+        }
+        setCloudStatus('saving');
+        try {
+          const payload =
+            msg.payload && typeof msg.payload === 'object'
+              ? (msg.payload as Record<string, unknown>)
+              : {};
+          await updateCartilhaContentData(cartilha.id, payload);
+          setCartilha((prev) => (prev ? { ...prev, contentData: payload } : prev));
+          setCloudStatus('saved');
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: 'guata-cartilha-content-save-result', ok: true },
+            '*'
+          );
+        } catch (e) {
+          console.error('Erro ao salvar conteúdo da cartilha:', e);
+          setCloudStatus('error');
+          iframeRef.current?.contentWindow?.postMessage(
+            {
+              type: 'guata-cartilha-content-save-result',
+              ok: false,
+              error: e instanceof Error ? e.message : 'Falha ao salvar',
+            },
+            '*'
+          );
+        }
+        return;
+      }
+
+      if (msg.type === 'guata-cartilha-upload-image' && typeof msg.dataUrl === 'string') {
+        if (!user || !isCloudAdmin) {
+          iframeRef.current?.contentWindow?.postMessage(
+            {
+              type: 'guata-cartilha-upload-result',
+              requestId: msg.requestId,
+              ok: false,
+              error: 'Login admin necessário para enviar imagem.',
+            },
+            '*'
+          );
+          return;
+        }
+        try {
+          const parsed = dataUrlToBlob(msg.dataUrl);
+          if (!parsed) throw new Error('Imagem inválida');
+          const publicUrl = await uploadCartilhaAsset(parsed.blob, parsed.filename);
+          iframeRef.current?.contentWindow?.postMessage(
+            {
+              type: 'guata-cartilha-upload-result',
+              requestId: msg.requestId,
+              ok: true,
+              url: publicUrl,
+              targetId: msg.targetId,
+            },
+            '*'
+          );
+        } catch (e) {
+          iframeRef.current?.contentWindow?.postMessage(
+            {
+              type: 'guata-cartilha-upload-result',
+              requestId: msg.requestId,
+              ok: false,
+              error: e instanceof Error ? e.message : 'Upload falhou',
+            },
+            '*'
+          );
+        }
+        return;
+      }
 
       if (msg.type === 'guata-cartilha-progress-request') {
         if (!user) return;
@@ -107,7 +222,7 @@ const CartilhaViewer = () => {
 
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [cartilha?.id, user, native]);
+  }, [cartilha?.id, cartilha?.contentData, user, isCloudAdmin, native]);
 
   if (loading) {
     return (
@@ -151,12 +266,14 @@ const CartilhaViewer = () => {
             <p className="hidden sm:block text-[11px] text-slate-400 truncate">
               {user
                 ? cloudStatus === 'saving'
-                  ? 'Salvando progresso…'
+                  ? 'Salvando…'
                   : cloudStatus === 'saved'
-                    ? 'Progresso salvo'
+                    ? 'Salvo na nuvem'
                     : cloudStatus === 'error'
                       ? 'Falha ao salvar (mantido neste aparelho)'
-                      : 'Progresso na sua conta'
+                      : isCloudAdmin
+                        ? 'Admin · edições salvam na nuvem'
+                        : 'Progresso na sua conta'
                 : 'Leitura livre · entre para salvar progresso'}
             </p>
           </div>
@@ -178,7 +295,6 @@ const CartilhaViewer = () => {
               Conta conectada
             </span>
           )}
-          {/* Nova aba só no desktop do site — no celular/app a leitura fica in-app */}
           {!native && (
             <a
               href={embedSrc || cartilha.htmlPath}
@@ -199,6 +315,7 @@ const CartilhaViewer = () => {
         title={cartilha.title}
         className="flex-1 w-full border-0 bg-slate-950 min-h-0"
         allow="fullscreen"
+        onLoad={() => pushContentHydrate(cartilha.contentData || null)}
       />
     </div>
   );
