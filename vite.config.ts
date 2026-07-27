@@ -54,7 +54,8 @@ const siteProfiles: Record<SiteBrand, {
       "Tecnologia, inteligência artificial e soluções digitais para destinos, empresas e organizações do turismo.",
     url: "https://viajartur.com/",
     favicon: "/branding/guata-labs-mark.svg",
-    image: "https://viajartur.com/branding/guata-labs-share.svg",
+    // PNG: WhatsApp/Facebook não renderizam OG em SVG de forma confiável
+    image: "https://viajartur.com/branding/guata-labs-share.png",
     imageAlt: "Guatá Labs — Tecnologia e IA para o Turismo",
     schema: {
       "@context": "https://schema.org",
@@ -94,6 +95,11 @@ function resolveSiteBrand(mode: string): SiteBrand {
 
 function siteIdentityPlugin(brand: SiteBrand): Plugin {
   const profile = siteProfiles[brand];
+  const siteName = brand === "guata-labs" ? "Guatá Labs" : "Descubra Mato Grosso do Sul";
+  const faviconType = brand === "guata-labs" ? "image/svg+xml" : "image/png";
+  const appleTouch =
+    brand === "guata-labs" ? "/branding/guata-labs-share.png" : "/apple-touch-icon.png";
+
   return {
     name: "site-identity",
     transformIndexHtml() {
@@ -116,21 +122,22 @@ function siteIdentityPlugin(brand: SiteBrand): Plugin {
         },
         {
           tag: "link",
-          attrs: { rel: "icon", href: profile.favicon, type: brand === "guata-labs" ? "image/svg+xml" : "image/png" },
+          attrs: { rel: "icon", href: profile.favicon, type: faviconType },
           injectTo: "head" as const,
         },
         {
           tag: "link",
-          attrs: { rel: "apple-touch-icon", href: brand === "guata-labs" ? profile.favicon : "/apple-touch-icon.png" },
+          attrs: { rel: "apple-touch-icon", href: appleTouch },
           injectTo: "head" as const,
         },
-        { tag: "meta", attrs: { property: "og:site_name", content: brand === "guata-labs" ? "Guatá Labs" : "Descubra Mato Grosso do Sul" }, injectTo: "head" as const },
+        { tag: "meta", attrs: { property: "og:site_name", content: siteName }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:title", content: profile.title }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:description", content: profile.description }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:type", content: "website" }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:url", content: profile.url }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:locale", content: "pt_BR" }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:image", content: profile.image }, injectTo: "head" as const },
+        { tag: "meta", attrs: { property: "og:image:type", content: brand === "guata-labs" ? "image/png" : "image/png" }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:image:alt", content: profile.imageAlt }, injectTo: "head" as const },
         { tag: "meta", attrs: { name: "twitter:card", content: "summary_large_image" }, injectTo: "head" as const },
         { tag: "meta", attrs: { name: "twitter:title", content: profile.title }, injectTo: "head" as const },
@@ -158,6 +165,53 @@ function siteIdentityPlugin(brand: SiteBrand): Plugin {
           brand === "guata-labs"
             ? `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://viajartur.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://viajartur.com/solucoes</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://viajartur.com/casos-sucesso</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://viajartur.com/sobre</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n  <url><loc>https://viajartur.com/contato</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n</urlset>\n`
             : `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>https://descubrams.com/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n  <url><loc>https://descubrams.com/descubrams/destinos</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>\n  <url><loc>https://descubrams.com/descubrams/eventos</loc><changefreq>daily</changefreq><priority>0.9</priority></url>\n  <url><loc>https://descubrams.com/descubrams/roteiros</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>\n  <url><loc>https://descubrams.com/descubrams/parceiros</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>\n  <url><loc>https://descubrams.com/descubrams/sobre</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>\n</urlset>\n`,
+      });
+      this.emitFile({
+        type: "asset",
+        fileName: "manifest.webmanifest",
+        source: JSON.stringify(
+          brand === "guata-labs"
+            ? {
+                name: "Guatá Labs",
+                short_name: "Guatá Labs",
+                description:
+                  "Tecnologia, inteligência artificial e soluções digitais para o turismo.",
+                start_url: "/",
+                display: "standalone",
+                background_color: "#0B3D2E",
+                theme_color: "#0B3D2E",
+                lang: "pt-BR",
+                icons: [
+                  {
+                    src: "/branding/guata-labs-share.png",
+                    type: "image/png",
+                    sizes: "512x512",
+                    purpose: "any",
+                  },
+                ],
+              }
+            : {
+                name: "Descubra MS",
+                short_name: "Descubra MS",
+                description:
+                  "Portal oficial de turismo de Mato Grosso do Sul — destinos, eventos, roteiros e o Guatá.",
+                start_url: "/",
+                display: "standalone",
+                background_color: "#0B3D2E",
+                theme_color: "#0B3D2E",
+                lang: "pt-BR",
+                icons: [
+                  {
+                    src: "/branding/descubra-ms-mark.png",
+                    type: "image/png",
+                    sizes: "512x512",
+                    purpose: "any",
+                  },
+                ],
+              },
+          null,
+          2
+        ),
       });
     },
   };

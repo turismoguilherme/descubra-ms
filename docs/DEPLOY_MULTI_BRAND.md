@@ -46,6 +46,11 @@ Em cada domínio:
 3. Abra `/sitemap.xml` e confirme que não contém URLs do outro domínio.
 4. Confirme o favicon em `/branding/descubra-ms-mark.png` ou
    `/branding/guata-labs-mark.svg`.
-5. Solicite nova indexação da home no Google Search Console.
+5. Confirme o favicon em `/branding/descubra-ms-mark.png` ou
+   `/branding/guata-labs-mark.svg`.
+6. Confirme `og:image` em PNG (WhatsApp não usa SVG de forma confiável):
+   Descubra → `/branding/descubra-ms-mark.png`; Guatá → `/branding/guata-labs-share.png`.
+7. Solicite nova indexação da home no Google Search Console.
+8. Para limpar cache do preview do WhatsApp, use o [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) com a URL e clique em “Scrape Again”.
 
 Alterações no resultado do Google não são imediatas; dependem de novo rastreamento.

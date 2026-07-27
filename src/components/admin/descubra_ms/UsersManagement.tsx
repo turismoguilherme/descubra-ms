@@ -202,14 +202,19 @@ export default function UsersManagement() {
       return;
     }
 
-    const { error } = await supabase.functions.invoke('admin-delete-user', {
+    const { data, error } = await supabase.functions.invoke('admin-delete-user', {
       body: { userId: user.user_id },
     });
 
-    if (error) {
+    const remoteMessage =
+      data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string'
+        ? (data as { error: string }).error
+        : null;
+
+    if (error || remoteMessage) {
       toast({
         title: 'Erro ao excluir',
-        description: error.message || 'Falha ao excluir usuário.',
+        description: remoteMessage || error?.message || 'Falha ao excluir usuário.',
         variant: 'destructive',
       });
       return;

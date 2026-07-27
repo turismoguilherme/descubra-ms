@@ -28,13 +28,14 @@ export default function AdminLogin() {
       const result = await signIn(e, p);
 
       if (result.error) {
-        const errorMessage = result.error.message || 'Credenciais inválidas';
+        const raw = result.error.message || '';
+        const errorMessage = raw.includes('Invalid login credentials')
+          ? 'Email ou senha inválidos'
+          : raw.includes('Email not confirmed')
+            ? 'Email não confirmado. Verifique sua caixa de entrada.'
+            : raw || 'Credenciais inválidas';
         setError(errorMessage);
-        toast({
-          title: 'Erro no login',
-          description: errorMessage,
-          variant: 'destructive',
-        });
+        // AuthProvider já exibe toast; evita duplicar mensagem em inglês
       } else if (result.data) {
         setTimeout(() => {
           window.location.reload();

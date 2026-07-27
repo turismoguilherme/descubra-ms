@@ -116,17 +116,6 @@ export const adminModulesConfig: AdminModule[] = [
             description: 'Configure os planos de assinatura da plataforma Guatá Labs',
             helpText: 'Gerencie planos, preços e recursos disponíveis para cada tipo de assinatura.',
           },
-          {
-            id: 'viajar-team',
-            label: 'Membros da Equipe',
-            icon: Users,
-            path: '/viajar/admin/viajar/team-members',
-            permission: 'viajar',
-            platform: 'viajar',
-            title: 'Membros da Equipe',
-            description: 'Gerencie os membros da equipe Guatá Labs',
-            helpText: 'Adicione, edite ou remova membros da equipe exibidos na página Sobre.',
-          },
         ],
       },
       {

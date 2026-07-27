@@ -42,7 +42,6 @@ const PoliciesEditor = lazy(() => import('@/components/admin/settings/PoliciesEd
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
 const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
 const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
-const TeamMembersManager = lazy(() => import('@/components/admin/viajar/TeamMembersManager'));
 const ViaJARSectionManager = lazy(() => import('@/components/admin/viajar/ViaJARSectionManager'));
 
 const ADMIN_ROLES = ['admin', 'master_admin', 'tech'] as const;
@@ -92,11 +91,6 @@ export default function ViaJARAdminPanel() {
         <Route path="viajar/plan-settings" element={
           <Suspense fallback={<LoadingFallback />}>
             <ViaJARTurSettingsManager />
-          </Suspense>
-        } />
-        <Route path="viajar/team-members" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <TeamMembersManager />
           </Suspense>
         } />
         <Route path="viajar/sections" element={

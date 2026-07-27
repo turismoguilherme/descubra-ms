@@ -6,6 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -15,6 +23,7 @@ import {
   ChevronDown,
   ChevronRight,
   Loader2,
+  Pencil,
   Plus,
   Trash2,
 } from 'lucide-react';
@@ -83,6 +92,12 @@ const GuataCartilhasManager = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
   const [linkDraft, setLinkDraft] = useState('');
+  const [editItem, setEditItem] = useState<GuataCartilha | null>(null);
+  const [editForm, setEditForm] = useState(emptyForm);
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [regenSlug, setRegenSlug] = useState(false);
+  const editCoverRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
     setLoading(true);
@@ -194,6 +209,82 @@ const GuataCartilhasManager = () => {
     setEditingLinkId(null);
     setLinkDraft('');
     toast({ title: 'Link salvo' });
+  };
+
+  const openEdit = (item: GuataCartilha) => {
+    setEditItem(item);
+    setEditForm({
+      title: item.title,
+      subtitle: item.subtitle || '',
+      audience: item.audience || '',
+      theme: item.theme || 'pantanal',
+      is_featured: item.is_featured,
+      is_active: item.is_active,
+      status: item.status,
+      openLink: item.html_url || '',
+    });
+    setEditCoverFile(null);
+    setRegenSlug(false);
+    if (editCoverRef.current) editCoverRef.current.value = '';
+  };
+
+  const saveEdit = async () => {
+    if (!editItem) return;
+    if (!editForm.title.trim()) {
+      toast({ title: 'Informe o título', variant: 'destructive' });
+      return;
+    }
+
+    const openLink = editForm.openLink.trim() || null;
+    let status = editForm.status;
+    if (status === 'available' && !openLink) {
+      status = 'coming_soon';
+      toast({
+        title: 'Salva como Em breve',
+        description: 'Para ficar Disponível, informe o link de abertura.',
+      });
+    }
+
+    const nextSlug = regenSlug ? slugify(editForm.title) : editItem.slug;
+    if (regenSlug && !nextSlug) {
+      toast({ title: 'Título inválido para gerar slug', variant: 'destructive' });
+      return;
+    }
+
+    setEditSaving(true);
+    try {
+      let coverUrl = editItem.cover_url;
+      if (editCoverFile) coverUrl = await uploadCover(editCoverFile);
+
+      const { error } = await supabase
+        .from('guata_cartilhas')
+        .update({
+          title: editForm.title.trim(),
+          subtitle: editForm.subtitle.trim() || null,
+          audience: editForm.audience.trim() || null,
+          slug: nextSlug,
+          theme: editForm.theme,
+          status,
+          is_featured: editForm.is_featured,
+          is_active: editForm.is_active,
+          cover_url: coverUrl,
+          html_url: openLink,
+        })
+        .eq('id', editItem.id);
+      if (error) throw new Error(error.message);
+
+      toast({ title: 'Cartilha atualizada' });
+      setEditItem(null);
+      load();
+    } catch (e) {
+      toast({
+        title: 'Erro ao atualizar',
+        description: e instanceof Error ? e.message : String(e),
+        variant: 'destructive',
+      });
+    } finally {
+      setEditSaving(false);
+    }
   };
 
   const handleDelete = async (item: GuataCartilha) => {
@@ -414,6 +505,9 @@ const GuataCartilhasManager = () => {
                         <Button size="icon" variant="outline" onClick={() => move(index, 1)}>
                           <ArrowDown className="w-4 h-4" />
                         </Button>
+                        <Button size="icon" variant="outline" onClick={() => openEdit(item)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
                         <Button size="icon" variant="destructive" onClick={() => handleDelete(item)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -457,6 +551,136 @@ const GuataCartilhasManager = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!editItem} onOpenChange={(open) => !open && setEditItem(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar cartilha</DialogTitle>
+            <DialogDescription>
+              Atualize título, descrição, tema, capa, link e visibilidade.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editItem && (
+            <div className="space-y-4 py-2">
+              <div>
+                <Label htmlFor="edit-title">Título</Label>
+                <Input
+                  id="edit-title"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={regenSlug} onCheckedChange={setRegenSlug} />
+                <Label className="text-sm">
+                  Regenerar slug a partir do título
+                  <span className="block text-xs text-muted-foreground font-normal">
+                    Atual: {editItem.slug}
+                    {regenSlug && editForm.title
+                      ? ` → ${slugify(editForm.title) || '—'}`
+                      : ''}
+                  </span>
+                </Label>
+              </div>
+              <div>
+                <Label htmlFor="edit-subtitle">Descrição</Label>
+                <Textarea
+                  id="edit-subtitle"
+                  value={editForm.subtitle}
+                  onChange={(e) => setEditForm((f) => ({ ...f, subtitle: e.target.value }))}
+                  rows={2}
+                />
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-audience">Público / selo</Label>
+                  <Input
+                    id="edit-audience"
+                    value={editForm.audience}
+                    onChange={(e) => setEditForm((f) => ({ ...f, audience: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-theme">Cor do card</Label>
+                  <select
+                    id="edit-theme"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={editForm.theme}
+                    onChange={(e) => setEditForm((f) => ({ ...f, theme: e.target.value }))}
+                  >
+                    <option value="pantanal">Verde Pantanal</option>
+                    <option value="terracotta">Terra Cota</option>
+                    <option value="blue">Azul Rio</option>
+                    <option value="amber">Ipê Amarelo</option>
+                    <option value="purple">Cerrado Violeta</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="edit-link">Link de abertura</Label>
+                <Input
+                  id="edit-link"
+                  value={editForm.openLink}
+                  onChange={(e) => setEditForm((f) => ({ ...f, openLink: e.target.value }))}
+                  placeholder="/cartilhas/guata-capacita/index.html"
+                />
+              </div>
+              <div>
+                <Label>Trocar capa (opcional)</Label>
+                {editItem.cover_url && (
+                  <img
+                    src={editItem.cover_url}
+                    alt=""
+                    className="mt-1 mb-2 h-20 w-auto rounded-md object-cover border"
+                  />
+                )}
+                <Input
+                  ref={editCoverRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => setEditCoverFile(e.target.files?.[0] || null)}
+                />
+              </div>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={editForm.is_featured}
+                    onCheckedChange={(v) => setEditForm((f) => ({ ...f, is_featured: v }))}
+                  />
+                  <Label>Destaque na home</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={editForm.is_active}
+                    onCheckedChange={(v) => setEditForm((f) => ({ ...f, is_active: v }))}
+                  />
+                  <Label>Visível no site</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={editForm.status === 'coming_soon'}
+                    onCheckedChange={(v) =>
+                      setEditForm((f) => ({ ...f, status: v ? 'coming_soon' : 'available' }))
+                    }
+                  />
+                  <Label>Em breve (ainda não abre)</Label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditItem(null)} disabled={editSaving}>
+              Cancelar
+            </Button>
+            <Button onClick={saveEdit} disabled={editSaving} className="gap-2">
+              {editSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

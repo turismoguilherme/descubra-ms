@@ -88,8 +88,16 @@ serve(async (req: Request) => {
 
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId);
     if (deleteError) {
+      const details =
+        typeof (deleteError as { details?: string }).details === 'string'
+          ? (deleteError as { details?: string }).details
+          : undefined;
+      const message = [deleteError.message, details].filter(Boolean).join(' — ');
       return new Response(
-        JSON.stringify({ error: deleteError.message }),
+        JSON.stringify({
+          error: message || 'Database error deleting user',
+          code: (deleteError as { code?: string }).code ?? null,
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }

@@ -7,7 +7,7 @@ import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import CookieConsentBanner from '@/components/cookies/CookieConsentBanner';
 import { platformContentService } from '@/services/admin/platformContentService';
 import { useViaJARSectionControls } from '@/hooks/useViaJARSectionControls';
-import WhatViajARTurDoesSection from '@/components/home/WhatViajARTurDoesSection';
+import WhatGuataLabsDoesSection from '@/components/home/WhatGuataLabsDoesSection';
 import TravelTechHero from '@/components/home/TravelTechHero';
 import PlatformInActionSection from '@/components/home/PlatformInActionSection';
 import BenefitsSection from '@/components/home/BenefitsSection';
@@ -108,7 +108,7 @@ const ViaJARSaaS = () => {
       <TravelTechHero />
 
       {/* O que a Guatá Labs faz */}
-      {isSectionActive('what_we_do') && <WhatViajARTurDoesSection />}
+      {isSectionActive('what_we_do') && <WhatGuataLabsDoesSection />}
 
       {/* Plataforma em Ação */}
       {isSectionActive('platform_in_action') && <PlatformInActionSection />}

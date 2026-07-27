@@ -41,13 +41,13 @@ export interface BrandConfig {
   };
 }
 
-// Configuração para Overflow One
+// Configuração para Guatá Labs (legado: overflow-one)
 const overflowOneConfig: BrandConfig = {
   brand: 'overflow-one',
   logo: {
-    src: '/images/logo-overflow-one.png',
-    alt: 'Overflow One - Plataforma de Turismo',
-    fallback: 'Overflow One'
+    src: '/branding/guata-labs-share.png',
+    alt: 'Guatá Labs - Tecnologia para o Turismo',
+    fallback: 'Guatá Labs'
   },
   navigation: [
     { name: 'Destinos', path: '/destinos' },
@@ -65,8 +65,8 @@ const overflowOneConfig: BrandConfig = {
     secondary: 'Entrar'
   },
   hero: {
-    title: 'Overflow One',
-    subtitle: 'Sua plataforma completa de turismo e descoberta',
+    title: 'Guatá Labs',
+    subtitle: 'Tecnologia e inteligência artificial para o turismo',
     buttons: {
       primary: { text: 'Começar Agora', path: '/welcome' },
       secondary: { text: 'Passaporte Digital', path: '/passaporte' },

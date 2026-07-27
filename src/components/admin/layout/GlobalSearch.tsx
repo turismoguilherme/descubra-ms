@@ -19,7 +19,6 @@ const searchItems: SearchItem[] = [
   // Guatá Labs
   { label: 'Conteúdo e Menu', path: '/viajar/admin/viajar/content', category: 'Guatá Labs' },
   { label: 'Configuração de Planos', path: '/viajar/admin/viajar/plan-settings', category: 'Guatá Labs' },
-  { label: 'Membros da Equipe', path: '/viajar/admin/viajar/team-members', category: 'Guatá Labs' },
 
   // Descubra MS
   { label: 'Regiões Turísticas', path: '/viajar/admin/descubra-ms/tourist-regions', category: 'Descubra MS' },
