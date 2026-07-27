@@ -143,152 +143,6 @@ export type Database = {
         }
         Relationships: []
       }
-      ai_consultant_config: {
-        Row: {
-          city_id: string | null
-          confidence_threshold: number | null
-          created_at: string | null
-          custom_prompts: Json | null
-          data_sources: Json | null
-          enabled: boolean | null
-          gemini_api_key_encrypted: string | null
-          id: string
-          max_queries_per_day: number | null
-          region_id: string | null
-          tenant_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          city_id?: string | null
-          confidence_threshold?: number | null
-          created_at?: string | null
-          custom_prompts?: Json | null
-          data_sources?: Json | null
-          enabled?: boolean | null
-          gemini_api_key_encrypted?: string | null
-          id?: string
-          max_queries_per_day?: number | null
-          region_id?: string | null
-          tenant_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          city_id?: string | null
-          confidence_threshold?: number | null
-          created_at?: string | null
-          custom_prompts?: Json | null
-          data_sources?: Json | null
-          enabled?: boolean | null
-          gemini_api_key_encrypted?: string | null
-          id?: string
-          max_queries_per_day?: number | null
-          region_id?: string | null
-          tenant_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_consultant_config_city_id_fkey"
-            columns: ["city_id"]
-            isOneToOne: false
-            referencedRelation: "cities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_consultant_config_region_id_fkey"
-            columns: ["region_id"]
-            isOneToOne: false
-            referencedRelation: "regions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_consultant_feedback: {
-        Row: {
-          created_at: string | null
-          feedback_text: string | null
-          helpful: boolean | null
-          id: string
-          improvement_suggestions: string | null
-          log_id: string | null
-          rating: number | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          feedback_text?: string | null
-          helpful?: boolean | null
-          id?: string
-          improvement_suggestions?: string | null
-          log_id?: string | null
-          rating?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          feedback_text?: string | null
-          helpful?: boolean | null
-          id?: string
-          improvement_suggestions?: string | null
-          log_id?: string | null
-          rating?: number | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_consultant_feedback_log_id_fkey"
-            columns: ["log_id"]
-            isOneToOne: false
-            referencedRelation: "ai_consultant_logs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      ai_consultant_logs: {
-        Row: {
-          confidence: number | null
-          context: Json | null
-          created_at: string | null
-          error_message: string | null
-          id: string
-          insights_count: number | null
-          processing_time_ms: number | null
-          question: string
-          recommendations_count: number | null
-          response_summary: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          confidence?: number | null
-          context?: Json | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          insights_count?: number | null
-          processing_time_ms?: number | null
-          question: string
-          recommendations_count?: number | null
-          response_summary?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          confidence?: number | null
-          context?: Json | null
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          insights_count?: number | null
-          processing_time_ms?: number | null
-          question?: string
-          recommendations_count?: number | null
-          response_summary?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       ai_feedback_log: {
         Row: {
           comments: string | null
@@ -367,129 +221,6 @@ export type Database = {
         }
         Relationships: []
       }
-      ai_master_insights: {
-        Row: {
-          actions: Json | null
-          confidence_score: number | null
-          created_at: string | null
-          data_sources: string[] | null
-          description: string
-          generated_by: string | null
-          id: string
-          insight_type: string
-          priority: string | null
-          recommendations: Json | null
-          region: string | null
-          state_code: string | null
-          status: string | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          actions?: Json | null
-          confidence_score?: number | null
-          created_at?: string | null
-          data_sources?: string[] | null
-          description: string
-          generated_by?: string | null
-          id?: string
-          insight_type: string
-          priority?: string | null
-          recommendations?: Json | null
-          region?: string | null
-          state_code?: string | null
-          status?: string | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          actions?: Json | null
-          confidence_score?: number | null
-          created_at?: string | null
-          data_sources?: string[] | null
-          description?: string
-          generated_by?: string | null
-          id?: string
-          insight_type?: string
-          priority?: string | null
-          recommendations?: Json | null
-          region?: string | null
-          state_code?: string | null
-          status?: string | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      ai_proactive_insights: {
-        Row: {
-          city_id: string | null
-          confidence: number | null
-          created_at: string | null
-          data_sources: Json | null
-          description: string
-          dismissed_by: string[] | null
-          expires_at: string | null
-          id: string
-          insight_type: string
-          region_id: string | null
-          severity: string | null
-          tenant_id: string
-          title: string
-          updated_at: string | null
-          viewed_by: string[] | null
-        }
-        Insert: {
-          city_id?: string | null
-          confidence?: number | null
-          created_at?: string | null
-          data_sources?: Json | null
-          description: string
-          dismissed_by?: string[] | null
-          expires_at?: string | null
-          id?: string
-          insight_type: string
-          region_id?: string | null
-          severity?: string | null
-          tenant_id: string
-          title: string
-          updated_at?: string | null
-          viewed_by?: string[] | null
-        }
-        Update: {
-          city_id?: string | null
-          confidence?: number | null
-          created_at?: string | null
-          data_sources?: Json | null
-          description?: string
-          dismissed_by?: string[] | null
-          expires_at?: string | null
-          id?: string
-          insight_type?: string
-          region_id?: string | null
-          severity?: string | null
-          tenant_id?: string
-          title?: string
-          updated_at?: string | null
-          viewed_by?: string[] | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_proactive_insights_city_id_fkey"
-            columns: ["city_id"]
-            isOneToOne: false
-            referencedRelation: "cities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_proactive_insights_region_id_fkey"
-            columns: ["region_id"]
-            isOneToOne: false
-            referencedRelation: "regions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       ai_prompt_configs: {
         Row: {
           chatbot_name: string
@@ -535,45 +266,6 @@ export type Database = {
           updated_by?: string | null
           variables?: Json | null
           version?: number
-        }
-        Relationships: []
-      }
-      ai_seo_improvements: {
-        Row: {
-          applied_at: string | null
-          applied_by: string | null
-          content_id: string
-          content_type: string
-          created_at: string | null
-          id: string
-          improvements: Json
-          priority: string | null
-          seo_analysis: string | null
-          status: string | null
-        }
-        Insert: {
-          applied_at?: string | null
-          applied_by?: string | null
-          content_id: string
-          content_type: string
-          created_at?: string | null
-          id?: string
-          improvements?: Json
-          priority?: string | null
-          seo_analysis?: string | null
-          status?: string | null
-        }
-        Update: {
-          applied_at?: string | null
-          applied_by?: string | null
-          content_id?: string
-          content_type?: string
-          created_at?: string | null
-          id?: string
-          improvements?: Json
-          priority?: string | null
-          seo_analysis?: string | null
-          status?: string | null
         }
         Relationships: []
       }
@@ -1170,57 +862,6 @@ export type Database = {
         }
         Relationships: []
       }
-      commercial_partner_metrics: {
-        Row: {
-          created_at: string
-          id: string
-          metadata: Json | null
-          metric_type: string
-          metric_value: number
-          partner_id: string
-          recorded_at: string
-          source: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          metric_type: string
-          metric_value?: number
-          partner_id: string
-          recorded_at?: string
-          source?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          metadata?: Json | null
-          metric_type?: string
-          metric_value?: number
-          partner_id?: string
-          recorded_at?: string
-          source?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "commercial_partner_metrics_partner_id_fkey"
-            columns: ["partner_id"]
-            isOneToOne: false
-            referencedRelation: "commercial_partners"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "commercial_partner_metrics_partner_id_fkey"
-            columns: ["partner_id"]
-            isOneToOne: false
-            referencedRelation: "commercial_partners_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       commercial_partners: {
         Row: {
           address: string | null
@@ -1444,15 +1085,7 @@ export type Database = {
           to_address?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "communication_logs_related_ticket_id_fkey"
-            columns: ["related_ticket_id"]
-            isOneToOne: false
-            referencedRelation: "flowtrip_support_tickets"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       content_audit_log: {
         Row: {
@@ -2363,47 +1996,6 @@ export type Database = {
         }
         Relationships: []
       }
-      flowtrip_onboarding_steps: {
-        Row: {
-          client_id: string | null
-          completed_at: string | null
-          created_at: string | null
-          id: string
-          is_completed: boolean | null
-          order_sequence: number
-          step_description: string | null
-          step_name: string
-        }
-        Insert: {
-          client_id?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          is_completed?: boolean | null
-          order_sequence: number
-          step_description?: string | null
-          step_name: string
-        }
-        Update: {
-          client_id?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          is_completed?: boolean | null
-          order_sequence?: number
-          step_description?: string | null
-          step_name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "flowtrip_onboarding_steps_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "flowtrip_clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       flowtrip_state_features: {
         Row: {
           config: Json | null
@@ -2570,53 +2162,6 @@ export type Database = {
           },
         ]
       }
-      flowtrip_support_tickets: {
-        Row: {
-          assigned_to: string | null
-          client_id: string | null
-          created_at: string | null
-          created_by: string | null
-          description: string
-          id: string
-          priority: string | null
-          status: string | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          client_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description: string
-          id?: string
-          priority?: string | null
-          status?: string | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          assigned_to?: string | null
-          client_id?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string
-          id?: string
-          priority?: string | null
-          status?: string | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "flowtrip_support_tickets_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "flowtrip_clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       flowtrip_usage_metrics: {
         Row: {
           client_id: string | null
@@ -2648,41 +2193,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "flowtrip_usage_metrics_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "flowtrip_clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      flowtrip_white_label_configs: {
-        Row: {
-          client_id: string | null
-          config_key: string
-          config_value: Json
-          created_at: string | null
-          id: string
-          updated_at: string | null
-        }
-        Insert: {
-          client_id?: string | null
-          config_key: string
-          config_value: Json
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Update: {
-          client_id?: string | null
-          config_key?: string
-          config_value?: Json
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "flowtrip_white_label_configs_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "flowtrip_clients"
@@ -2761,6 +2271,7 @@ export type Database = {
       guata_cartilhas: {
         Row: {
           audience: string | null
+          content_data: Json
           cover_url: string | null
           created_at: string
           display_order: number
@@ -2777,6 +2288,7 @@ export type Database = {
         }
         Insert: {
           audience?: string | null
+          content_data?: Json
           cover_url?: string | null
           created_at?: string
           display_order?: number
@@ -2793,6 +2305,7 @@ export type Database = {
         }
         Update: {
           audience?: string | null
+          content_data?: Json
           cover_url?: string | null
           created_at?: string
           display_order?: number
@@ -2806,75 +2319,6 @@ export type Database = {
           theme?: string
           title?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      guata_events: {
-        Row: {
-          city: string | null
-          contact_info: Json | null
-          created_at: string | null
-          description: string | null
-          end_date: string | null
-          end_time: string | null
-          event_type: string | null
-          id: string
-          is_active: boolean | null
-          is_recurring: boolean | null
-          last_verified: string | null
-          location: string | null
-          price_info: string | null
-          recurrence_pattern: Json | null
-          source: string | null
-          start_date: string | null
-          start_time: string | null
-          title: string
-          updated_at: string | null
-          website: string | null
-        }
-        Insert: {
-          city?: string | null
-          contact_info?: Json | null
-          created_at?: string | null
-          description?: string | null
-          end_date?: string | null
-          end_time?: string | null
-          event_type?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_recurring?: boolean | null
-          last_verified?: string | null
-          location?: string | null
-          price_info?: string | null
-          recurrence_pattern?: Json | null
-          source?: string | null
-          start_date?: string | null
-          start_time?: string | null
-          title: string
-          updated_at?: string | null
-          website?: string | null
-        }
-        Update: {
-          city?: string | null
-          contact_info?: Json | null
-          created_at?: string | null
-          description?: string | null
-          end_date?: string | null
-          end_time?: string | null
-          event_type?: string | null
-          id?: string
-          is_active?: boolean | null
-          is_recurring?: boolean | null
-          last_verified?: string | null
-          location?: string | null
-          price_info?: string | null
-          recurrence_pattern?: Json | null
-          source?: string | null
-          start_date?: string | null
-          start_time?: string | null
-          title?: string
-          updated_at?: string | null
-          website?: string | null
         }
         Relationships: []
       }
@@ -3112,48 +2556,6 @@ export type Database = {
         }
         Relationships: []
       }
-      guata_search_stats: {
-        Row: {
-          confidence_score: number | null
-          created_at: string | null
-          id: string
-          query: string
-          query_category: string | null
-          response_time_ms: number | null
-          results_count: number | null
-          session_id: string | null
-          sources_used: Json | null
-          user_id: string | null
-          user_satisfaction: string | null
-        }
-        Insert: {
-          confidence_score?: number | null
-          created_at?: string | null
-          id?: string
-          query: string
-          query_category?: string | null
-          response_time_ms?: number | null
-          results_count?: number | null
-          session_id?: string | null
-          sources_used?: Json | null
-          user_id?: string | null
-          user_satisfaction?: string | null
-        }
-        Update: {
-          confidence_score?: number | null
-          created_at?: string | null
-          id?: string
-          query?: string
-          query_category?: string | null
-          response_time_ms?: number | null
-          results_count?: number | null
-          session_id?: string | null
-          sources_used?: Json | null
-          user_id?: string | null
-          user_satisfaction?: string | null
-        }
-        Relationships: []
-      }
       guata_tourist_attractions: {
         Row: {
           accessibility_info: string | null
@@ -3265,66 +2667,6 @@ export type Database = {
           session_id?: string
           updated_at?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      guata_verified_partners: {
-        Row: {
-          business_name: string
-          business_type: string | null
-          city: string | null
-          contact_info: Json | null
-          created_at: string | null
-          description: string | null
-          id: string
-          is_featured: boolean | null
-          location: string | null
-          pricing_info: string | null
-          rating: number | null
-          review_count: number | null
-          services: Json | null
-          updated_at: string | null
-          verification_date: string | null
-          verification_status: string | null
-          verified_by: string | null
-        }
-        Insert: {
-          business_name: string
-          business_type?: string | null
-          city?: string | null
-          contact_info?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_featured?: boolean | null
-          location?: string | null
-          pricing_info?: string | null
-          rating?: number | null
-          review_count?: number | null
-          services?: Json | null
-          updated_at?: string | null
-          verification_date?: string | null
-          verification_status?: string | null
-          verified_by?: string | null
-        }
-        Update: {
-          business_name?: string
-          business_type?: string | null
-          city?: string | null
-          contact_info?: Json | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_featured?: boolean | null
-          location?: string | null
-          pricing_info?: string | null
-          rating?: number | null
-          review_count?: number | null
-          services?: Json | null
-          updated_at?: string | null
-          verification_date?: string | null
-          verification_status?: string | null
-          verified_by?: string | null
         }
         Relationships: []
       }
@@ -3564,53 +2906,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      inventory_analytics: {
-        Row: {
-          created_at: string | null
-          event_type: string
-          id: string
-          inventory_id: string | null
-          ip_address: unknown
-          metadata: Json | null
-          referrer: string | null
-          session_id: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          event_type: string
-          id?: string
-          inventory_id?: string | null
-          ip_address?: unknown
-          metadata?: Json | null
-          referrer?: string | null
-          session_id?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          event_type?: string
-          id?: string
-          inventory_id?: string | null
-          ip_address?: unknown
-          metadata?: Json | null
-          referrer?: string | null
-          session_id?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "inventory_analytics_inventory_id_fkey"
-            columns: ["inventory_id"]
-            isOneToOne: false
-            referencedRelation: "tourism_inventory"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       inventory_categories: {
         Row: {
@@ -4188,36 +3483,6 @@ export type Database = {
         }
         Relationships: []
       }
-      master_ai_feedback: {
-        Row: {
-          context_data: Json | null
-          context_type: string | null
-          created_at: string | null
-          feedback_type: string
-          id: string
-          user_comment: string | null
-          user_id: string | null
-        }
-        Insert: {
-          context_data?: Json | null
-          context_type?: string | null
-          created_at?: string | null
-          feedback_type: string
-          id?: string
-          user_comment?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          context_data?: Json | null
-          context_type?: string | null
-          created_at?: string | null
-          feedback_type?: string
-          id?: string
-          user_comment?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       master_clients: {
         Row: {
           auto_renewal: boolean | null
@@ -4430,59 +3695,6 @@ export type Database = {
         }
         Relationships: []
       }
-      master_support_tickets: {
-        Row: {
-          assigned_to: string | null
-          category: string | null
-          client_id: string
-          created_at: string | null
-          description: string | null
-          id: string
-          priority: string | null
-          resolution: string | null
-          resolved_at: string | null
-          status: string | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          assigned_to?: string | null
-          category?: string | null
-          client_id: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          priority?: string | null
-          resolution?: string | null
-          resolved_at?: string | null
-          status?: string | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          assigned_to?: string | null
-          category?: string | null
-          client_id?: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          priority?: string | null
-          resolution?: string | null
-          resolved_at?: string | null
-          status?: string | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "master_support_tickets_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "master_clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       master_system_metrics: {
         Row: {
           category: string | null
@@ -4635,75 +3847,6 @@ export type Database = {
           subscribed_at?: string | null
         }
         Relationships: []
-      }
-      offline_checkins: {
-        Row: {
-          accuracy: number | null
-          checkpoint_id: string
-          created_at: string | null
-          device_info: string | null
-          id: string
-          latitude: number
-          longitude: number
-          photo_metadata: Json | null
-          photo_url: string | null
-          route_id: string
-          synced: boolean | null
-          synced_at: string | null
-          user_id: string
-          validated: boolean | null
-          validation_error: string | null
-        }
-        Insert: {
-          accuracy?: number | null
-          checkpoint_id: string
-          created_at?: string | null
-          device_info?: string | null
-          id?: string
-          latitude: number
-          longitude: number
-          photo_metadata?: Json | null
-          photo_url?: string | null
-          route_id: string
-          synced?: boolean | null
-          synced_at?: string | null
-          user_id: string
-          validated?: boolean | null
-          validation_error?: string | null
-        }
-        Update: {
-          accuracy?: number | null
-          checkpoint_id?: string
-          created_at?: string | null
-          device_info?: string | null
-          id?: string
-          latitude?: number
-          longitude?: number
-          photo_metadata?: Json | null
-          photo_url?: string | null
-          route_id?: string
-          synced?: boolean | null
-          synced_at?: string | null
-          user_id?: string
-          validated?: boolean | null
-          validation_error?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "offline_checkins_checkpoint_id_fkey"
-            columns: ["checkpoint_id"]
-            isOneToOne: false
-            referencedRelation: "route_checkpoints"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "offline_checkins_route_id_fkey"
-            columns: ["route_id"]
-            isOneToOne: false
-            referencedRelation: "routes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       pantanal_avatars: {
         Row: {
@@ -6803,51 +5946,6 @@ export type Database = {
           },
         ]
       }
-      secretary_files: {
-        Row: {
-          category: string | null
-          created_at: string
-          description: string | null
-          file_path: string
-          file_size: number
-          file_type: string
-          filename: string
-          id: string
-          original_name: string
-          updated_at: string
-          uploaded_by: string | null
-          uploaded_by_name: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          file_path: string
-          file_size: number
-          file_type: string
-          filename: string
-          id?: string
-          original_name: string
-          updated_at?: string
-          uploaded_by?: string | null
-          uploaded_by_name?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string
-          description?: string | null
-          file_path?: string
-          file_size?: number
-          file_type?: string
-          filename?: string
-          id?: string
-          original_name?: string
-          updated_at?: string
-          uploaded_by?: string | null
-          uploaded_by_name?: string | null
-        }
-        Relationships: []
-      }
       security_audit_log: {
         Row: {
           action: string
@@ -8128,63 +7226,6 @@ export type Database = {
       }
     }
     Views: {
-      ai_consultant_config_safe: {
-        Row: {
-          city_id: string | null
-          confidence_threshold: number | null
-          created_at: string | null
-          custom_prompts: Json | null
-          data_sources: Json | null
-          enabled: boolean | null
-          id: string | null
-          max_queries_per_day: number | null
-          region_id: string | null
-          tenant_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          city_id?: string | null
-          confidence_threshold?: number | null
-          created_at?: string | null
-          custom_prompts?: Json | null
-          data_sources?: Json | null
-          enabled?: boolean | null
-          id?: string | null
-          max_queries_per_day?: number | null
-          region_id?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          city_id?: string | null
-          confidence_threshold?: number | null
-          created_at?: string | null
-          custom_prompts?: Json | null
-          data_sources?: Json | null
-          enabled?: boolean | null
-          id?: string | null
-          max_queries_per_day?: number | null
-          region_id?: string | null
-          tenant_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ai_consultant_config_city_id_fkey"
-            columns: ["city_id"]
-            isOneToOne: false
-            referencedRelation: "cities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ai_consultant_config_region_id_fkey"
-            columns: ["region_id"]
-            isOneToOne: false
-            referencedRelation: "regions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       commercial_partners_public: {
         Row: {
           address: string | null
@@ -8781,6 +7822,15 @@ export type Database = {
       reset_user_route_progress: {
         Args: { p_route_id: string; p_user_id: string }
         Returns: number
+      }
+      save_guata_cartilha_content: {
+        Args: {
+          p_content: Json
+          p_email: string
+          p_password: string
+          p_slug: string
+        }
+        Returns: Json
       }
       secure_ai_consultant_operation: {
         Args: {
