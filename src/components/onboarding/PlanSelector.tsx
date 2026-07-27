@@ -1,7 +1,7 @@
 /**
  * Plan Selector Component
  * Seleção de planos de assinatura com comparação de features
- * ViaJARTur: apenas planos mensais (sem opção anual)
+ * Guatá Labs: apenas planos mensais (sem opção anual)
  */
 
 import React from 'react';
@@ -21,7 +21,7 @@ interface PlanSelectorProps {
 }
 
 export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelectedPlan, preSelectedBilling, isViaJARTur = false }: PlanSelectorProps) {
-  // ViaJARTur: apenas planos mensais, sem toggle anual
+  // Guatá Labs: apenas planos mensais, sem toggle anual
   
   // ViaJAR Tur: apenas 2 planos (Empresários e Secretárias)
   // Descubra MS ou outros: todos os planos
@@ -65,7 +65,7 @@ export default function PlanSelector({ onSelectPlan, recommendedPlan, preSelecte
       <div className={cn(
         "grid gap-6",
         isViaJARTur 
-          ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto" // ViaJARTur: 2 planos centralizados
+          ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto" // Guatá Labs: 2 planos centralizados
           : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" // Outros: 4 planos
       )}>
         {planOrder.map((planId) => {

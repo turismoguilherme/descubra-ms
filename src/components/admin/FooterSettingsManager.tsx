@@ -688,14 +688,14 @@ export default function FooterSettingsManager() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Link ViajARTur</CardTitle>
-          <CardDescription>URL do site ViajARTur para exibir no rodapé</CardDescription>
+          <CardTitle className="text-lg">Link Guatá Labs</CardTitle>
+          <CardDescription>URL do site Guatá Labs para exibir no rodapé</CardDescription>
         </CardHeader>
         <CardContent>
           <div>
             <Label htmlFor="viajar_link">
               <Globe className="inline h-4 w-4 mr-2" />
-              URL ViajARTur
+              URL Guatá Labs
             </Label>
             <Input
               id="viajar_link"
@@ -787,7 +787,7 @@ export default function FooterSettingsManager() {
               id="disclaimer"
               value={settings.disclaimer || ''}
               onChange={(e) => setSettings({ ...settings, disclaimer: e.target.value })}
-              placeholder="Independent project by ViajARTur, not affiliated with the Government of Canada"
+              placeholder="Independent project by Guatá Labs, not affiliated with the Government of Canada"
             />
           </div>
         </CardContent>

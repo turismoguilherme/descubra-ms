@@ -243,11 +243,11 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
     },
   },
   data_report_approved: {
-    subject: '✅ Solicitação de Relatório Aprovada - ViajARTur',
+    subject: '✅ Solicitação de Relatório Aprovada - Guatá Labs',
     html: (data) => `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">ViajARTur</h1>
+          <h1 style="color: white; margin: 0;">Guatá Labs</h1>
         </div>
         <div style="padding: 30px; background: #f9f9f9;">
           <h2 style="color: #1e3a5f;">Sua solicitação foi aprovada! ✅</h2>
@@ -270,17 +270,17 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
           </p>
         </div>
         <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
-          <p>ViajARTur - Plataforma de Inteligência Turística</p>
+          <p>Guatá Labs - Plataforma de Inteligência Turística</p>
         </div>
       </div>
     `,
   },
   data_report_ready: {
-    subject: '📊 Seu Relatório de Dados está Pronto! - ViajARTur',
+    subject: '📊 Seu Relatório de Dados está Pronto! - Guatá Labs',
     html: (data) => `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(to right, #1e3a5f, #2d8a8a); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">ViajARTur</h1>
+          <h1 style="color: white; margin: 0;">Guatá Labs</h1>
         </div>
         <div style="padding: 30px; background: #f9f9f9;">
           <h2 style="color: #1e3a5f;">Seu relatório está pronto! 📊</h2>
@@ -313,7 +313,7 @@ const templates: Record<NotificationType, { subject: string | ((data: any) => st
           </div>
         </div>
         <div style="padding: 20px; text-align: center; color: #666; font-size: 12px;">
-          <p>ViajARTur - Plataforma de Inteligência Turística</p>
+          <p>Guatá Labs - Plataforma de Inteligência Turística</p>
           <p style="margin-top: 10px; font-size: 11px; color: #999;">
             Dúvidas? Entre em contato: contato@viajartur.com.br
           </p>

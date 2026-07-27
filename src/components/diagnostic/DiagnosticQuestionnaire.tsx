@@ -575,7 +575,7 @@ const DiagnosticQuestionnaire: React.FC<DiagnosticQuestionnaireProps> = ({
                 <Sparkles className="h-8 w-8 text-blue-600" />
               </div>
               <h3 className="text-xl font-semibold text-slate-800">
-                Bem-vindo ao ViajARTur
+                Bem-vindo ao Guatá Labs
               </h3>
               <p className="text-sm text-slate-600">
                 Configure seu perfil para personalizar sua experiência

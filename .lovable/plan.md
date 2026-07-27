@@ -1,50 +1,63 @@
-## O que eu verifiquei antes de planejar
+## O que verifiquei antes de propor
 
-- **Banco (548 MB no total)**: `security_audit_log` sozinha ocupa **92 MB com 9.108 linhas** (registros de 08/02/2026 a 17/07/2026). É de longe o maior peso e é tabela de log — ou seja, dá para reduzir com segurança. As outras tabelas são pequenas (a segunda maior tem 1 MB).
-- **Storage**: 171 arquivos, **152 MB**.
-- **Repositório**: `public/downloads/descubra-ms.apk` = **82 MB** versionado dentro do projeto.
-- **Cartilha Guatá Capacita**: é um HTML único (`public/cartilhas/guata-capacita/index.html`) exibido em iframe. Os "links das aulas" hoje apontam para URLs de exemplo (`https://turismo.ms.gov.br/capacita/modulo1-video`, etc.) geradas em `generateDefaultQRCodes()`, e o botão "Abrir link" usa `target="_blank"` — que no app nativo (WebView dentro de iframe) normalmente não abre nada.
-- **Sugestões do chat**: `GuataChat.tsx` renderiza `SuggestionQuestions variant="inline"` em grade de 2 colunas alinhada à esquerda (`SuggestionQuestions.tsx`).
-
----
-
-## 1) Limpeza de arquivos (sem risco)
-
-- Remover o `descubra-ms.apk` (82 MB) do repositório — ele é gerado por `scripts/build-android-apk.mjs`, então não se perde nada; o link de download passa a apontar para o artefato publicado. **Confirmo com você antes de apagar.**
-- Remover docs de trabalho já concluídos e duplicados em `docs/` (RESUMO_*, STATUS_*, CORRECOES_IMPLEMENTADAS_*_FINAL, README_ATUALIZADO, etc.), mantendo os documentos de arquitetura/configuração úteis.
-- Varredura de órfãos em `src/` (arquivos `.ts/.tsx` sem nenhum import), removendo apenas os 100% sem referência.
-
-## 2) Limpeza do Supabase
-
-**Etapa A — o ganho real (imediato):**
-- Apagar registros de `security_audit_log` com mais de 90 dias e rodar `VACUUM FULL` na tabela. Expectativa: liberar a maior parte dos 92 MB.
-- Criar uma função de retenção agendada (90 dias) para o log não crescer de novo.
-- Limpar caches expirados: `guata_response_cache` e `koda_response_cache`.
-
-**Etapa B — tabelas legadas (só depois de conferir com você):**
-Existem tabelas antigas praticamente vazias (grupo `flowtrip_*`, `master_*`, `workflow_definitions`, `automated_tasks`, `ai_master_insights`, `ai_proactive_insights`). Elas ocupam pouquíssimo espaço, então **não vale o risco de remover às cegas**. Vou levantar a lista das que não têm nenhuma leitura/escrita no código e te mostrar antes de qualquer `DROP`. Nada é apagado sem sua aprovação nominal.
-
-## 3) Guatá Capacita no app (layout + links das aulas)
-
-- **Links das aulas**: trocar o `target="_blank"` por abertura compatível com o app (no nativo, abre no navegador do sistema via ponte do Capacitor; no site, continua em nova aba) e transformar o bloco QR + botão em um cartão que não vaza da coluna no celular.
-- **Textos saindo para fora**: aplicar `overflow-wrap/break-words`, remover `whitespace-nowrap` das barras de navegação em telas pequenas (hoje as pílulas "Página 1..8" forçam scroll horizontal), e ajustar grids fixos (`grid-cols-2`, tabelas e cabeçalhos) para empilhar abaixo de 768px. Ajustes ficam dentro do bloco `@media screen and (max-width: 767px)`, sem alterar o layout A4/impressão.
-- **URLs de exemplo**: as URLs dos módulos são placeholders. Se você já tem os links reais das aulas/quizzes, me manda que eu coloco; senão, deixo o botão desabilitado com aviso "aula em breve" em vez de abrir link quebrado.
-
-## 4) Chat Guatá — sugestões centralizadas no app
-
-- Em `SuggestionQuestions.tsx` (variante `inline`): centralizar o título e os chips, com os cartões em largura consistente e texto centralizado, mantendo o toque confortável.
-- Em `GuataChat.tsx`: centralizar o bloco no container e limitar a largura máxima para não colar nas bordas.
-- Conferir os balões de mensagem no app (`ChatMessage.tsx`) para garantir alinhamento e quebra de texto correta em telas estreitas.
+- O menu real do admin vem de `src/config/adminModulesConfig.ts` (os arquivos `AdminSidebar.tsx` e `HorizontalNav.tsx` existem mas **não são usados** por nenhuma tela — são código morto).
+- As tabelas do módulo financeiro estão praticamente vazias: `flowtrip_clients` (1 linha), `flowtrip_subscriptions` (1), `payment_reconciliation` (0), `flowtrip_invoices` (0), `flowtrip_usage_metrics` (0), `expenses` (0), `employee_salaries` (0), `pending_refunds` (0).
+- Os webhooks do Stripe (`stripe-webhook-handler`, `stripe-create-checkout`, `hubspot-sync`) usam `master_clients`, **não** as tabelas `flowtrip_*` nem `payment_reconciliation` — então remover essas não quebra pagamentos de eventos/parceiros.
+- Exclusão de usuário: a função `admin-delete-user` existe e está correta, mas **21 tabelas apontam para `auth.users` com `ON DELETE NO ACTION`** (`passport_stamps`, `security_audit_log`, `attendant_checkins`, `routes.created_by`, `leads`, `tourism_inventory`, etc.). Isso faz o `auth.admin.deleteUser` falhar com "Database error deleting user" para qualquer usuário que já tenha usado o app. Essa é a causa confirmada.
+- Cartilhas: em `GuataCartilhasManager.tsx` só existe edição **do link**. Título, subtítulo, público, tema e capa só podem ser definidos na criação — por isso não é possível editar o nome depois.
 
 ---
 
-## Ordem de execução
-1. Limpeza do `security_audit_log` + retenção + caches (migration)
-2. Correções de layout do Guatá Capacita e links das aulas
-3. Centralização das sugestões e revisão dos balões no app
-4. Limpeza de arquivos do repositório (após seu OK sobre o APK)
-5. Lista de tabelas legadas para sua aprovação
+## 1. Remover o módulo Financeiro por completo
 
-## Detalhes técnicos
-- A migration só apaga linhas de log/cache e cria a função de retenção; nenhum schema de negócio é alterado.
-- As correções da cartilha ficam restritas ao CSS mobile e à função `createQRCode` do HTML — layout de impressão/A4 intocado.
+**Menu e rotas** (`adminModulesConfig.ts` + `ViaJARAdminPanel.tsx`): remover o grupo `financial` inteiro (Visão Geral, Clientes, Assinaturas, Pagamentos, Receitas, Contas a Pagar, Contas Bancárias, Fornecedores, Relatórios, Leads de Contato) e as rotas `financial/*`, `viajar/clients`, `viajar/subscriptions`.
+
+**Reembolsos → Parceiros**: `RefundManagement` passa a ser uma **4ª aba dentro de Descubra MS → Parceiros** (`?tab=refunds`), junto de Lista / Taxas / Cancelamento. Nada de reembolso se perde.
+
+**Dashboard inicial do admin**: hoje o `DashboardOverview` é 100% financeiro (receita, despesa, lucro, contas a vencer). Vou substituí-lo por uma visão operacional: eventos pendentes de aprovação, parceiros aguardando aprovação, termos pendentes de revisão, usuários novos e reembolsos pendentes — tudo com link direto para a tela correspondente.
+
+**Arquivos removidos**: `src/components/admin/financial/` (exceto `RefundManagement.tsx`), `src/components/admin/viajar/ClientsManagement.tsx`, `SubscriptionsManagement.tsx`, `src/services/admin/financialService.ts`, `financialDashboardService.ts`, `src/utils/financialReportGenerator.ts`, além dos códigos mortos `AdminSidebar.tsx` e `HorizontalNav.tsx`.
+
+**Banco (migração)**: `DROP TABLE flowtrip_clients, flowtrip_subscriptions, flowtrip_invoices, flowtrip_usage_metrics, payment_reconciliation, expenses, employee_salaries`. Mantidas: `pending_refunds`, `master_clients`, `viajar_employees`, `partner_transactions` (usadas por outras partes).
+
+> Nota: `AIAdminChat` e `autonomousAgentService` consultam despesas/receitas. Vou ajustá-los para não referenciar as tabelas removidas em vez de deletá-los.
+
+## 2. Remover "Conteúdo e opções do site"
+
+Item `platform-settings` sai do menu — ele aponta para `/descubra-ms/platform-settings`, rota que **nem existe** no painel (link quebrado hoje). Também vou limpar os outros itens de menu órfãos que descobri: `homepage`, `destinations`, `employees`, `pages`, `settings`.
+
+## 3. Remover toda referência a "ViajARTur"
+
+Substituição por **Guatá Labs** em: `AdminLogin.tsx`, `UsersManagement.tsx` (descrição), `PoliciesEditor.tsx`, `FooterSettingsManager.tsx`, `ViajarProductsManager.tsx`, `ViaJARSectionManager.tsx`, `EmployeesManagement.tsx`, `UnifiedLoginSystem.tsx`, `TestUserSelector.tsx`, `DiagnosticQuestionnaire.tsx`, `SystemMonitoring.tsx`, `SimpleTextEditor.tsx`, `WhatViajARTurDoesSection.tsx` (renomeado para `WhatGuataLabsDoesSection.tsx`), `pdfTemplateService.ts` e `viajarTestLogin.ts`.
+
+As **rotas `/viajar/...` continuam iguais** — mexer nelas quebraria links salvos e o redirect de login. Só muda o texto visível.
+
+## 4. Novo layout da tela de login administrativa
+
+Só a tela `AdminLogin.tsx` (o cabeçalho interno do painel fica como está):
+
+- Layout em duas colunas no desktop: painel esquerdo com a marca **Guatá Labs** (logo + mascote capivara, fundo verde-floresta com textura sutil) e formulário à direita em card claro; empilhado no mobile.
+- Paleta Guatá Labs (verde-floresta / dourado / creme) via tokens do design system, substituindo os cinzas atuais.
+- Melhorias de usabilidade: botão mostrar/ocultar senha, link "Esqueci minha senha", estado de erro mais legível, foco automático no e-mail e `autoComplete` correto.
+- Subtítulo passa de "ViajARTur & Descubra MS" para "Guatá Labs & Descubra MS".
+
+## 5. Corrigir exclusão de usuários
+
+Migração alterando as 21 chaves estrangeiras que apontam para `auth.users` com `NO ACTION`:
+- dados pessoais do usuário → `ON DELETE CASCADE` (`passport_stamps`, `user_achievements`, `attendant_checkins`, `attendant_timesheet`, `inventory_reviews`, `checkpoint_code_attempts`, `app_push_devices`);
+- campos de autoria/auditoria → `ON DELETE SET NULL` (`routes.created_by`, `security_audit_log.user_id`, `leads.created_by/assigned_to`, `tourism_inventory`, `destinations`, `passport_configurations`, `pending_refunds.processed_by`, `system_alerts.resolved_by`, `content_audit_log`, `site_settings`, etc.), preservando o histórico.
+
+Além disso, `admin-delete-user` passará a devolver a mensagem real do Postgres e a UI vai exibi-la, para nunca mais ficar um erro genérico.
+
+## 6. Corrigir edição das cartilhas do Guatá Capacita
+
+Em `GuataCartilhasManager.tsx`, trocar a edição só-do-link por um **diálogo "Editar cartilha"** completo: título (com regeneração opcional do slug), subtítulo, público-alvo, tema, link de abertura, troca de capa, status (Disponível / Em breve), destaque na home e visibilidade — salvando via `update` na `guata_cartilhas`.
+
+---
+
+### Detalhes técnicos
+
+- Migração 1: `DROP TABLE ... CASCADE` das 7 tabelas financeiras (todas vazias ou com 1 linha de teste).
+- Migração 2: `ALTER TABLE ... DROP CONSTRAINT / ADD CONSTRAINT ... ON DELETE CASCADE|SET NULL` nas FKs para `auth.users`.
+- `RefundManagement` é montado dentro de `PartnersAdminModule` como aba, sem duplicar lógica.
+- Nenhuma rota pública do Descubra MS é afetada.

@@ -15,7 +15,7 @@ interface User {
   full_name: string | null;
   email: string;
   role: string;
-  platform: 'Descubra MS' | 'ViajarTur';
+  platform: 'Descubra MS' | 'Guatá Labs';
   status: 'active' | 'inactive';
   protectedAccount: boolean;
   created_at: string;
@@ -102,7 +102,7 @@ export default function UsersManagement() {
           full_name: profile.full_name,
           email: 'Não disponível',
           role: primaryRole,
-          platform: isViajar ? 'ViajarTur' : 'Descubra MS',
+          platform: isViajar ? 'Guatá Labs' : 'Descubra MS',
           status: isActive ? 'active' : 'inactive',
           protectedAccount,
           created_at: profile.created_at || '',
@@ -130,8 +130,8 @@ export default function UsersManagement() {
   const metrics = {
     descubraTotal: users.filter((u) => u.platform === 'Descubra MS').length,
     descubraActive: users.filter((u) => u.platform === 'Descubra MS' && u.status === 'active').length,
-    viajarTotal: users.filter((u) => u.platform === 'ViajarTur').length,
-    viajarActive: users.filter((u) => u.platform === 'ViajarTur' && u.status === 'active').length,
+    viajarTotal: users.filter((u) => u.platform === 'Guatá Labs').length,
+    viajarActive: users.filter((u) => u.platform === 'Guatá Labs' && u.status === 'active').length,
   };
 
   const handleToggleBlock = async (user: User) => {
@@ -226,7 +226,7 @@ export default function UsersManagement() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Usuários"
-        description="Gerencie usuários do Descubra MS e ViajarTur. Bloqueie ou exclua contas conforme política e solicitações."
+        description="Gerencie usuários do Descubra MS e Guatá Labs. Bloqueie ou exclua contas conforme política e solicitações."
         helpText="Exclusão permanente disponível apenas para admin/master_admin. Contas protegidas não podem ser removidas por esta tela."
       />
 
@@ -245,7 +245,7 @@ export default function UsersManagement() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>ViajarTur</CardDescription>
+            <CardDescription>Guatá Labs</CardDescription>
             <CardTitle className="text-2xl flex items-center gap-2">
               <Users className="w-5 h-5" />
               {metrics.viajarTotal}

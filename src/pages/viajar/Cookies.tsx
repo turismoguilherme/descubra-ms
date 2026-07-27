@@ -44,7 +44,7 @@ const Cookies = () => {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Política de Cookies - ViajARTur</title>
+            <title>Política de Cookies - Guatá Labs</title>
             <meta charset="utf-8">
             <style>
               body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; color: #333; }
@@ -63,7 +63,7 @@ const Cookies = () => {
           </head>
           <body>
             <h1>Política de Cookies</h1>
-            <p><strong>ViajARTur - Plataforma SaaS de Gestão Turística</strong></p>
+            <p><strong>Guatá Labs - Plataforma SaaS de Gestão Turística</strong></p>
             <p><em>Última atualização: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</em></p>
             <hr style="margin: 30px 0;">
             ${clone.innerHTML}
@@ -79,15 +79,15 @@ const Cookies = () => {
   const essentialCookies = [
     { name: 'sb-access-token', purpose: 'Token de autenticação Supabase', duration: 'Sessão', provider: 'Supabase' },
     { name: 'sb-refresh-token', purpose: 'Token de renovação da sessão', duration: '7 dias', provider: 'Supabase' },
-    { name: 'csrf_token', purpose: 'Proteção contra ataques CSRF', duration: 'Sessão', provider: 'ViajARTur' },
-    { name: 'session_id', purpose: 'Identificador da sessão do usuário', duration: 'Sessão', provider: 'ViajARTur' },
+    { name: 'csrf_token', purpose: 'Proteção contra ataques CSRF', duration: 'Sessão', provider: 'Guatá Labs' },
+    { name: 'session_id', purpose: 'Identificador da sessão do usuário', duration: 'Sessão', provider: 'Guatá Labs' },
   ];
 
   const preferenceCookies = [
-    { name: 'theme', purpose: 'Preferência de tema (claro/escuro)', duration: '1 ano', provider: 'ViajARTur' },
-    { name: 'sidebar_state', purpose: 'Estado da barra lateral (aberta/fechada)', duration: '30 dias', provider: 'ViajARTur' },
-    { name: 'dashboard_layout', purpose: 'Layout preferido do dashboard', duration: '30 dias', provider: 'ViajARTur' },
-    { name: 'locale', purpose: 'Preferência de idioma', duration: '1 ano', provider: 'ViajARTur' },
+    { name: 'theme', purpose: 'Preferência de tema (claro/escuro)', duration: '1 ano', provider: 'Guatá Labs' },
+    { name: 'sidebar_state', purpose: 'Estado da barra lateral (aberta/fechada)', duration: '30 dias', provider: 'Guatá Labs' },
+    { name: 'dashboard_layout', purpose: 'Layout preferido do dashboard', duration: '30 dias', provider: 'Guatá Labs' },
+    { name: 'locale', purpose: 'Preferência de idioma', duration: '1 ano', provider: 'Guatá Labs' },
   ];
 
   const analyticsCookies = [
@@ -171,7 +171,7 @@ const Cookies = () => {
                 {/* Introdução */}
                 <div className="mb-8">
                   <p className="text-muted-foreground leading-relaxed text-lg">
-                    A <strong className="text-foreground">ViajARTur</strong> utiliza cookies e tecnologias similares 
+                    A <strong className="text-foreground">Guatá Labs</strong> utiliza cookies e tecnologias similares 
                     para melhorar sua experiência em nossa plataforma. Esta política explica detalhadamente o que são 
                     cookies, quais utilizamos, suas finalidades e como você pode gerenciá-los.
                   </p>
@@ -545,7 +545,7 @@ const Cookies = () => {
                   Para dúvidas sobre esta Política de Cookies:
                 </p>
                 <div className="bg-gradient-to-r from-viajar-cyan/10 to-viajar-blue/10 p-6 rounded-lg border border-viajar-cyan/20">
-                  <p className="text-foreground font-semibold mb-2">ViajARTur</p>
+                  <p className="text-foreground font-semibold mb-2">Guatá Labs</p>
                   <p className="text-muted-foreground">
                     <strong>E-mail:</strong> privacidade@viajartur.com.br
                   </p>
@@ -559,7 +559,7 @@ const Cookies = () => {
                 {/* Rodapé do Documento */}
                 <div className="mt-12 pt-8 border-t border-border">
                   <p className="text-center text-muted-foreground text-sm">
-                    Ao continuar navegando na plataforma <strong className="text-foreground">ViajARTur</strong>, 
+                    Ao continuar navegando na plataforma <strong className="text-foreground">Guatá Labs</strong>, 
                     você concorda com o uso de cookies conforme descrito nesta política.
                   </p>
                 </div>

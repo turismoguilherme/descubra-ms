@@ -87,7 +87,7 @@ const KodaFooter = () => {
                   rel="noopener noreferrer"
                   className="text-white/80 hover:text-white transition-colors underline flex items-center gap-1"
                 >
-                  ViajARTur
+                  Guatá Labs
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </>

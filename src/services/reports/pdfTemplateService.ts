@@ -1,7 +1,7 @@
 // @ts-nocheck
 /**
- * PDF Template Service - ViaJARTur
- * Serviço para geração de relatórios PDF seguindo o layout padrão ViaJARTur
+ * PDF Template Service - Guatá Labs
+ * Serviço para geração de relatórios PDF seguindo o layout padrão Guatá Labs
  * 
  * Layout baseado no template: src/assets/templates/viajartur-relatorio-template.docx
  */
@@ -35,7 +35,7 @@ export interface ReportConfig {
 }
 
 // ============================================================================
-// CORES PADRÃO VIAJARTUR
+// CORES PADRÃO Guatá Labs
 // ============================================================================
 
 const COLORS = {
@@ -123,7 +123,7 @@ export class PDFTemplateService {
   // --------------------------------------------------------------------------
 
   private addCoverPage(config: ReportConfig) {
-    // Logo ViaJARTur grande e centralizado
+    // Logo Guatá Labs grande e centralizado
     const centerX = this.pageWidth / 2;
     
     // Espaço inicial
@@ -133,7 +133,7 @@ export class PDFTemplateService {
     this.doc.setFont('helvetica', 'bold');
     this.doc.setFontSize(32);
     
-    const logoText = 'ViajARTur';
+    const logoText = 'Guatá Labs';
     const viajWidth = this.doc.getTextWidth('Viaj');
     const arWidth = this.doc.getTextWidth('AR');
     const turWidth = this.doc.getTextWidth('Tur');
@@ -491,7 +491,7 @@ export class PDFTemplateService {
   private addFooter(pageNumber: number, totalPages: number) {
     this.doc.setFontSize(8);
     this.doc.setTextColor(...COLORS.textMuted);
-    const footerText = `ViaJARTur © ${new Date().getFullYear()} - Todos os direitos reservados | Documento gerado automaticamente - Página ${pageNumber} de ${totalPages}`;
+    const footerText = `Guatá Labs © ${new Date().getFullYear()} - Todos os direitos reservados | Documento gerado automaticamente - Página ${pageNumber} de ${totalPages}`;
     this.doc.text(footerText, this.pageWidth / 2, this.pageHeight - 10, { align: 'center' });
   }
 

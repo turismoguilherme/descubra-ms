@@ -50,7 +50,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onSkip 
   const steps = [
     {
       id: 'welcome',
-      title: 'Bem-vindo ao ViajARTur',
+      title: 'Bem-vindo ao Guatá Labs',
       description: 'Vamos configurar seu perfil para personalizar sua experiência',
       icon: <Sparkles className="h-6 w-6" />,
       component: WelcomeStep

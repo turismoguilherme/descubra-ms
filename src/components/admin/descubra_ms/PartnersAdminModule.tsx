@@ -6,11 +6,18 @@ import PartnerSettingsManager from '@/components/admin/PartnerSettingsManager';
 import PlatformCancellationPolicyAdmin from '@/components/admin/settings/PlatformCancellationPolicyAdmin';
 
 const PartnerTermsReview = lazy(() => import('@/components/admin/partners/PartnerTermsReview'));
+const RefundManagement = lazy(() => import('@/components/admin/partners/RefundManagement'));
 
-export type PartnersAdminTab = 'list' | 'fees' | 'cancellation' | 'terms';
+export type PartnersAdminTab = 'list' | 'fees' | 'cancellation' | 'terms' | 'refunds';
 
 function tabFromSearch(tabParam: string | null): PartnersAdminTab {
-  if (tabParam === 'fees' || tabParam === 'cancellation' || tabParam === 'terms') return tabParam;
+  if (
+    tabParam === 'fees' ||
+    tabParam === 'cancellation' ||
+    tabParam === 'terms' ||
+    tabParam === 'refunds'
+  )
+    return tabParam;
   return 'list';
 }
 
@@ -35,16 +42,17 @@ export default function PartnersAdminModule() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Parceiros</h1>
         <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-          Lista e aprovações, valores/comissão/links Stripe, termos e política de cancelamento.
+          Lista e aprovações, valores/comissão/links Stripe, termos, política de cancelamento e fila de reembolsos.
         </p>
       </div>
 
       <Tabs value={tab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4 h-auto p-1 flex-wrap gap-1 sm:flex sm:w-auto sm:max-w-none">
+        <TabsList className="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-5 h-auto p-1 flex-wrap gap-1 sm:flex sm:w-auto sm:max-w-none">
           <TabsTrigger value="list" className="py-2 text-xs sm:text-sm">Lista</TabsTrigger>
           <TabsTrigger value="fees" className="py-2 text-xs sm:text-sm">Taxas e links</TabsTrigger>
           <TabsTrigger value="terms" className="py-2 text-xs sm:text-sm">Termos</TabsTrigger>
           <TabsTrigger value="cancellation" className="py-2 text-xs sm:text-sm">Cancelamento</TabsTrigger>
+          <TabsTrigger value="refunds" className="py-2 text-xs sm:text-sm">Reembolsos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="mt-0 focus-visible:outline-none">
@@ -60,6 +68,11 @@ export default function PartnersAdminModule() {
         </TabsContent>
         <TabsContent value="cancellation" className="mt-0 focus-visible:outline-none">
           <PlatformCancellationPolicyAdmin embedded />
+        </TabsContent>
+        <TabsContent value="refunds" className="mt-0 focus-visible:outline-none">
+          <Suspense fallback={<div className="text-center py-8 text-muted-foreground">Carregando...</div>}>
+            <RefundManagement />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>

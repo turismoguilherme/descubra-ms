@@ -38,8 +38,8 @@ const Privacy = () => {
           <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4 mb-6">
             <p className="text-sm font-medium">
               {isFrench 
-                ? '⚠️ Projet indépendant de ViajARTur, non affilié au gouvernement du Canada'
-                : '⚠️ Independent project by ViajARTur, not affiliated with the Government of Canada'}
+                ? '⚠️ Projet indépendant de Guatá Labs, non affilié au gouvernement du Canada'
+                : '⚠️ Independent project by Guatá Labs, not affiliated with the Government of Canada'}
             </p>
           </div>
 
@@ -101,7 +101,7 @@ const Privacy = () => {
                 <h2 className="text-2xl font-bold mb-4">6. Contact</h2>
                 <p className="text-white/90 leading-relaxed">
                   Pour toute question concernant cette politique de confidentialité, veuillez nous contacter via 
-                  les canaux officiels de ViajARTur.
+                  les canaux officiels de Guatá Labs.
                 </p>
               </section>
             </>
@@ -163,7 +163,7 @@ const Privacy = () => {
                 <h2 className="text-2xl font-bold mb-4">6. Contact</h2>
                 <p className="text-white/90 leading-relaxed">
                   For any questions regarding this privacy policy, please contact us through 
-                  ViajARTur's official channels.
+                  Guatá Labs's official channels.
                 </p>
               </section>
             </>

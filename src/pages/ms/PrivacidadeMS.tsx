@@ -161,7 +161,7 @@ const PrivacidadeMS = () => {
                 {/* Introdução */}
                 <div className="mb-8">
                   <p className="text-gray-700 leading-relaxed text-lg">
-                    A <strong>viajARTUR</strong>, responsável pela plataforma <strong>Descubra Mato Grosso do Sul</strong>, 
+                    A <strong>Guatá Labs</strong>, responsável pela plataforma <strong>Descubra Mato Grosso do Sul</strong>, 
                     está comprometida com a proteção da privacidade e dos dados pessoais de seus usuários, em conformidade 
                     com a <strong>Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018)</strong> e demais normas aplicáveis.
                   </p>
@@ -886,7 +886,7 @@ const PrivacidadeMS = () => {
                   seus dados pessoais, entre em contato:
                 </p>
                 <div className="bg-gradient-to-r from-blue-50 to-green-50 p-6 rounded-lg border border-ms-primary-blue/20">
-                  <p className="text-gray-800 font-semibold mb-2">viajARTUR</p>
+                  <p className="text-gray-800 font-semibold mb-2">Guatá Labs</p>
                   <p className="text-gray-700">Responsável pela plataforma Descubra Mato Grosso do Sul</p>
                   <p className="text-gray-700 mt-2">
                     <strong>E-mail:</strong> privacidade@descubramsconline.com.br

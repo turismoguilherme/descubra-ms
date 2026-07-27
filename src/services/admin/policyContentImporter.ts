@@ -11,7 +11,7 @@ export const policyContentImporter = {
   getContentFromFile(policyKey: string, platform: 'viajar' | 'descubra_ms'): string {
     const contentMap: Record<string, Record<string, string>> = {
       terms_of_use: {
-        descubra_ms: `Estes Termos de Uso regem o uso da plataforma Descubra Mato Grosso do Sul, operada pela viajARTUR. Ao acessar e utilizar esta plataforma, você concorda com estes termos. Se você não concordar com qualquer parte destes termos, não deve utilizar nossos serviços.
+        descubra_ms: `Estes Termos de Uso regem o uso da plataforma Descubra Mato Grosso do Sul, operada pela Guatá Labs. Ao acessar e utilizar esta plataforma, você concorda com estes termos. Se você não concordar com qualquer parte destes termos, não deve utilizar nossos serviços.
 
 ## 1. Aceitação dos Termos
 
@@ -71,24 +71,24 @@ A violação destas regras pode resultar em suspensão ou encerramento imediato 
 
 ## 5. Propriedade Intelectual
 
-Todo o conteúdo da plataforma, incluindo textos, imagens, logos, design, código-fonte e funcionalidades, é de propriedade da viajARTUR ou de seus licenciadores e está protegido por leis de propriedade intelectual.
+Todo o conteúdo da plataforma, incluindo textos, imagens, logos, design, código-fonte e funcionalidades, é de propriedade da Guatá Labs ou de seus licenciadores e está protegido por leis de propriedade intelectual.
 
 **Você pode:** visualizar, baixar e imprimir conteúdo para uso pessoal e não comercial.
 
 **Você NÃO pode:** reproduzir, distribuir, modificar, criar obras derivadas, publicar, transmitir ou explorar comercialmente qualquer conteúdo sem autorização prévia por escrito.
 
-Ao enviar conteúdo para a plataforma (comentários, avaliações, fotos, etc.), você concede à viajARTUR uma licença não exclusiva, mundial e gratuita para utilizar, reproduzir e exibir esse conteúdo na plataforma.
+Ao enviar conteúdo para a plataforma (comentários, avaliações, fotos, etc.), você concede à Guatá Labs uma licença não exclusiva, mundial e gratuita para utilizar, reproduzir e exibir esse conteúdo na plataforma.
 
 ## 6. Limitação de Responsabilidade
 
-A plataforma é fornecida "como está" e "conforme disponível". A viajARTUR não garante que:
+A plataforma é fornecida "como está" e "conforme disponível". A Guatá Labs não garante que:
 
 - A plataforma estará sempre disponível, ininterrupta ou livre de erros;
 - Os resultados obtidos através da plataforma serão precisos ou confiáveis;
 - Defeitos serão corrigidos;
 - A plataforma estará livre de vírus ou outros componentes prejudiciais.
 
-**Importante:** A viajARTUR não se responsabiliza por:
+**Importante:** A Guatá Labs não se responsabiliza por:
 
 - Danos diretos, indiretos, incidentais ou consequenciais decorrentes do uso da plataforma;
 - Perda de dados, lucros ou oportunidades de negócio;
@@ -100,11 +100,11 @@ A plataforma é fornecida "como está" e "conforme disponível". A viajARTUR nã
 
 A plataforma pode conter links para sites de terceiros (parceiros, prestadores de serviços, etc.). Esses links são fornecidos apenas para sua conveniência.
 
-A viajARTUR não tem controle sobre o conteúdo, políticas de privacidade ou práticas de sites de terceiros e não se responsabiliza por eles. Recomendamos que você leia os termos e políticas de privacidade de qualquer site de terceiro que visitar.
+A Guatá Labs não tem controle sobre o conteúdo, políticas de privacidade ou práticas de sites de terceiros e não se responsabiliza por eles. Recomendamos que você leia os termos e políticas de privacidade de qualquer site de terceiro que visitar.
 
 ## 8. Modificações nos Serviços e Termos
 
-A viajARTUR se reserva o direito de:
+A Guatá Labs se reserva o direito de:
 
 - Modificar, suspender ou descontinuar qualquer aspecto da plataforma a qualquer momento;
 - Atualizar estes Termos de Uso periodicamente;
@@ -116,7 +116,7 @@ O uso continuado da plataforma após alterações nos termos constitui aceitaç�
 
 Você pode encerrar sua conta a qualquer momento através das configurações da plataforma ou entrando em contato conosco.
 
-A viajARTUR pode suspender ou encerrar sua conta imediatamente, sem aviso prévio, se você violar estes Termos de Uso ou se houver qualquer atividade suspeita ou fraudulenta.
+A Guatá Labs pode suspender ou encerrar sua conta imediatamente, sem aviso prévio, se você violar estes Termos de Uso ou se houver qualquer atividade suspeita ou fraudulenta.
 
 Após o encerramento, você perderá acesso à sua conta e a todos os dados associados, exceto quando a retenção for exigida por lei.
 
@@ -129,26 +129,26 @@ Qualquer disputa decorrente destes termos será resolvida no foro da comarca de 
 ## 11. Disposições Gerais
 
 - Se qualquer disposição destes termos for considerada inválida, as demais disposições permanecerão em vigor;
-- Estes termos constituem o acordo completo entre você e a viajARTUR sobre o uso da plataforma;
-- A falha da viajARTUR em exercer qualquer direito não constitui renúncia a esse direito;
+- Estes termos constituem o acordo completo entre você e a Guatá Labs sobre o uso da plataforma;
+- A falha da Guatá Labs em exercer qualquer direito não constitui renúncia a esse direito;
 - Você não pode transferir seus direitos ou obrigações sob estes termos sem nosso consentimento prévio por escrito.
 
 ## 12. Contato
 
 Para questões sobre estes Termos de Uso, entre em contato:
 
-**viajARTUR**
+**Guatá Labs**
 Responsável pela plataforma Descubra Mato Grosso do Sul
 
 **E-mail:** contato@descubramsconline.com.br
 **Telefone:** (67) 3318-7600
 
 Ao utilizar a plataforma Descubra Mato Grosso do Sul, você declara ter lido, compreendido e concordado com estes Termos de Uso.`,
-        viajar: `Estes Termos de Uso regem o uso da plataforma ViajARTur, operada pela viajARTUR. Ao acessar e utilizar esta plataforma, você concorda com estes termos. Se você não concordar com qualquer parte destes termos, não deve utilizar nossos serviços.
+        viajar: `Estes Termos de Uso regem o uso da plataforma Guatá Labs, operada pela Guatá Labs. Ao acessar e utilizar esta plataforma, você concorda com estes termos. Se você não concordar com qualquer parte destes termos, não deve utilizar nossos serviços.
 
 ## 1. Aceitação dos Termos
 
-Ao criar uma conta, acessar ou utilizar qualquer funcionalidade da plataforma ViajARTur, você declara que:
+Ao criar uma conta, acessar ou utilizar qualquer funcionalidade da plataforma Guatá Labs, você declara que:
 
 - Leu, compreendeu e concordou com estes Termos de Uso;
 - Concordou com nossa Política de Privacidade;
@@ -158,7 +158,7 @@ Ao criar uma conta, acessar ou utilizar qualquer funcionalidade da plataforma Vi
 
 ## 2. Descrição dos Serviços
 
-A plataforma ViajARTur oferece serviços de gestão e automação para o setor de turismo, incluindo:
+A plataforma Guatá Labs oferece serviços de gestão e automação para o setor de turismo, incluindo:
 
 - Sistema de gestão de destinos turísticos;
 - Automação de processos administrativos;
@@ -188,7 +188,7 @@ Você concorda em NÃO utilizar a plataforma para:
 
 ## 5. Propriedade Intelectual
 
-Todo o conteúdo da plataforma é de propriedade da viajARTUR ou de seus licenciadores e está protegido por leis de propriedade intelectual.
+Todo o conteúdo da plataforma é de propriedade da Guatá Labs ou de seus licenciadores e está protegido por leis de propriedade intelectual.
 
 **Você pode:** utilizar a plataforma conforme os termos de sua assinatura.
 
@@ -196,24 +196,24 @@ Todo o conteúdo da plataforma é de propriedade da viajARTUR ou de seus licenci
 
 ## 6. Limitação de Responsabilidade
 
-A plataforma é fornecida "como está" e "conforme disponível". A viajARTUR não garante que a plataforma estará sempre disponível, ininterrupta ou livre de erros.
+A plataforma é fornecida "como está" e "conforme disponível". A Guatá Labs não garante que a plataforma estará sempre disponível, ininterrupta ou livre de erros.
 
 ## 7. Modificações nos Serviços e Termos
 
-A viajARTUR se reserva o direito de modificar, suspender ou descontinuar qualquer aspecto da plataforma a qualquer momento.
+A Guatá Labs se reserva o direito de modificar, suspender ou descontinuar qualquer aspecto da plataforma a qualquer momento.
 
 ## 8. Rescisão
 
-Você pode encerrar sua conta a qualquer momento. A viajARTUR pode suspender ou encerrar sua conta imediatamente se você violar estes Termos de Uso.
+Você pode encerrar sua conta a qualquer momento. A Guatá Labs pode suspender ou encerrar sua conta imediatamente se você violar estes Termos de Uso.
 
 ## 9. Contato
 
 Para questões sobre estes Termos de Uso, entre em contato através do suporte da plataforma.
 
-Ao utilizar a plataforma ViajARTur, você declara ter lido, compreendido e concordado com estes Termos de Uso.`,
+Ao utilizar a plataforma Guatá Labs, você declara ter lido, compreendido e concordado com estes Termos de Uso.`,
       },
       privacy_policy: {
-        descubra_ms: `Esta Política de Privacidade descreve como a viajARTUR coleta, usa e protege suas informações pessoais quando você utiliza a plataforma Descubra Mato Grosso do Sul.
+        descubra_ms: `Esta Política de Privacidade descreve como a Guatá Labs coleta, usa e protege suas informações pessoais quando você utiliza a plataforma Descubra Mato Grosso do Sul.
 
 ## 1. Informações que Coletamos
 
@@ -272,7 +272,7 @@ Para questões sobre privacidade, entre em contato:
 **Telefone:** (67) 3318-7600
 
 Esta Política de Privacidade está em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).`,
-        viajar: `Esta Política de Privacidade descreve como a viajARTUR coleta, usa e protege suas informações pessoais quando você utiliza a plataforma ViajARTur.
+        viajar: `Esta Política de Privacidade descreve como a Guatá Labs coleta, usa e protege suas informações pessoais quando você utiliza a plataforma Guatá Labs.
 
 ## 1. Informações que Coletamos
 
@@ -307,7 +307,7 @@ Para questões sobre privacidade, entre em contato através do suporte da plataf
 Esta Política de Privacidade está em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).`,
       },
       cookie_policy: {
-        both: `A ViajARTur utiliza cookies e tecnologias similares para melhorar sua experiência em nossa plataforma. Esta política explica detalhadamente o que são cookies, quais utilizamos, suas finalidades e como você pode gerenciá-los.
+        both: `A Guatá Labs utiliza cookies e tecnologias similares para melhorar sua experiência em nossa plataforma. Esta política explica detalhadamente o que são cookies, quais utilizamos, suas finalidades e como você pode gerenciá-los.
 
 ## 1. O que são Cookies?
 
@@ -398,12 +398,12 @@ Podemos atualizar esta Política de Cookies periodicamente para refletir mudanç
 
 Para dúvidas sobre esta Política de Cookies:
 
-**ViajARTur**
+**Guatá Labs**
 
 **E-mail:** privacidade@viajartur.com.br
 **Telefone:** (67) 3000-0000
 
-Ao continuar navegando na plataforma ViajARTur, você concorda com o uso de cookies conforme descrito nesta política.`,
+Ao continuar navegando na plataforma Guatá Labs, você concorda com o uso de cookies conforme descrito nesta política.`,
       },
     };
 

@@ -188,7 +188,7 @@ const OverflowOneRegister: React.FC = () => {
           contactPerson: formData.contactPerson,
           email: formData.email,
           selectedPlan: selectedPlan,
-          selectedBilling: 'monthly' // ViaJARTur só tem plano mensal
+          selectedBilling: 'monthly' // Guatá Labs só tem plano mensal
         }));
         
         toast({

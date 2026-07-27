@@ -339,7 +339,7 @@ const TravelTechRobot = () => {
       >
         <motion.img
           src={robotImage}
-          alt="Robô IA da ViaJARTur - Travel Tech"
+          alt="Robô IA da Guatá Labs - Travel Tech"
           className="w-full h-auto drop-shadow-[0_20px_60px_rgba(0,255,170,0.15)] transition-all duration-500 group-hover:drop-shadow-[0_20px_80px_rgba(0,255,170,0.25)]"
           style={{
             maskImage: 'linear-gradient(to bottom, black 75%, transparent 98%)',

@@ -1,6 +1,6 @@
 // @ts-nocheck
 /**
- * Hook para carregar configurações do ViaJARTur do banco de dados
+ * Hook para carregar configurações do Guatá Labs do banco de dados
  */
 
 import { useState, useEffect } from 'react';
@@ -68,7 +68,7 @@ export function useViaJARTurSettings() {
         .in('setting_key', keys);
 
       if (fetchError) {
-        console.error('Erro ao carregar settings ViaJARTur:', fetchError);
+        console.error('Erro ao carregar settings Guatá Labs:', fetchError);
         // Usar valores padrão em caso de erro
         return;
       }
@@ -107,7 +107,7 @@ export function useViaJARTurSettings() {
         setSettings(newSettings);
       }
     } catch (err: unknown) {
-      console.error('Erro ao carregar configurações ViaJARTur:', err);
+      console.error('Erro ao carregar configurações Guatá Labs:', err);
       setError(err.message);
     } finally {
       setLoading(false);

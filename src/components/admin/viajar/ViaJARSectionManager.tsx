@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 const sectionDescriptions: Record<string, string> = {
   hero_stats: 'Estatísticas exibidas no hero (ex: +100K Usuários, 98% Satisfação)',
-  what_we_do: 'Seção "O que a ViajARTur faz" com cards de produtos',
+  what_we_do: 'Seção "O que a Guatá Labs faz" com cards de produtos',
   platform_in_action: 'Dashboard interativo mostrando a plataforma funcionando',
   benefits: 'Grid de benefícios da plataforma para gestores',
   benefits_stats: 'Números de resultados na seção de benefícios (ex: 300% eficiência)',
@@ -72,7 +72,7 @@ export default function ViaJARSectionManager() {
     <div className="space-y-8">
       <AdminPageHeader
         title="Controle de Seções"
-        description="Ative ou desative seções e métricas da landing page ViajARTur"
+        description="Ative ou desative seções e métricas da landing page Guatá Labs"
         helpText="Controle a visibilidade de cada seção da página principal. Métricas com ⚠️ são projeções/metas, não dados reais."
       />
 

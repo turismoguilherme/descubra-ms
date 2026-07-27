@@ -59,7 +59,7 @@ export default function ViaJARTurSettingsManager() {
         .in('setting_key', keys);
 
       if (error) {
-        console.error('Erro ao carregar configurações ViaJARTur:', error);
+        console.error('Erro ao carregar configurações Guatá Labs:', error);
       }
 
       if (data && data.length > 0) {
@@ -145,7 +145,7 @@ export default function ViaJARTurSettingsManager() {
 
       toast({
         title: 'Salvo com sucesso!',
-        description: 'As configurações do ViaJARTur foram atualizadas. As mudanças serão refletidas em alguns segundos.',
+        description: 'As configurações do Guatá Labs foram atualizadas. As mudanças serão refletidas em alguns segundos.',
         duration: 5000,
       });
     } catch (error: unknown) {

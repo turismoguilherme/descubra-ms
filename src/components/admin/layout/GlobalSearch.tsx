@@ -13,38 +13,36 @@ interface SearchItem {
 }
 
 const searchItems: SearchItem[] = [
-  // Dashboard
+  // Geral
   { label: 'Dashboard', path: '/viajar/admin', category: 'Geral' },
-  
-  // ViajARTur
-  { label: 'Funcionários', path: '/viajar/admin/viajar/employees', category: 'ViajARTur' },
-  { label: 'Clientes', path: '/viajar/admin/viajar/clients', category: 'ViajARTur' },
-  { label: 'Assinaturas', path: '/viajar/admin/viajar/subscriptions', category: 'ViajARTur' },
-  { label: 'Páginas ViajARTur', path: '/viajar/admin/viajar/pages', category: 'ViajARTur' },
-  { label: 'Configurações ViajARTur', path: '/viajar/admin/viajar/settings', category: 'ViajARTur' },
-  
+
+  // Guatá Labs
+  { label: 'Conteúdo e Menu', path: '/viajar/admin/viajar/content', category: 'Guatá Labs' },
+  { label: 'Configuração de Planos', path: '/viajar/admin/viajar/plan-settings', category: 'Guatá Labs' },
+  { label: 'Membros da Equipe', path: '/viajar/admin/viajar/team-members', category: 'Guatá Labs' },
+
   // Descubra MS
-  { label: 'Homepage Descubra MS', path: '/viajar/admin/descubra-ms/homepage', category: 'Descubra MS' },
-  { label: 'Destinos', path: '/viajar/admin/descubra-ms/destinations', category: 'Descubra MS' },
+  { label: 'Regiões Turísticas', path: '/viajar/admin/descubra-ms/tourist-regions', category: 'Descubra MS' },
   { label: 'Eventos', path: '/viajar/admin/descubra-ms/events', category: 'Descubra MS' },
   { label: 'Parceiros', path: '/viajar/admin/descubra-ms/partners', category: 'Descubra MS' },
+  { label: 'Parceiros (taxas e links Stripe)', path: '/viajar/admin/descubra-ms/partners?tab=fees', category: 'Descubra MS' },
+  { label: 'Termos dos parceiros', path: '/viajar/admin/descubra-ms/partners?tab=terms', category: 'Descubra MS' },
+  { label: 'Política de cancelamento', path: '/viajar/admin/descubra-ms/partners?tab=cancellation', category: 'Descubra MS' },
+  { label: 'Reembolsos pendentes (Stripe)', path: '/viajar/admin/descubra-ms/partners?tab=refunds', category: 'Descubra MS' },
   { label: 'Passaporte Digital', path: '/viajar/admin/descubra-ms/passport', category: 'Descubra MS' },
-  { label: 'Conteúdo Descubra MS', path: '/viajar/admin/descubra-ms/content', category: 'Descubra MS' },
-  { label: 'Usuários Descubra MS', path: '/viajar/admin/descubra-ms/users', category: 'Descubra MS' },
-  { label: 'Parceiros (taxas e cancelamento)', path: '/viajar/admin/descubra-ms/partners?tab=fees', category: 'Descubra MS' },
-  { label: 'Política de cancelamento (reservas)', path: '/viajar/admin/descubra-ms/partners?tab=cancellation', category: 'Descubra MS' },
-  
-  // Financeiro
-  { label: 'Gestão Financeira', path: '/viajar/admin/financial', category: 'Financeiro' },
-  { label: 'Pagamentos', path: '/viajar/admin/financial/payments', category: 'Financeiro' },
-  { label: 'Relatórios Financeiros', path: '/viajar/admin/financial/reports', category: 'Financeiro' },
-  { label: 'Reembolsos pendentes (Stripe)', path: '/viajar/admin/financial/refunds', category: 'Financeiro' },
-  
+  { label: 'Cartilhas Guatá Capacita', path: '/viajar/admin/descubra-ms/guata-cartilhas', category: 'Descubra MS' },
+  { label: 'Vídeos do Guatá', path: '/viajar/admin/descubra-ms/guata-videos', category: 'Descubra MS' },
+  { label: 'Avatares do Pantanal', path: '/viajar/admin/descubra-ms/avatars', category: 'Descubra MS' },
+  { label: 'Footer', path: '/viajar/admin/descubra-ms/footer', category: 'Descubra MS' },
+  { label: 'WhatsApp', path: '/viajar/admin/descubra-ms/whatsapp', category: 'Descubra MS' },
+  { label: 'Usuários', path: '/viajar/admin/descubra-ms/users', category: 'Descubra MS' },
+
   // Sistema
   { label: 'Monitoramento', path: '/viajar/admin/system/monitoring', category: 'Sistema' },
   { label: 'Auditoria', path: '/viajar/admin/system/logs', category: 'Sistema' },
-  
-  { label: 'Chat IA', path: '/viajar/admin/ai/chat', category: 'IA' },
+  { label: 'Políticas', path: '/viajar/admin/settings/policies', category: 'Sistema' },
+
+  // IA
   { label: 'Base de Conhecimento', path: '/viajar/admin/ai/knowledge-base', category: 'IA' },
 ];
 

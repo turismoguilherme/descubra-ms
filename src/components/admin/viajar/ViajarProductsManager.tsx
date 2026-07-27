@@ -345,7 +345,7 @@ export default function ViajarProductsManager() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold">Gerenciar Produtos/Soluções</h2>
-          <p className="text-muted-foreground">Crie e edite produtos exibidos na homepage do ViajARTur</p>
+          <p className="text-muted-foreground">Crie e edite produtos exibidos na homepage do Guatá Labs</p>
         </div>
         <Button onClick={openCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />

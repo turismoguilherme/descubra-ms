@@ -1166,7 +1166,7 @@ const PrivateDashboard = () => {
                   {isFirstAccess && (
                     <SectionWrapper 
                       variant="default" 
-                      title="Bem-vindo ao ViajARTur"
+                      title="Bem-vindo ao Guatá Labs"
                       subtitle="Explore o painel; o diagnóstico deixa tudo mais personalizado quando você quiser"
                     >
                       <CardBox className="mb-6">
