@@ -196,7 +196,7 @@ const OverflowOneLogin: React.FC = () => {
               <span className="text-sm text-white/90 font-medium">Acesso à Plataforma</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">Entrar na ViajARTur</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">Entrar na Guatá Labs</h1>
             <p className="text-xl text-white/70 max-w-2xl mx-auto">
               Acesse sua conta empresarial e continue transformando seu negócio turístico
             </p>
@@ -287,7 +287,7 @@ const OverflowOneLogin: React.FC = () => {
           <Card className="shadow-xl">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-gray-900">
-                {testLoginEnabled ? 'Ou entre com credenciais' : 'Entrar na ViajARTur'}
+                {testLoginEnabled ? 'Ou entre com credenciais' : 'Entrar na Guatá Labs'}
               </CardTitle>
               <p className="text-sm text-gray-600 mt-2">
                 {testLoginEnabled

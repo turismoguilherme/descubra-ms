@@ -703,7 +703,7 @@ export class DataSaleReportService {
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
       doc.text(
-        `ViajARTur - Dados Reais e Verificados | Página ${i} de ${totalPages}`,
+        `Guatá Labs - Dados Reais e Verificados | Página ${i} de ${totalPages}`,
         pageWidth / 2,
         pageHeight - 15,
         { align: 'center' }

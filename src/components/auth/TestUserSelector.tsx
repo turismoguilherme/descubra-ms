@@ -137,7 +137,7 @@ const TestUserSelector: React.FC<TestUserSelectorProps> = ({
           <h1 className="text-3xl font-bold">Usuários de Teste</h1>
         </div>
         <p className="text-muted-foreground">
-          Selecione um usuário para testar as funcionalidades da ViajARTur
+          Selecione um usuário para testar as funcionalidades da Guatá Labs
         </p>
       </div>
 

@@ -56,7 +56,7 @@ export default function PlatformMenuEditor({ platform }: PlatformMenuEditorProps
   const [activeMenuType, setActiveMenuType] = useState<'main' | 'footer' | 'sidebar'>('main');
   const { toast } = useToast();
 
-  const platformName = platform === 'viajar' ? 'ViaJARTur' : 'Descubra MS';
+  const platformName = platform === 'viajar' ? 'Guatá Labs' : 'Descubra MS';
 
   useEffect(() => {
     loadMenus();

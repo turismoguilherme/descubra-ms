@@ -1,7 +1,7 @@
 /**
  * Exclui um parceiro institucional e, quando seguro, o usuário do Auth.
  * Permite que o ex-parceiro se cadastre novamente com o mesmo e-mail.
- * NÃO remove do Auth se o usuário for ViajarTur (viajar_employees) ou admin/tech.
+ * NÃO remove do Auth se o usuário for Guatá Labs (viajar_employees) ou admin/tech.
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';

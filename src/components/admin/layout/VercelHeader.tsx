@@ -44,7 +44,7 @@ export default function VercelHeader() {
       {/* Left: Logo + Project Name */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          {/* ViajARTur Logo */}
+          {/* Guatá Labs Logo */}
           <div className="w-6 h-6 bg-gradient-to-br from-[#3B82F6] to-[#8B5CF6] rounded-sm flex items-center justify-center">
             <span className="text-white text-xs font-bold">V</span>
           </div>

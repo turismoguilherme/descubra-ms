@@ -162,7 +162,7 @@ const TermosUsoMS = () => {
                 <div className="mb-8">
                   <p className="text-gray-700 leading-relaxed text-lg">
                     Estes Termos de Uso regem o uso da plataforma <strong>Descubra Mato Grosso do Sul</strong>, 
-                    operada pela <strong>viajARTUR</strong>. Ao acessar e utilizar esta plataforma, você concorda 
+                    operada pela <strong>Guatá Labs</strong>. Ao acessar e utilizar esta plataforma, você concorda 
                     com estes termos. Se você não concordar com qualquer parte destes termos, não deve utilizar 
                     nossos serviços.
                   </p>
@@ -298,7 +298,7 @@ const TermosUsoMS = () => {
                       <li>Receber notificações sobre eventos de interesse (com seu consentimento)</li>
                     </ul>
                     <p className="text-xs text-gray-600 mt-2 italic">
-                      Os eventos são cadastrados por terceiros (organizadores, parceiros, órgãos públicos). A viajARTUR 
+                      Os eventos são cadastrados por terceiros (organizadores, parceiros, órgãos públicos). A Guatá Labs 
                       não se responsabiliza pela veracidade das informações ou pela realização dos eventos.
                     </p>
                     <div className="bg-teal-50 border-l-4 border-ms-discovery-teal p-4 rounded-r-lg mt-3">
@@ -334,7 +334,7 @@ const TermosUsoMS = () => {
                     </ul>
                     <p className="text-xs text-gray-600 mt-2 italic">
                       Os parceiros são responsáveis pelos serviços oferecidos e pelo tratamento dos dados compartilhados 
-                      para viabilizar reservas. A viajARTUR atua como intermediária e não se responsabiliza por serviços 
+                      para viabilizar reservas. A Guatá Labs atua como intermediária e não se responsabiliza por serviços 
                       prestados pelos parceiros.
                     </p>
                     <div className="bg-blue-50 border-l-4 border-ms-primary-blue p-4 rounded-r-lg mt-3">
@@ -479,7 +479,7 @@ const TermosUsoMS = () => {
                 </div>
 
                 <p className="text-gray-600 text-sm mt-4 italic">
-                  A viajARTUR se compromete a proteger seus dados e manter o processo de recuperação de senha seguro. 
+                  A Guatá Labs se compromete a proteger seus dados e manter o processo de recuperação de senha seguro. 
                   Se você identificar qualquer atividade suspeita relacionada à sua conta, entre em contato conosco imediatamente.
                 </p>
               </div>
@@ -553,7 +553,7 @@ const TermosUsoMS = () => {
               <div className="ml-12 space-y-3">
                 <p className="text-gray-700 leading-relaxed">
                   Todo o conteúdo da plataforma, incluindo textos, imagens, logos, design, código-fonte e 
-                  funcionalidades, é de propriedade da <strong>viajARTUR</strong> ou de seus licenciadores e 
+                  funcionalidades, é de propriedade da <strong>Guatá Labs</strong> ou de seus licenciadores e 
                   está protegido por leis de propriedade intelectual.
                 </p>
                 <div className="bg-blue-50 border-l-4 border-ms-primary-blue p-4 rounded-r-lg">
@@ -569,7 +569,7 @@ const TermosUsoMS = () => {
                 </div>
                 <p className="text-gray-700 leading-relaxed mt-4">
                   Ao enviar conteúdo para a plataforma (comentários, avaliações, fotos, etc.), você concede 
-                  à <strong>viajARTUR</strong> uma licença não exclusiva, mundial e gratuita para utilizar, 
+                  à <strong>Guatá Labs</strong> uma licença não exclusiva, mundial e gratuita para utilizar, 
                   reproduzir e exibir esse conteúdo na plataforma.
                 </p>
               </div>
@@ -585,7 +585,7 @@ const TermosUsoMS = () => {
               </div>
               <div className="ml-12 space-y-6">
                 <p className="text-gray-700 leading-relaxed">
-                  A plataforma é fornecida "como está" e "conforme disponível". A <strong>viajARTUR</strong> 
+                  A plataforma é fornecida "como está" e "conforme disponível". A <strong>Guatá Labs</strong> 
                   não garante que:
                 </p>
                 <ul className="space-y-2 list-disc list-inside text-gray-700">
@@ -610,7 +610,7 @@ const TermosUsoMS = () => {
                     </ul>
                     <p className="text-gray-700 leading-relaxed mt-3">
                       O Guatá é uma <strong>ferramenta de apoio</strong> que complementa, mas não substitui, a verificação direta 
-                      com fontes oficiais. A <strong>viajARTUR</strong> recomenda que decisões importantes sejam tomadas considerando 
+                      com fontes oficiais. A <strong>Guatá Labs</strong> recomenda que decisões importantes sejam tomadas considerando 
                       múltiplas fontes de informação.
                     </p>
                   </div>
@@ -623,10 +623,10 @@ const TermosUsoMS = () => {
                       <strong>Limitações e Responsabilidades:</strong>
                     </p>
                     <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
-                      <li>As <strong>recompensas são oferecidas pelos parceiros</strong>, não pela viajARTUR. A viajARTUR não garante a disponibilidade, qualidade ou validade das recompensas</li>
+                      <li>As <strong>recompensas são oferecidas pelos parceiros</strong>, não pela Guatá Labs. A Guatá Labs não garante a disponibilidade, qualidade ou validade das recompensas</li>
                       <li>Recompensas podem ter <strong>condições específicas</strong> definidas pelos parceiros (validade, quantidade limitada, etc.)</li>
                       <li>O sistema de check-in depende da <strong>geolocalização GPS</strong> do seu dispositivo, que pode não estar sempre precisa</li>
-                      <li>A viajARTUR não se responsabiliza por <strong>fraudes ou uso indevido</strong> do sistema de pontos e recompensas</li>
+                      <li>A Guatá Labs não se responsabiliza por <strong>fraudes ou uso indevido</strong> do sistema de pontos e recompensas</li>
                       <li>Pontos e conquistas são <strong>virtuais</strong> e não têm valor monetário</li>
                     </ul>
                   </div>
@@ -640,9 +640,9 @@ const TermosUsoMS = () => {
                     </p>
                     <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
                       <li>Os <strong>parceiros são responsáveis</strong> pelos serviços oferecidos (hospedagem, alimentação, passeios, etc.)</li>
-                      <li>A viajARTUR atua como <strong>intermediária</strong> e não se responsabiliza pela qualidade, disponibilidade ou cumprimento dos serviços prestados pelos parceiros</li>
+                      <li>A Guatá Labs atua como <strong>intermediária</strong> e não se responsabiliza pela qualidade, disponibilidade ou cumprimento dos serviços prestados pelos parceiros</li>
                       <li>Informações sobre parceiros (preços, disponibilidade, avaliações) são fornecidas pelos próprios parceiros ou por terceiros</li>
-                      <li>A viajARTUR não garante a <strong>veracidade das informações</strong> fornecidas pelos parceiros</li>
+                      <li>A Guatá Labs não garante a <strong>veracidade das informações</strong> fornecidas pelos parceiros</li>
                       <li>Disputas relacionadas a reservas ou serviços devem ser <strong>resolvidas diretamente com o parceiro</strong></li>
                       <li>Recomendamos que você leia os <strong>termos e condições</strong> de cada parceiro antes de fazer reservas</li>
                     </ul>
@@ -657,10 +657,10 @@ const TermosUsoMS = () => {
                     </p>
                     <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
                       <li>Os eventos são <strong>cadastrados por terceiros</strong> (organizadores, parceiros, órgãos públicos)</li>
-                      <li>A viajARTUR <strong>não se responsabiliza</strong> pela veracidade das informações sobre eventos (data, local, preço, disponibilidade)</li>
-                      <li>A viajARTUR não garante que os eventos serão <strong>realizados conforme anunciado</strong></li>
+                      <li>A Guatá Labs <strong>não se responsabiliza</strong> pela veracidade das informações sobre eventos (data, local, preço, disponibilidade)</li>
+                      <li>A Guatá Labs não garante que os eventos serão <strong>realizados conforme anunciado</strong></li>
                       <li>Cancelamentos, alterações ou problemas com eventos devem ser <strong>resolvidos diretamente com os organizadores</strong></li>
-                      <li>A viajARTUR não se responsabiliza por <strong>ingressos, reembolsos ou danos</strong> relacionados a eventos</li>
+                      <li>A Guatá Labs não se responsabiliza por <strong>ingressos, reembolsos ou danos</strong> relacionados a eventos</li>
                     </ul>
                   </div>
                 </div>
@@ -674,11 +674,11 @@ const TermosUsoMS = () => {
                     <ul className="space-y-2 list-disc list-inside text-gray-700 ml-4">
                       <li>Os roteiros são <strong>sugestões geradas automaticamente</strong> por Inteligência Artificial e devem ser usados como referência inicial</li>
                       <li>As sugestões são baseadas em <strong>informações disponíveis na plataforma</strong> e podem não incluir todos os destinos, atrações ou estabelecimentos disponíveis</li>
-                      <li>A viajARTUR <strong>não garante</strong> a precisão, completude ou atualização das informações incluídas nos roteiros</li>
+                      <li>A Guatá Labs <strong>não garante</strong> a precisão, completude ou atualização das informações incluídas nos roteiros</li>
                       <li>Roteiros podem não considerar <strong>condições climáticas, eventos temporários, restrições locais ou alterações</strong> em horários, preços ou disponibilidade</li>
                       <li>Recomendamos <strong>verificar informações</strong> (horários, preços, disponibilidade, acessibilidade) diretamente com os estabelecimentos antes de visitar</li>
                       <li>Para decisões importantes, consulte <strong>fontes oficiais</strong> e verifique detalhes com os estabelecimentos ou órgãos responsáveis</li>
-                      <li>A viajARTUR não se responsabiliza por <strong>experiências que não atendam às expectativas</strong> baseadas nos roteiros sugeridos</li>
+                      <li>A Guatá Labs não se responsabiliza por <strong>experiências que não atendam às expectativas</strong> baseadas nos roteiros sugeridos</li>
                     </ul>
                     <p className="text-gray-600 text-sm mt-3 italic">
                       Os roteiros são uma ferramenta de apoio para planejamento de viagens. A responsabilidade final sobre 
@@ -689,7 +689,7 @@ const TermosUsoMS = () => {
 
                 <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg mt-4">
                   <p className="text-gray-700 leading-relaxed">
-                    <strong>Limitações Gerais:</strong> A <strong>viajARTUR</strong> não se responsabiliza por:
+                    <strong>Limitações Gerais:</strong> A <strong>Guatá Labs</strong> não se responsabiliza por:
                   </p>
                   <ul className="space-y-1 list-disc list-inside text-gray-700 mt-2">
                     <li>Danos diretos, indiretos, incidentais ou consequenciais decorrentes do uso da plataforma;</li>
@@ -716,7 +716,7 @@ const TermosUsoMS = () => {
                   Esses links são fornecidos apenas para sua conveniência.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
-                  A <strong>viajARTUR</strong> não tem controle sobre o conteúdo, políticas de privacidade ou 
+                  A <strong>Guatá Labs</strong> não tem controle sobre o conteúdo, políticas de privacidade ou 
                   práticas de sites de terceiros e não se responsabiliza por eles. Recomendamos que você leia os 
                   termos e políticas de privacidade de qualquer site de terceiro que visitar.
                 </p>
@@ -733,7 +733,7 @@ const TermosUsoMS = () => {
               </div>
               <div className="ml-12 space-y-3">
                 <p className="text-gray-700 leading-relaxed">
-                  A <strong>viajARTUR</strong> se reserva o direito de:
+                  A <strong>Guatá Labs</strong> se reserva o direito de:
                 </p>
                 <ul className="space-y-2 list-disc list-inside text-gray-700">
                   <li>Modificar, suspender ou descontinuar qualquer aspecto da plataforma a qualquer momento;</li>
@@ -761,7 +761,7 @@ const TermosUsoMS = () => {
                   entrando em contato conosco.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
-                  A <strong>viajARTUR</strong> pode suspender ou encerrar sua conta imediatamente, sem aviso prévio, 
+                  A <strong>Guatá Labs</strong> pode suspender ou encerrar sua conta imediatamente, sem aviso prévio, 
                   se você violar estes Termos de Uso ou se houver qualquer atividade suspeita ou fraudulenta.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
@@ -801,8 +801,8 @@ const TermosUsoMS = () => {
               <div className="ml-12 space-y-3">
                 <ul className="space-y-2 list-disc list-inside text-gray-700">
                   <li>Se qualquer disposição destes termos for considerada inválida, as demais disposições permanecerão em vigor;</li>
-                  <li>Estes termos constituem o acordo completo entre você e a viajARTUR sobre o uso da plataforma;</li>
-                  <li>A falha da viajARTUR em exercer qualquer direito não constitui renúncia a esse direito;</li>
+                  <li>Estes termos constituem o acordo completo entre você e a Guatá Labs sobre o uso da plataforma;</li>
+                  <li>A falha da Guatá Labs em exercer qualquer direito não constitui renúncia a esse direito;</li>
                   <li>Você não pode transferir seus direitos ou obrigações sob estes termos sem nosso consentimento prévio por escrito.</li>
                 </ul>
               </div>
@@ -821,7 +821,7 @@ const TermosUsoMS = () => {
                   Para questões sobre estes Termos de Uso, entre em contato:
                 </p>
                 <div className="bg-gradient-to-r from-blue-50 to-green-50 p-6 rounded-lg border border-ms-primary-blue/20">
-                  <p className="text-gray-800 font-semibold mb-2">viajARTUR</p>
+                  <p className="text-gray-800 font-semibold mb-2">Guatá Labs</p>
                   <p className="text-gray-700">Responsável pela plataforma Descubra Mato Grosso do Sul</p>
                   <p className="text-gray-700 mt-2">
                     <strong>E-mail:</strong> contato@descubramsconline.com.br

@@ -305,13 +305,13 @@ async function executeMetricsAnalysis(supabase: any) {
       throw new Error('GEMINI_API_KEY não configurada');
     }
 
-    const analysisPrompt = `Analise as seguintes métricas UNIFICADAS das plataformas ViajARTur e Descubra MS:
+    const analysisPrompt = `Analise as seguintes métricas UNIFICADAS das plataformas Guatá Labs e Descubra MS:
 
 MÉTRICAS:
 - Total de usuários: ${totalUsers}
 - Novos usuários (30 dias): ${newUsersLast30Days}
 - Eventos ativos: ${activeEvents}
-- Receita ViajARTur (30 dias): R$ ${totalRevenue.toFixed(2)}
+- Receita Guatá Labs (30 dias): R$ ${totalRevenue.toFixed(2)}
 - Passaportes Digitais: ${totalPassports}
 - Destinos: ${totalDestinations}
 

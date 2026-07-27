@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { generateContent } from '@/config/gemini';
-import { financialDashboardService } from './financialDashboardService';
 
 export interface TaskResult {
   success: boolean;
@@ -12,7 +11,7 @@ export interface TaskResult {
 
 export const autonomousAgentService = {
   /**
-   * Executa análise de métricas UNIFICADA (ViajARTur + Descubra MS)
+   * Executa análise de métricas UNIFICADA (Guatá Labs + Descubra MS)
    */
   async runMetricsAnalysis(): Promise<TaskResult> {
     try {
@@ -31,7 +30,7 @@ export const autonomousAgentService = {
         supabase.from('user_profiles').select('id, created_at', { count: 'exact', head: false }).limit(1000),
         // Eventos (unificado)
         supabase.from('events').select('id, created_at, is_visible, source').limit(1000),
-        // Receitas (ViajARTur)
+        // Receitas (Guatá Labs)
         supabase.from('master_financial_records')
           .select('amount, record_type, paid_date')
           .eq('record_type', 'revenue')
@@ -64,15 +63,15 @@ export const autonomousAgentService = {
       }).length || 0;
 
       // Gerar análise com IA (unificada)
-      const analysisPrompt = `Analise as seguintes métricas UNIFICADAS das plataformas ViajARTur e Descubra MS e forneça insights:
+      const analysisPrompt = `Analise as seguintes métricas UNIFICADAS das plataformas Guatá Labs e Descubra MS e forneça insights:
 
 MÉTRICAS UNIFICADAS:
 - Total de usuários (ambas plataformas): ${totalUsers}
 - Novos usuários (últimos 30 dias): ${newUsersLast30Days}
 - Eventos ativos (total): ${activeEvents}
-  - ViajARTur: ${eventsViajar}
+  - Guatá Labs: ${eventsViajar}
   - Descubra MS: ${eventsDescubra}
-- Receita ViajARTur (últimos 30 dias): R$ ${totalRevenue.toFixed(2)}
+- Receita Guatá Labs (últimos 30 dias): R$ ${totalRevenue.toFixed(2)}
 - Passaportes Digitais (Descubra MS): ${totalPassports}
 - Destinos cadastrados (Descubra MS): ${totalDestinations}
 - Itens de inventário (Descubra MS): ${totalInventory}
@@ -89,7 +88,7 @@ Seja conciso e objetivo.`;
       const aiAnalysis = await generateContent(analysisPrompt);
       
       const result = {
-        // ViajARTur
+        // Guatá Labs
         viajar: {
           users: totalUsers, // Aproximado - usuários podem estar em ambas
           events: eventsViajar,
@@ -145,106 +144,6 @@ Seja conciso e objetivo.`;
     }
   },
 
-  /**
-   * Gera relatório financeiro
-   */
-  async generateFinancialReport(): Promise<TaskResult> {
-    try {
-      console.log('💰 [AutonomousAgent] Gerando relatório financeiro...');
-      
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-      // Buscar dados financeiros reais
-      const [revenue, expenses, upcomingBills] = await Promise.all([
-        financialDashboardService.getMonthlyRevenue(
-          startOfMonth.toISOString().split('T')[0],
-          endOfMonth.toISOString().split('T')[0]
-        ).catch(() => ({ total: 0, byCategory: {} })),
-        financialDashboardService.getMonthlyExpenses(
-          startOfMonth.toISOString().split('T')[0],
-          endOfMonth.toISOString().split('T')[0]
-        ).catch(() => ({ total: 0, byCategory: {} })),
-        financialDashboardService.getUpcomingBills(7).catch(() => []),
-      ]);
-
-      const profit = (revenue.total || 0) - (expenses.total || 0);
-      const profitMargin = revenue.total > 0 ? ((profit / revenue.total) * 100) : 0;
-
-      // Gerar relatório com IA
-      const reportPrompt = `Gere um relatório financeiro profissional para o mês atual com os seguintes dados:
-
-RECEITAS:
-- Total: R$ ${(revenue.total || 0).toFixed(2)}
-- Por categoria: ${JSON.stringify(revenue.byCategory || {})}
-
-DESPESAS:
-- Total: R$ ${(expenses.total || 0).toFixed(2)}
-- Por categoria: ${JSON.stringify(expenses.byCategory || {})}
-
-RESULTADO:
-- Lucro: R$ ${profit.toFixed(2)}
-- Margem de lucro: ${profitMargin.toFixed(2)}%
-
-CONTAS A VENCER (próximos 7 dias): ${upcomingBills.length} contas
-
-Forneça:
-1. Resumo executivo
-2. Análise de receitas
-3. Análise de despesas
-4. Projeções
-5. Recomendações
-
-Formato: Relatório profissional e objetivo.`;
-
-      const aiReport = await generateContent(reportPrompt);
-
-      const result = {
-        period: {
-          start: startOfMonth.toISOString().split('T')[0],
-          end: endOfMonth.toISOString().split('T')[0],
-        },
-        revenue: revenue.total || 0,
-        expenses: expenses.total || 0,
-        profit,
-        profitMargin,
-        upcomingBills: upcomingBills.length,
-        report: aiReport.ok ? aiReport.text : 'Relatório não disponível no momento',
-        timestamp: new Date().toISOString(),
-      };
-
-      // Salvar relatório no banco
-      try {
-        const { data: user } = await supabase.auth.getUser();
-        await supabase.from('ai_analyses').insert({
-          type: 'financial',
-          analysis_data: result,
-          insights: aiReport.ok ? aiReport.text : null,
-          created_by: user.user?.id,
-        });
-        console.log('✅ [AutonomousAgent] Relatório salvo no banco');
-      } catch (saveError) {
-        console.warn('⚠️ [AutonomousAgent] Erro ao salvar relatório no banco:', saveError);
-      }
-
-      console.log('✅ [AutonomousAgent] Relatório financeiro gerado');
-
-      return {
-        success: true,
-        message: 'Relatório financeiro gerado com sucesso',
-        data: result,
-      };
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.error('❌ [AutonomousAgent] Erro ao gerar relatório financeiro:', err);
-      return {
-        success: false,
-        message: 'Erro ao gerar relatório financeiro',
-        error: err.message,
-      };
-    }
-  },
 
   /**
    * Detecta anomalias e envia alertas

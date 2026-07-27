@@ -135,5 +135,5 @@ export const VIAJAR_TEST_PASSWORD = '123456';
 export const VIAJAR_ADMIN_TEST_DISPLAY = {
   email: 'admin@viajar.com',
   password: VIAJAR_TEST_PASSWORD,
-  label: 'Admin ViajARTur (teste)',
+  label: 'Admin Guatá Labs (teste)',
 } as const;

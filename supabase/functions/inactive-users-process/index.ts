@@ -2,7 +2,7 @@
  * Processa contas inativas do Descubra MS:
  * - Envia e-mail de aviso para quem não acessa há X meses
  * - Após prazo de graça, exclui a conta (Auth)
- * Não afeta usuários ViajarTur (viajar_employees) nem admins (user_roles).
+ * Não afeta usuários Guatá Labs (viajar_employees) nem admins (user_roles).
  *
  * Chamado por pg_cron semanalmente. Pode ser invocado com Authorization: Bearer ANON_KEY.
  */

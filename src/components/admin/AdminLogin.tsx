@@ -3,8 +3,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Shield, Mail, Lock, AlertCircle, Sparkles, LayoutDashboard, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import guataLabsLogo from '@/assets/guata-labs-logo.png';
+
+const HIGHLIGHTS = [
+  { icon: LayoutDashboard, label: 'Gestão unificada de conteúdos e eventos' },
+  { icon: Users, label: 'Parceiros, usuários e permissões em um só lugar' },
+  { icon: Sparkles, label: 'Inteligência e automações do Guatá' },
+];
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -53,38 +60,88 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-8">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <Shield className="h-8 w-8 text-gray-700" />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Área Administrativa</h1>
-            <p className="text-sm text-gray-500 mt-2">ViajARTur & Descubra MS</p>
+    <div className="min-h-screen bg-guata-cream flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl grid lg:grid-cols-2 rounded-2xl overflow-hidden shadow-xl border border-guata-paper bg-card">
+        {/* Painel de marca */}
+        <aside className="hidden lg:flex flex-col justify-between bg-guata-deep p-10 text-guata-cream">
+          <div>
+            <img
+              src={guataLabsLogo}
+              alt="Guatá Labs"
+              className="h-14 w-auto object-contain"
+              loading="lazy"
+            />
+            <h2 className="mt-10 text-3xl font-bold leading-tight">
+              Painel administrativo
+            </h2>
+            <p className="mt-3 text-guata-cream/70 text-sm leading-relaxed">
+              Centro de controle das plataformas Guatá Labs e Descubra MS.
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <ul className="space-y-4 mt-10">
+            {HIGHLIGHTS.map(({ icon: Icon, label }) => (
+              <li key={label} className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-guata-forest">
+                  <Icon className="h-4 w-4 text-guata-gold" />
+                </span>
+                <span className="text-sm text-guata-cream/85">{label}</span>
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-10 text-xs text-guata-cream/50">
+            © {new Date().getFullYear()} Guatá Labs
+          </p>
+        </aside>
+
+        {/* Formulário */}
+        <div className="p-8 sm:p-12 flex flex-col justify-center">
+          <div className="lg:hidden mb-8 text-center">
+            <img
+              src={guataLabsLogo}
+              alt="Guatá Labs"
+              className="h-12 w-auto object-contain mx-auto"
+              loading="lazy"
+            />
+          </div>
+
+          <div className="mb-8">
+            <span className="inline-flex items-center gap-2 rounded-full bg-guata-paper px-3 py-1 text-xs font-medium text-guata-forest">
+              <Shield className="h-3.5 w-3.5" />
+              Acesso restrito
+            </span>
+            <h1 className="mt-4 text-2xl font-bold text-foreground">Área administrativa</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Guatá Labs &amp; Descubra MS
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md flex items-center gap-2 text-sm">
+              <div
+                role="alert"
+                className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded-md flex items-center gap-2 text-sm"
+              >
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="email" className="text-sm font-medium">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-11"
                   required
                   disabled={isLoading}
                 />
@@ -92,18 +149,19 @@ export default function AdminLogin() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="password" className="text-sm font-medium">
                 Senha
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
+                  autoComplete="current-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-11"
                   required
                   disabled={isLoading}
                 />
@@ -112,18 +170,16 @@ export default function AdminLogin() {
 
             <Button
               type="submit"
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white"
+              className="w-full h-11 bg-guata-forest hover:bg-guata-deep text-guata-cream font-semibold"
               disabled={isLoading}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-xs text-gray-500">
-              Apenas usuários com permissão de administrador podem acessar
-            </p>
-          </div>
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Apenas usuários com permissão de administrador podem acessar.
+          </p>
         </div>
       </div>
     </div>

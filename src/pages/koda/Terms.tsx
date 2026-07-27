@@ -38,8 +38,8 @@ const Terms = () => {
           <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4 mb-6">
             <p className="text-sm font-medium">
               {isFrench 
-                ? '⚠️ Projet indépendant de ViajARTur, non affilié au gouvernement du Canada'
-                : '⚠️ Independent project by ViajARTur, not affiliated with the Government of Canada'}
+                ? '⚠️ Projet indépendant de Guatá Labs, non affilié au gouvernement du Canada'
+                : '⚠️ Independent project by Guatá Labs, not affiliated with the Government of Canada'}
             </p>
           </div>
 
@@ -91,7 +91,7 @@ const Terms = () => {
               <section>
                 <h2 className="text-2xl font-bold mb-4">5. Limitation de responsabilité</h2>
                 <p className="text-white/90 leading-relaxed">
-                  ViajARTur et Koda ne sont pas responsables des décisions prises sur la base des informations fournies 
+                  Guatá Labs et Koda ne sont pas responsables des décisions prises sur la base des informations fournies 
                   par le service. Les utilisateurs sont responsables de vérifier les informations importantes.
                 </p>
               </section>
@@ -151,7 +151,7 @@ const Terms = () => {
               <section>
                 <h2 className="text-2xl font-bold mb-4">5. Limitation of Liability</h2>
                 <p className="text-white/90 leading-relaxed">
-                  ViajARTur and Koda are not responsible for decisions made based on information provided by the service. 
+                  Guatá Labs and Koda are not responsible for decisions made based on information provided by the service. 
                   Users are responsible for verifying important information.
                 </p>
               </section>

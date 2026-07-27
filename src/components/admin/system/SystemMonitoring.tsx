@@ -132,13 +132,13 @@ export default function SystemMonitoring() {
       
       if (viajarConfig) {
         systemsData.push({
-          platform: 'ViajARTur',
+          platform: 'Guatá Labs',
           status: viajarConfig.status,
           lastCheck: viajarConfig.last_check || new Date().toISOString(),
         });
       } else {
         systemsData.push({
-          platform: 'ViajARTur',
+          platform: 'Guatá Labs',
           status: 'healthy',
           lastCheck: new Date().toISOString(),
         });

@@ -44,7 +44,7 @@ const Privacidade = () => {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Política de Privacidade - ViajARTur</title>
+            <title>Política de Privacidade - Guatá Labs</title>
             <meta charset="utf-8">
             <style>
               body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; color: #333; }
@@ -63,7 +63,7 @@ const Privacidade = () => {
           </head>
           <body>
             <h1>Política de Privacidade</h1>
-            <p><strong>ViajARTur - Plataforma SaaS de Gestão Turística</strong></p>
+            <p><strong>Guatá Labs - Plataforma SaaS de Gestão Turística</strong></p>
             <p><em>Última atualização: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</em></p>
             <hr style="margin: 30px 0;">
             ${clone.innerHTML}
@@ -145,7 +145,7 @@ const Privacidade = () => {
                 {/* Introdução */}
                 <div className="mb-8">
                   <p className="text-muted-foreground leading-relaxed text-lg">
-                    A <strong className="text-foreground">ViajARTur</strong> está comprometida com a proteção da privacidade 
+                    A <strong className="text-foreground">Guatá Labs</strong> está comprometida com a proteção da privacidade 
                     e dos dados pessoais de seus usuários, em conformidade com a <strong className="text-foreground">Lei Geral 
                     de Proteção de Dados (LGPD - Lei nº 13.709/2018)</strong> e demais normas aplicáveis.
                   </p>
@@ -165,7 +165,7 @@ const Privacidade = () => {
               </div>
               <div className="ml-12 space-y-6">
                 <p className="text-muted-foreground leading-relaxed">
-                  Coletamos os seguintes tipos de informações quando você utiliza a plataforma SaaS ViajARTur:
+                  Coletamos os seguintes tipos de informações quando você utiliza a plataforma SaaS Guatá Labs:
                 </p>
 
                 <div>
@@ -235,7 +235,7 @@ const Privacidade = () => {
                       certificada PCI DSS (Payment Card Industry Data Security Standard).
                     </p>
                     <p className="text-muted-foreground text-sm mb-2">
-                      A ViajARTur <strong>não armazena</strong> dados completos de cartão de crédito ou informações bancárias sensíveis.
+                      A Guatá Labs <strong>não armazena</strong> dados completos de cartão de crédito ou informações bancárias sensíveis.
                     </p>
                     <p className="text-muted-foreground text-sm">
                       Recebemos apenas informações necessárias para gerenciar assinaturas:
@@ -785,7 +785,7 @@ const Privacidade = () => {
                   Para exercer seus direitos, esclarecer dúvidas ou apresentar reclamações:
                 </p>
                 <div className="bg-gradient-to-r from-viajar-cyan/10 to-viajar-blue/10 p-6 rounded-lg border border-viajar-cyan/20">
-                  <p className="text-foreground font-semibold mb-3">ViajARTur</p>
+                  <p className="text-foreground font-semibold mb-3">Guatá Labs</p>
                   <div className="space-y-2 text-muted-foreground">
                     <p><strong>E-mail de Privacidade:</strong> privacidade@viajartur.com.br</p>
                     <p><strong>E-mail Geral:</strong> contato@viajartur.com.br</p>

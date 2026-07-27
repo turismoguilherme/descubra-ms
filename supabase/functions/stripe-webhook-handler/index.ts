@@ -71,7 +71,7 @@ serve(async (req) => {
           // Pagamento de acesso aos Roteiros IA
           await handleIARoutePaymentCompleted(session, supabase);
         } else if (session.mode === 'subscription' && session.client_reference_id) {
-          // Payment Link de assinatura ViaJARTur (client_reference_id = user_id)
+          // Payment Link de assinatura Guatá Labs (client_reference_id = user_id)
           await handlePaymentLinkSubscriptionCompleted(session, supabase);
         } else if (session.client_reference_id && !session.metadata?.type) {
           // Payment Link de evento (client_reference_id = event_id)
@@ -124,7 +124,7 @@ serve(async (req) => {
 
 // Funções de manipulação de eventos
 
-// Handler para Payment Link de assinaturas ViaJARTur (usa client_reference_id = user_id)
+// Handler para Payment Link de assinaturas Guatá Labs (usa client_reference_id = user_id)
 async function handlePaymentLinkSubscriptionCompleted(session: Stripe.Checkout.Session, supabase: any) {
   console.log('Assinatura via Payment Link completada:', session.id);
   
@@ -216,7 +216,7 @@ async function handlePaymentLinkSubscriptionCompleted(session: Stripe.Checkout.S
         contract_start_date: now.toISOString().split('T')[0],
         contract_end_date: periodEnd.toISOString().split('T')[0],
         auto_renewal: true,
-        client_name: customerEmail?.split('@')[0] || 'Cliente ViaJARTur',
+        client_name: customerEmail?.split('@')[0] || 'Cliente Guatá Labs',
       }, {
         onConflict: 'contact_email'
       });
@@ -234,7 +234,7 @@ async function handlePaymentLinkSubscriptionCompleted(session: Stripe.Checkout.S
       .insert({
         record_type: 'revenue',
         amount: amountPaid,
-        description: `Assinatura ViaJARTur (Payment Link): ${planId === 'government' ? 'Secretárias' : 'Empresários'}`,
+        description: `Assinatura Guatá Labs (Payment Link): ${planId === 'government' ? 'Secretárias' : 'Empresários'}`,
         stripe_invoice_id: session.payment_intent as string,
         stripe_subscription_id: subscriptionId,
         status: 'paid',

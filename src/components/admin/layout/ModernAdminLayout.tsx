@@ -21,11 +21,9 @@ export const ROLE_PERMISSIONS: Record<string, string[]> = {
   master_admin: ['*'],
   admin: ['*', 'communication'],
   tech: ['*', 'communication'],
-  financeiro: ['dashboard', 'financial', 'reports'],
-  rh: ['dashboard', 'employees', 'salaries'],
-  comercial: ['dashboard', 'clients', 'subscriptions', 'partners'],
+  comercial: ['dashboard', 'partners'],
   platforms: ['dashboard', 'viajar', 'descubra_ms'],
-  editor: ['dashboard', 'events', 'destinations'],
+  editor: ['dashboard', 'events', 'content'],
   atendente: ['dashboard', 'cat', 'users'],
 };
 

@@ -1,24 +1,28 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import ModernAdminLayout from '@/components/admin/layout/ModernAdminLayout';
 import AdminLogin from '@/components/admin/AdminLogin';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Users, DollarSign, FileText, TrendingUp, AlertTriangle, Calendar, Brain, Sparkles, MessageSquare } from 'lucide-react';
+import {
+  Calendar,
+  Briefcase,
+  FileSignature,
+  Users,
+  RefreshCw,
+  ArrowRight,
+  Stamp,
+  BookOpen,
+  Bot,
+  Activity,
+} from 'lucide-react';
 import { lazy, Suspense } from 'react';
 import LoadingFallback from '@/components/ui/loading-fallback';
-import { financialDashboardService } from '@/services/admin/financialDashboardService';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from 'recharts';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+
 // Lazy load components
-const ClientsManagement = lazy(() => import('@/components/admin/viajar/ClientsManagement'));
-const SubscriptionsManagement = lazy(() => import('@/components/admin/viajar/SubscriptionsManagement'));
-// MenuManager removido - desnecessário (menus são gerenciados via código)
 const UsersManagement = lazy(() => import('@/components/admin/descubra_ms/UsersManagement'));
 const WhatsAppSettingsManager = lazy(() => import('@/components/admin/descubra_ms/WhatsAppSettingsManager'));
 const EventsManagement = lazy(() => import('@/components/admin/descubra_ms/EventsManagement'));
@@ -29,20 +33,12 @@ const GuataVideosManager = lazy(() => import('@/components/admin/GuataVideosMana
 const GuataCartilhasManager = lazy(() => import('@/components/admin/GuataCartilhasManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const TouristRegionsManager = lazy(() => import('@/components/admin/descubra_ms/TouristRegionsManager'));
-const PaymentsList = lazy(() => import('@/components/admin/financial/PaymentsList'));
-const FinancialReports = lazy(() => import('@/components/admin/financial/FinancialReports'));
-const FinancialManagement = lazy(() => import('@/components/admin/financial/FinancialManagement'));
-const ModernFinancialDashboard = lazy(() => import('@/components/admin/financial/ModernFinancialDashboard'));
-const BillsManager = lazy(() => import('@/components/admin/financial/BillsManager'));
 const SystemMonitoring = lazy(() => import('@/components/admin/system/SystemMonitoring'));
 const AuditLogs = lazy(() => import('@/components/admin/system/AuditLogs'));
 const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
 const KnowledgeBaseAdmin = lazy(() => import('@/components/admin/ai/KnowledgeBaseAdmin'));
 const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
 const PoliciesEditor = lazy(() => import('@/components/admin/settings/PoliciesEditor'));
-const BankAccountsManager = lazy(() => import('@/components/admin/financial/BankAccountsManager'));
-const ContactLeadsManagement = lazy(() => import('@/components/admin/financial/ContactLeadsManagement'));
-const RefundManagement = lazy(() => import('@/components/admin/financial/RefundManagement'));
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
 const UnifiedPlatformEditor = lazy(() => import('@/components/admin/platform/UnifiedPlatformEditor'));
 const ViaJARTurSettingsManager = lazy(() => import('@/components/admin/ViaJARTurSettingsManager'));
@@ -69,10 +65,10 @@ export default function ViaJARAdminPanel() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
@@ -84,169 +80,110 @@ export default function ViaJARAdminPanel() {
 
   return (
     <ModernAdminLayout>
-          <Routes>
-            <Route index element={<DashboardOverview />} />
-            
-            {/* ViaJAR Routes */}
-            <Route path="viajar/content" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <UnifiedPlatformEditor initialPlatform="viajar" />
-              </Suspense>
-            } />
-            <Route path="viajar/clients" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <ClientsManagement />
-              </Suspense>
-            } />
-            <Route path="viajar/subscriptions" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <SubscriptionsManagement />
-              </Suspense>
-            } />
-            <Route path="viajar/plan-settings" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <ViaJARTurSettingsManager />
-              </Suspense>
-            } />
-            <Route path="viajar/team-members" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <TeamMembersManager />
-              </Suspense>
-            } />
-            <Route path="viajar/sections" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <ViaJARSectionManager />
-              </Suspense>
-            } />
-            
-            {/* Descubra MS Routes */}
-            <Route path="descubra-ms/footer" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <FooterSettingsManager />
-              </Suspense>
-            } />
-            <Route path="descubra-ms/tourist-regions" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <TouristRegionsManager />
-              </Suspense>
-            } />
-            {/* Rota de Menus removida - desnecessária */}
-            <Route path="descubra-ms/users" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <UsersManagement />
-              </Suspense>
-            } />
-            <Route path="descubra-ms/events" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <EventsManagement />
-              </Suspense>
-            } />
-            <Route path="descubra-ms/partners" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <PartnersAdminModule />
-              </Suspense>
-            } />
-            <Route path="descubra-ms/partner-terms" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <PartnerTermsAcceptances />
-              </Suspense>
-            } />
-            <Route
-              path="descubra-ms/settings"
-              element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=fees" replace />}
-            />
-            <Route
-              path="descubra-ms/partner-settings"
-              element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=fees" replace />}
-            />
-            <Route
-              path="descubra-ms/cancellation-policy"
-              element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=cancellation" replace />}
-            />
-            <Route path="descubra-ms/whatsapp" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <WhatsAppSettingsManager />
-              </Suspense>
-            } />
-            <Route path="descubra-ms/passport" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <PassportAdmin />
-              </Suspense>
-            } />
-            <Route path="descubra-ms/avatars" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <PantanalAvatarsManager />
-              </Suspense>
-            } />
-            <Route path="descubra-ms/guata-videos" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <GuataVideosManager />
-              </Suspense>
-            } />
-            <Route path="descubra-ms/guata-cartilhas" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <GuataCartilhasManager />
-              </Suspense>
-            } />
-            
-        {/* Financial Routes - Novo dashboard moderno */}
-            <Route path="financial" element={
-              <Suspense fallback={<LoadingFallback />}>
-            <ModernFinancialDashboard />
-              </Suspense>
-            } />
-            <Route path="financial/bills" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <BillsManager />
-              </Suspense>
-            } />
-        <Route path="financial/revenue" element={
+      <Routes>
+        <Route index element={<DashboardOverview />} />
+
+        {/* Guatá Labs */}
+        <Route path="viajar/content" element={
           <Suspense fallback={<LoadingFallback />}>
-            <FinancialManagement />
+            <UnifiedPlatformEditor initialPlatform="viajar" />
           </Suspense>
         } />
-        <Route path="financial/expenses" element={
+        <Route path="viajar/plan-settings" element={
           <Suspense fallback={<LoadingFallback />}>
-            <FinancialManagement />
+            <ViaJARTurSettingsManager />
           </Suspense>
         } />
-        <Route path="financial/salaries" element={
+        <Route path="viajar/team-members" element={
           <Suspense fallback={<LoadingFallback />}>
-            <FinancialManagement />
-              </Suspense>
-            } />
-            <Route path="financial/payments" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <PaymentsList />
-              </Suspense>
-            } />
-        <Route path="financial/reports" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <FinancialReports />
+            <TeamMembersManager />
           </Suspense>
         } />
-        <Route path="financial/refunds" element={
+        <Route path="viajar/sections" element={
           <Suspense fallback={<LoadingFallback />}>
-            <RefundManagement />
+            <ViaJARSectionManager />
           </Suspense>
         } />
-            <Route path="financial/contact-leads" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <ContactLeadsManagement />
-              </Suspense>
-            } />
-        <Route path="financial/accounts" element={
+
+        {/* Descubra MS */}
+        <Route path="descubra-ms/footer" element={
           <Suspense fallback={<LoadingFallback />}>
-            <BankAccountsManager />
+            <FooterSettingsManager />
           </Suspense>
         } />
-        <Route path="financial/suppliers" element={
+        <Route path="descubra-ms/tourist-regions" element={
           <Suspense fallback={<LoadingFallback />}>
-            <BankAccountsManager />
+            <TouristRegionsManager />
           </Suspense>
         } />
-        
-        {/* Settings Routes */}
+        <Route path="descubra-ms/users" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <UsersManagement />
+          </Suspense>
+        } />
+        <Route path="descubra-ms/events" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <EventsManagement />
+          </Suspense>
+        } />
+        <Route path="descubra-ms/partners" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <PartnersAdminModule />
+          </Suspense>
+        } />
+        <Route path="descubra-ms/partner-terms" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <PartnerTermsAcceptances />
+          </Suspense>
+        } />
+        <Route
+          path="descubra-ms/settings"
+          element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=fees" replace />}
+        />
+        <Route
+          path="descubra-ms/partner-settings"
+          element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=fees" replace />}
+        />
+        <Route
+          path="descubra-ms/cancellation-policy"
+          element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=cancellation" replace />}
+        />
+        <Route path="descubra-ms/whatsapp" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <WhatsAppSettingsManager />
+          </Suspense>
+        } />
+        <Route path="descubra-ms/passport" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <PassportAdmin />
+          </Suspense>
+        } />
+        <Route path="descubra-ms/avatars" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <PantanalAvatarsManager />
+          </Suspense>
+        } />
+        <Route path="descubra-ms/guata-videos" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <GuataVideosManager />
+          </Suspense>
+        } />
+        <Route path="descubra-ms/guata-cartilhas" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <GuataCartilhasManager />
+          </Suspense>
+        } />
+
+        {/* Redirecionamentos do antigo módulo Financeiro */}
+        <Route
+          path="financial/refunds"
+          element={<Navigate to="/viajar/admin/descubra-ms/partners?tab=refunds" replace />}
+        />
+        <Route path="financial/*" element={<Navigate to="/viajar/admin" replace />} />
+        <Route path="viajar/clients" element={<Navigate to="/viajar/admin" replace />} />
+        <Route path="viajar/subscriptions" element={<Navigate to="/viajar/admin" replace />} />
+
+        {/* Configurações */}
         <Route path="settings/policies" element={
           <Suspense fallback={<LoadingFallback />}>
             <PoliciesEditor />
@@ -257,430 +194,195 @@ export default function ViaJARAdminPanel() {
             <PlatformMetricsEditor />
           </Suspense>
         } />
-            
-            {/* System Routes */}
-            <Route path="system/monitoring" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <SystemMonitoring />
-              </Suspense>
-            } />
-            <Route path="system/logs" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AuditLogs />
-              </Suspense>
-            } />
-            
-            {/* AI Routes */}
-            <Route path="ai/chat" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <AIAdminChat />
-              </Suspense>
-            } />
-            <Route path="ai/knowledge-base" element={
-              <Suspense fallback={<LoadingFallback />}>
-                <KnowledgeBaseAdmin />
-              </Suspense>
-            } />
 
-            <Route path="*" element={<Navigate to="/viajar/admin" replace />} />
-          </Routes>
+        {/* Sistema */}
+        <Route path="system/monitoring" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <SystemMonitoring />
+          </Suspense>
+        } />
+        <Route path="system/logs" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AuditLogs />
+          </Suspense>
+        } />
+
+        {/* IA */}
+        <Route path="ai/chat" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <AIAdminChat />
+          </Suspense>
+        } />
+        <Route path="ai/knowledge-base" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <KnowledgeBaseAdmin />
+          </Suspense>
+        } />
+
+        <Route path="*" element={<Navigate to="/viajar/admin" replace />} />
+      </Routes>
     </ModernAdminLayout>
   );
 }
 
+interface OperationalCounts {
+  pendingEvents: number;
+  pendingPartners: number;
+  pendingTerms: number;
+  pendingRefunds: number;
+  newUsers: number;
+}
+
+const EMPTY_COUNTS: OperationalCounts = {
+  pendingEvents: 0,
+  pendingPartners: 0,
+  pendingTerms: 0,
+  pendingRefunds: 0,
+  newUsers: 0,
+};
+
 function DashboardOverview() {
   const [loading, setLoading] = useState(true);
-  const [revenue, setRevenue] = useState({ total: 0, viajar: 0, events: 0, partners: 0, other: 0, byMonth: [] as any[] });
-  const [expenses, setExpenses] = useState({ total: 0, byCategory: {} as Record<string, number>, byMonth: [] as any[] });
-  const [salaries, setSalaries] = useState({ total: 0, employees: [] });
-  const [profit, setProfit] = useState({ revenue: 0, expenses: 0, salaries: 0, taxes: 0, profit: 0, profitMargin: 0 });
-  const [upcomingBills, setUpcomingBills] = useState<any[]>([]);
-  const [pendingEvents, setPendingEvents] = useState(0);
+  const [counts, setCounts] = useState<OperationalCounts>(EMPTY_COUNTS);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    let active = true;
 
-  const loadDashboardData = async () => {
-    setLoading(true);
-    try {
-      const [revenueData, expensesData, salariesData, billsData] = await Promise.all([
-        financialDashboardService.getMonthlyRevenue(),
-        financialDashboardService.getMonthlyExpenses(),
-        financialDashboardService.getMonthlySalaries(),
-        financialDashboardService.getUpcomingBills(7),
+    const load = async () => {
+      setLoading(true);
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const countOf = async (
+        table: string,
+        apply: (query: any) => any
+      ): Promise<number> => {
+        try {
+          const { count, error } = await apply(
+            supabase.from(table as never).select('id', { count: 'exact', head: true })
+          );
+          if (error) throw error;
+          return count ?? 0;
+        } catch (error) {
+          console.error(`Erro ao contar ${table}:`, error);
+          return 0;
+        }
+      };
+
+      const [pendingEvents, pendingPartners, pendingTerms, pendingRefunds, newUsers] = await Promise.all([
+        countOf('events', (q) => q.eq('is_visible', false)),
+        countOf('commercial_partners', (q) => q.eq('status', 'pendente')),
+        countOf('partner_terms_acceptances', (q) => q.eq('review_status', 'pending')),
+        countOf('pending_refunds', (q) => q.eq('status', 'pending')),
+        countOf('user_profiles', (q) => q.gte('created_at', sevenDaysAgo)),
       ]);
 
-      setRevenue(revenueData);
-      setExpenses(expensesData);
-      setSalaries(salariesData);
-      setUpcomingBills(billsData);
-
-      const taxes = expensesData.byCategory.impostos || 0;
-      const profitData = await financialDashboardService.calculateProfit(
-        revenueData.total,
-        expensesData.total,
-        salariesData.total,
-        taxes
-      );
-      setProfit(profitData);
-
-      try {
-        const { data: eventsData } = await supabase
-          .from('events')
-          .select('id')
-          .eq('is_visible', false);
-        setPendingEvents(eventsData?.length || 0);
-      } catch (error) {
-        console.error('Erro ao buscar eventos pendentes:', error);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
-    } finally {
+      if (!active) return;
+      setCounts({ pendingEvents, pendingPartners, pendingTerms, pendingRefunds, newUsers });
       setLoading(false);
-    }
-  };
+    };
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const expenseCategoryData = Object.entries(expenses.byCategory).map(([name, value]) => ({
-    name: name.charAt(0).toUpperCase() + name.slice(1),
-    value: Number(value),
-  }));
+  const cards = [
+    {
+      label: 'Eventos aguardando aprovação',
+      value: counts.pendingEvents,
+      icon: Calendar,
+      to: '/viajar/admin/descubra-ms/events',
+      accent: 'text-amber-600 bg-amber-500/10',
+    },
+    {
+      label: 'Parceiros aguardando aprovação',
+      value: counts.pendingPartners,
+      icon: Briefcase,
+      to: '/viajar/admin/descubra-ms/partners',
+      accent: 'text-emerald-600 bg-emerald-500/10',
+    },
+    {
+      label: 'Termos pendentes de revisão',
+      value: counts.pendingTerms,
+      icon: FileSignature,
+      to: '/viajar/admin/descubra-ms/partners?tab=terms',
+      accent: 'text-blue-600 bg-blue-500/10',
+    },
+    {
+      label: 'Reembolsos pendentes',
+      value: counts.pendingRefunds,
+      icon: RefreshCw,
+      to: '/viajar/admin/descubra-ms/partners?tab=refunds',
+      accent: 'text-rose-600 bg-rose-500/10',
+    },
+    {
+      label: 'Novos usuários (7 dias)',
+      value: counts.newUsers,
+      icon: Users,
+      to: '/viajar/admin/descubra-ms/users',
+      accent: 'text-violet-600 bg-violet-500/10',
+    },
+  ];
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
-  const combinedChartData = revenue.byMonth.map((r, i) => ({
-    month: r.month,
-    receita: r.revenue,
-    despesas: expenses.byMonth[i]?.expenses || 0,
-  }));
+  const shortcuts = [
+    { label: 'Passaporte Digital', to: '/viajar/admin/descubra-ms/passport', icon: Stamp },
+    { label: 'Cartilhas Guatá Capacita', to: '/viajar/admin/descubra-ms/guata-cartilhas', icon: BookOpen },
+    { label: 'Base de Conhecimento da IA', to: '/viajar/admin/ai/knowledge-base', icon: Bot },
+    { label: 'Monitoramento do sistema', to: '/viajar/admin/system/monitoring', icon: Activity },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header com boas vindas */}
+    <div className="w-full max-w-7xl mx-auto space-y-6 pb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-          <h2 className="text-2xl font-bold text-slate-800">Bem-vindo ao Dashboard</h2>
-          <p className="text-slate-500 mt-1">Visão geral das plataformas ViajARTur e Descubra MS</p>
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Bem-vindo ao painel</h2>
+          <p className="text-muted-foreground mt-1">Visão operacional do Guatá Labs e do Descubra MS</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 px-3 py-1">
-            <div className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse" />
-            Sistema Online
-          </Badge>
-        </div>
+        <Badge variant="outline" className="w-fit px-3 py-1">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+          Sistema online
+        </Badge>
       </div>
 
-      {/* AI Quick Insights */}
-      <Card className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/20">
-              <Sparkles className="h-5 w-5 text-purple-400" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-slate-800 font-medium">Resumo da IA</p>
-              <p className="text-xs text-slate-500">
-                {loading ? 'Analisando dados...' : profit.profit >= 0 
-                  ? `Seu negócio está com margem de ${profit.profitMargin.toFixed(1)}%. ${upcomingBills.length > 0 ? `Atenção: ${upcomingBills.length} conta(s) a vencer.` : 'Sem contas pendentes.'}`
-                  : `Atenção: Resultado negativo este mês. Revise suas despesas.`
-                }
-              </p>
-            </div>
-            <Link to="/viajar/admin/ai/chat">
-              <Badge variant="outline" className="cursor-pointer hover:bg-purple-500/10 border-purple-500/30 text-purple-400">
-                <Brain className="h-3 w-3 mr-1" />
-                Consultar IA
-              </Badge>
-            </Link>
-          </div>
-          </CardContent>
-        </Card>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Receita */}
-        <Card className="bg-white border-slate-200 hover:border-green-500/30 transition-all overflow-hidden group">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
-          <CardContent className="p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-green-500/10">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-            </div>
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                +12%
-              </Badge>
-            </div>
-            <p className="text-slate-500 text-sm">Receita do Mês</p>
-            <p className="text-xl font-bold text-slate-800 mt-1">
-              {loading ? '...' : formatCurrency(revenue.total)}
-            </p>
-            <Progress value={75} className="h-1 mt-3 bg-[#27272A]" />
-          </CardContent>
-        </Card>
-
-        {/* Despesas */}
-        <Card className="bg-white border-slate-200 hover:border-red-500/30 transition-all overflow-hidden group">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
-          <CardContent className="p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-red-500/10">
-                <TrendingUp className="h-4 w-4 text-red-500 rotate-180" />
-            </div>
-              <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
-                {revenue.total > 0 ? `${((expenses.total / revenue.total) * 100).toFixed(0)}%` : '0%'}
-              </Badge>
-            </div>
-            <p className="text-slate-500 text-sm">Despesas do Mês</p>
-            <p className="text-xl font-bold text-red-400 mt-1">
-              {loading ? '...' : formatCurrency(expenses.total)}
-            </p>
-            <Progress value={revenue.total > 0 ? (expenses.total / revenue.total) * 100 : 0} className="h-1 mt-3 bg-[#27272A]" />
-          </CardContent>
-        </Card>
-
-        {/* Lucro */}
-        <Card className="bg-white border-slate-200 hover:border-blue-500/30 transition-all overflow-hidden group">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
-          <CardContent className="p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-blue-500/10">
-                <DollarSign className="h-4 w-4 text-blue-500" />
-            </div>
-              <Badge className={cn(
-                "text-xs",
-                profit.profit >= 0 
-                  ? "bg-green-500/20 text-green-400 border-green-500/30" 
-                  : "bg-red-500/20 text-red-400 border-red-500/30"
-              )}>
-                {profit.profitMargin.toFixed(1)}%
-              </Badge>
-            </div>
-            <p className="text-slate-500 text-sm">Lucro Líquido</p>
-            <p className={cn(
-              "text-xl font-bold mt-1",
-              profit.profit >= 0 ? "text-green-400" : "text-red-400"
-            )}>
-              {loading ? '...' : formatCurrency(profit.profit)}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Alertas */}
-        <Card className="bg-white border-slate-200 hover:border-yellow-500/30 transition-all overflow-hidden group">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform" />
-          <CardContent className="p-5 relative">
-            <div className="flex items-center justify-between mb-3">
-              <div className="p-2 rounded-lg bg-yellow-500/10">
-                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              </div>
-              {upcomingBills.length > 0 && (
-                <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs animate-pulse">
-                  Atenção
-                </Badge>
-              )}
-            </div>
-            <p className="text-slate-500 text-sm">Contas a Vencer</p>
-            <p className="text-xl font-bold text-yellow-400 mt-1">
-              {loading ? '...' : upcomingBills.length}
-            </p>
-            <Link to="/viajar/admin/financial/bills" className="text-xs text-blue-400 hover:text-blue-300 mt-2 inline-block">
-              Ver detalhes →
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white border-slate-200">
-          <CardHeader className="border-b border-slate-200">
-            <CardTitle className="text-slate-800 flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-500" />
-              Receita vs Despesas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={combinedChartData}>
-                  <defs>
-                    <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorDespesas" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                  <XAxis dataKey="month" stroke="#71717A" fontSize={12} />
-                  <YAxis stroke="#71717A" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#18181B', 
-                      border: '1px solid #27272A',
-                      borderRadius: '8px',
-                    }}
-                    formatter={(value: number) => formatCurrency(value)}
-                  />
-                  <Legend />
-                  <Area type="monotone" dataKey="receita" stroke="#10B981" fillOpacity={1} fill="url(#colorReceita)" name="Receita" />
-                  <Area type="monotone" dataKey="despesas" stroke="#EF4444" fillOpacity={1} fill="url(#colorDespesas)" name="Despesas" />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-slate-200">
-          <CardHeader className="border-b border-slate-200">
-            <CardTitle className="text-slate-800 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-purple-500" />
-              Despesas por Categoria
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie
-                    data={expenseCategoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {expenseCategoryData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#18181B', 
-                      border: '1px solid #27272A',
-                      borderRadius: '8px',
-                    }}
-                    formatter={(value: number) => formatCurrency(value)}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Acesso Rápido e Contas */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white border-slate-200">
-          <CardHeader className="border-b border-slate-200">
-            <CardTitle className="text-slate-800 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              Contas a Vencer (7 dias)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4">
-            {loading ? (
-              <div className="text-center py-8 text-slate-500">Carregando...</div>
-            ) : (
-              <div className="space-y-2">
-                {upcomingBills.length > 0 ? (
-                  upcomingBills.slice(0, 4).map((bill) => (
-                    <div key={bill.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200 hover:border-[#3F3F46] transition-colors">
-                      <div>
-                        <div className="font-medium text-slate-800 text-sm">{bill.description}</div>
-                        <div className="text-xs text-slate-400">
-                          Vence em {bill.days_until_due} {bill.days_until_due === 1 ? 'dia' : 'dias'}
-                        </div>
-                      </div>
-                      <div className="font-bold text-yellow-400 text-sm">{formatCurrency(bill.amount)}</div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 text-slate-400">
-                    <div className="text-green-500 mb-2">✓</div>
-                    Nenhuma conta a vencer
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {cards.map((card) => (
+          <Link key={card.label} to={card.to} className="group">
+            <Card className="h-full transition-all hover:shadow-md hover:border-primary/30">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className={cn('p-2 rounded-lg', card.accent)}>
+                    <card.icon className="h-5 w-5" />
                   </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <p className="text-3xl font-bold text-foreground mt-4">
+                  {loading ? '—' : card.value}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
 
-        <Card className="bg-white border-slate-200">
-          <CardHeader className="border-b border-slate-200">
-            <CardTitle className="text-slate-800 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-500" />
-              Acesso Rápido
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-2">
-            <Link to="/viajar/admin/financial" className="block p-3 rounded-lg bg-slate-50 border border-slate-200 hover:border-blue-500/30 transition-colors group">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                  <DollarSign className="h-4 w-4 text-blue-500" />
-                </div>
-                <div>
-                  <div className="font-medium text-slate-800 text-sm">Dashboard Financeiro</div>
-                  <div className="text-xs text-slate-400">Gráficos, análises e insights de IA</div>
-                </div>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Atalhos</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {shortcuts.map((shortcut) => (
+            <Link
+              key={shortcut.to}
+              to={shortcut.to}
+              className="flex items-center gap-3 rounded-lg border border-border p-3 text-sm text-foreground hover:bg-muted/60 transition-colors"
+            >
+              <shortcut.icon className="h-4 w-4 text-muted-foreground" />
+              {shortcut.label}
             </Link>
-            <Link to="/viajar/admin/descubra-ms/events" className="block p-3 rounded-lg bg-slate-50 border border-slate-200 hover:border-green-500/30 transition-colors group">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-                  <Calendar className="h-4 w-4 text-green-500" />
-                </div>
-                <div>
-                  <div className="font-medium text-slate-800 text-sm">Gerenciar Eventos</div>
-                  <div className="text-xs text-slate-400">{pendingEvents > 0 ? `${pendingEvents} pendentes` : 'Aprovar e gerenciar eventos'}</div>
-                </div>
-              </div>
-            </Link>
-            <Link to="/viajar/admin/settings/policies" className="block p-3 rounded-lg bg-slate-50 border border-slate-200 hover:border-purple-500/30 transition-colors group">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
-                  <FileText className="h-4 w-4 text-purple-500" />
-      </div>
-              <div>
-                  <div className="font-medium text-slate-800 text-sm">Políticas e Termos</div>
-                  <div className="text-xs text-slate-400">Editar termos de uso, privacidade e mais</div>
-                </div>
-              </div>
-            </Link>
-            <Link to="/viajar/admin/descubra-ms/passport" className="block p-3 rounded-lg bg-slate-50 border border-slate-200 hover:border-yellow-500/30 transition-colors group">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-yellow-500/10 group-hover:bg-yellow-500/20 transition-colors">
-                  <Users className="h-4 w-4 text-yellow-500" />
-            </div>
-              <div>
-                  <div className="font-medium text-slate-800 text-sm">Passaporte Digital</div>
-                  <div className="text-xs text-slate-400">Gerenciar rotas e checkpoints</div>
-                </div>
-              </div>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }
-

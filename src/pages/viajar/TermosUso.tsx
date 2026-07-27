@@ -44,7 +44,7 @@ const TermosUso = () => {
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Termos de Uso - ViajARTur</title>
+            <title>Termos de Uso - Guatá Labs</title>
             <meta charset="utf-8">
             <style>
               body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.6; color: #333; }
@@ -62,7 +62,7 @@ const TermosUso = () => {
           </head>
           <body>
             <h1>Termos de Uso</h1>
-            <p><strong>ViajARTur - Plataforma SaaS de Gestão Turística</strong></p>
+            <p><strong>Guatá Labs - Plataforma SaaS de Gestão Turística</strong></p>
             <p><em>Última atualização: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</em></p>
             <hr style="margin: 30px 0;">
             ${clone.innerHTML}
@@ -144,7 +144,7 @@ const TermosUso = () => {
                 {/* Introdução */}
                 <div className="mb-8">
                   <p className="text-muted-foreground leading-relaxed text-lg">
-                    Estes Termos de Uso regem o uso da plataforma <strong className="text-foreground">ViajARTur</strong>, 
+                    Estes Termos de Uso regem o uso da plataforma <strong className="text-foreground">Guatá Labs</strong>, 
                     um sistema SaaS (Software as a Service) de gestão turística inteligente. Ao acessar e utilizar 
                     esta plataforma, você concorda com todos os termos descritos neste documento.
                   </p>
@@ -157,7 +157,7 @@ const TermosUso = () => {
                 <div>
                   <h2 className="text-xl font-bold text-amber-700 mb-3">⚠️ AVISO IMPORTANTE: Plataforma em Evolução</h2>
                   <p className="text-amber-900 mb-4">
-                    A <strong>ViajARTur</strong> é uma plataforma nova e em constante evolução. Ao utilizar nossos 
+                    A <strong>Guatá Labs</strong> é uma plataforma nova e em constante evolução. Ao utilizar nossos 
                     serviços, você reconhece e aceita que:
                   </p>
                   <ul className="space-y-2 text-amber-800">
@@ -198,7 +198,7 @@ const TermosUso = () => {
               <div className="ml-12 space-y-4">
                 <p className="text-muted-foreground leading-relaxed">
                   Ao criar uma conta ou utilizar qualquer funcionalidade da plataforma 
-                  <strong className="text-foreground"> ViajARTur</strong>, você declara que:
+                  <strong className="text-foreground"> Guatá Labs</strong>, você declara que:
                 </p>
                 <ul className="space-y-2 list-disc list-inside text-muted-foreground">
                   <li>Leu, compreendeu e concordou com estes Termos de Uso;</li>
@@ -222,7 +222,7 @@ const TermosUso = () => {
               </div>
               <div className="ml-12 space-y-4">
                 <p className="text-muted-foreground leading-relaxed">
-                  A plataforma <strong className="text-foreground">ViajARTur</strong> é um sistema SaaS (Software as a Service) 
+                  A plataforma <strong className="text-foreground">Guatá Labs</strong> é um sistema SaaS (Software as a Service) 
                   completo de gestão turística inteligente que oferece:
                 </p>
                 <div className="space-y-4">
@@ -361,7 +361,7 @@ const TermosUso = () => {
               <div className="ml-12 space-y-6">
                 <h3 className="font-semibold text-foreground">4.1 Planos de Assinatura</h3>
                 <p className="text-muted-foreground">
-                  A ViajARTur oferece diferentes planos de assinatura. Os valores, funcionalidades e limites 
+                  A Guatá Labs oferece diferentes planos de assinatura. Os valores, funcionalidades e limites 
                   de cada plano estão descritos na <Link to="/precos" className="text-viajar-cyan hover:underline">página de preços</Link>.
                 </p>
 
@@ -556,7 +556,7 @@ const TermosUso = () => {
                       <li>Respeite os limites técnicos e não tente contorná-los</li>
                     </ul>
                     <p className="text-muted-foreground text-sm mt-3">
-                      A ViajARTur se reserva o direito de limitar ou suspender contas que excedam o uso razoável, 
+                      A Guatá Labs se reserva o direito de limitar ou suspender contas que excedam o uso razoável, 
                       mesmo dentro dos limites do plano.
                     </p>
                   </div>
@@ -576,7 +576,7 @@ const TermosUso = () => {
                       <li>Assegurar que os dados estão em conformidade com leis aplicáveis</li>
                     </ul>
                     <p className="text-blue-800 text-sm mt-3">
-                      A ViajARTur não se responsabiliza por erros, inconsistências ou problemas decorrentes de 
+                      A Guatá Labs não se responsabiliza por erros, inconsistências ou problemas decorrentes de 
                       dados incorretos ou incompletos inseridos pelo usuário.
                     </p>
                   </div>
@@ -639,8 +639,8 @@ const TermosUso = () => {
 
                 <h3 className="font-semibold text-foreground mt-6">6.2 Limitações de Responsabilidade</h3>
                 <p className="text-muted-foreground mb-3">
-                  A ViajARTur fornece ferramentas de análise e apoio à decisão. As análises e recomendações devem ser 
-                  consideradas como parte de um processo de tomada de decisão mais amplo. A ViajARTur não se responsabiliza por:
+                  A Guatá Labs fornece ferramentas de análise e apoio à decisão. As análises e recomendações devem ser 
+                  consideradas como parte de um processo de tomada de decisão mais amplo. A Guatá Labs não se responsabiliza por:
                 </p>
                 <ul className="space-y-2 list-disc list-inside text-muted-foreground">
                   <li>Decisões comerciais tomadas exclusivamente com base nas análises da plataforma, sem considerar outras fontes de informação;</li>
@@ -701,16 +701,16 @@ const TermosUso = () => {
                 <h2 className="text-2xl font-bold text-foreground">8. Propriedade Intelectual</h2>
               </div>
               <div className="ml-12 space-y-4">
-                <h3 className="font-semibold text-foreground">8.1 Propriedade da ViajARTur</h3>
+                <h3 className="font-semibold text-foreground">8.1 Propriedade da Guatá Labs</h3>
                 <p className="text-muted-foreground">
                   A plataforma, incluindo código-fonte, design, funcionalidades e marca, são propriedade 
-                  exclusiva da ViajARTur e estão protegidos por leis de propriedade intelectual.
+                  exclusiva da Guatá Labs e estão protegidos por leis de propriedade intelectual.
                 </p>
 
                 <h3 className="font-semibold text-foreground mt-4">8.2 Seus Dados</h3>
                 <p className="text-muted-foreground">
                   <strong className="text-foreground">Os dados que você insere na plataforma permanecem seus.</strong> 
-                  A ViajARTur não reivindica propriedade sobre suas informações comerciais, relatórios ou 
+                  A Guatá Labs não reivindica propriedade sobre suas informações comerciais, relatórios ou 
                   análises geradas a partir dos seus dados.
                 </p>
               </div>
@@ -766,7 +766,7 @@ const TermosUso = () => {
               <div className="ml-12 space-y-4">
                 <p className="text-muted-foreground">Para questões sobre estes Termos de Uso:</p>
                 <div className="bg-gradient-to-r from-viajar-cyan/10 to-viajar-blue/10 p-6 rounded-lg border border-viajar-cyan/20">
-                  <p className="text-foreground font-semibold mb-3">ViajARTur</p>
+                  <p className="text-foreground font-semibold mb-3">Guatá Labs</p>
                   <div className="space-y-2 text-muted-foreground">
                     <p><strong>E-mail Geral:</strong> contato@viajartur.com.br</p>
                     <p><strong>Cancelamentos:</strong> cancelamento@viajartur.com.br</p>
@@ -780,7 +780,7 @@ const TermosUso = () => {
                 {/* Rodapé do Documento */}
                 <div className="mt-12 pt-8 border-t border-border">
                   <p className="text-center text-muted-foreground text-sm">
-                    Ao utilizar a plataforma <strong className="text-foreground">ViajARTur</strong>, você declara ter lido, 
+                    Ao utilizar a plataforma <strong className="text-foreground">Guatá Labs</strong>, você declara ter lido, 
                     compreendido e concordado com estes Termos de Uso, incluindo o aviso sobre a plataforma estar 
                     em evolução e a possibilidade de erros.
                   </p>

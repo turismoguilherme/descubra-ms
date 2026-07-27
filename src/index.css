@@ -119,7 +119,7 @@ body {
     --guata-cream: 45 60% 95%;        /* #FAF6EC */
     --guata-bark: 30 30% 25%;
     
-    /* Aliases legados ViaJARTur → remapeados para nova paleta Guatá Labs */
+    /* Aliases legados Guatá Labs → remapeados para nova paleta Guatá Labs */
     --viajar-slate: var(--guata-deep);
     --viajar-cyan: var(--guata-gold);
     --viajar-cyan-light: var(--guata-gold-light);

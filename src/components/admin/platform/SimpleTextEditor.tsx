@@ -31,7 +31,7 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
   viajar: [
     // Hero
     { key: 'viajar_hero_badge', label: 'Badge (texto pequeno)', type: 'text', placeholder: 'Plataforma #1 de Turismo Inteligente', section: 'Hero Principal' },
-    { key: 'viajar_hero_title', label: 'Título Principal', type: 'text', placeholder: 'ViajARTur', section: 'Hero Principal' },
+    { key: 'viajar_hero_title', label: 'Título Principal', type: 'text', placeholder: 'Guatá Labs', section: 'Hero Principal' },
     { key: 'viajar_hero_subtitle', label: 'Subtítulo', type: 'text', placeholder: 'Ecossistema inteligente de turismo', section: 'Hero Principal' },
     { key: 'viajar_hero_description', label: 'Descrição', type: 'textarea', placeholder: 'Transforme dados em decisões estratégicas...', section: 'Hero Principal' },
     { key: 'viajar_hero_cta_primary', label: 'Botão Principal', type: 'text', placeholder: 'Acessar Plataforma', section: 'Hero Principal' },
@@ -89,7 +89,7 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     
     // Vídeo
     { key: 'viajar_video_title', label: 'Título', type: 'text', placeholder: 'Veja a Plataforma em Ação', section: 'Vídeo' },
-    { key: 'viajar_video_description', label: 'Descrição', type: 'textarea', placeholder: 'Descubra como a ViajARTur...', section: 'Vídeo' },
+    { key: 'viajar_video_description', label: 'Descrição', type: 'textarea', placeholder: 'Descubra como a Guatá Labs...', section: 'Vídeo' },
     
     // CTA Final
     { key: 'viajar_cta_title', label: 'Título', type: 'text', placeholder: 'Pronto para Transformar seu Turismo?', section: 'Call to Action' },
@@ -109,7 +109,7 @@ const TEXT_FIELDS: Record<string, TextField[]> = {
     
     // Página Sobre
     { key: 'viajar_sobre_destaque', label: 'Texto de Destaque', type: 'text', placeholder: 'Transformar dados turísticos em decisões estratégicas que geram impacto real.', section: 'Página Sobre' },
-    { key: 'viajar_sobre_narrativa', label: 'Narrativa Unificada (Missão + Visão)', type: 'textarea', placeholder: 'A ViajarTur existe para transformar dados turísticos em decisões estratégicas...', section: 'Página Sobre' },
+    { key: 'viajar_sobre_narrativa', label: 'Narrativa Unificada (Missão + Visão)', type: 'textarea', placeholder: 'A Guatá Labs existe para transformar dados turísticos em decisões estratégicas...', section: 'Página Sobre' },
     { key: 'viajar_sobre_missao', label: 'Nossa Missão', type: 'textarea', placeholder: 'Democratizar tecnologia de ponta para o setor turístico.', section: 'Página Sobre' },
     { key: 'viajar_sobre_visao', label: 'Nossa Visão', type: 'textarea', placeholder: 'Ser a plataforma líder em gestão inteligente de turismo no Brasil.', section: 'Página Sobre' },
     
@@ -229,7 +229,7 @@ const SITE_SETTINGS_KEYS = [
 const getHelpText = (key: string, type: string): string => {
   // Tooltips específicos por campo
   const specificTooltips: Record<string, string> = {
-    // ViajARTur - Hero
+    // Guatá Labs - Hero
     'viajar_hero_badge': 'Texto pequeno que aparece acima do título principal',
     'viajar_hero_title': 'Nome da plataforma. Será exibido em destaque na página inicial',
     'viajar_hero_subtitle': 'Frase de efeito que resume a proposta da plataforma',
@@ -238,13 +238,13 @@ const getHelpText = (key: string, type: string): string => {
     'viajar_hero_cta_secondary': 'Texto do botão secundário',
     'viajar_hero_video_url': 'Link do YouTube. O vídeo será incorporado como background',
     
-    // ViajARTur - Cases
+    // Guatá Labs - Cases
     'viajar_cases_descubra_ms_title': 'Título do case Descubra MS',
     'viajar_cases_descubra_ms_technologies': 'Array JSON com tecnologias: ["Guatá IA", "Passaporte Digital"]',
     'viajar_cases_koda_title': 'Título do case Koda',
     'viajar_cases_koda_technologies': 'Array JSON com tecnologias: ["IA Conversacional", "Multi-idioma"]',
     
-    // ViajARTur - Sobre
+    // Guatá Labs - Sobre
     'viajar_sobre_destaque': 'Texto de destaque que aparece no topo da página Sobre',
     'viajar_sobre_narrativa': 'Narrativa unificada combinando missão e visão em um texto corrido',
     
@@ -304,7 +304,7 @@ export default function SimpleTextEditor({ platform }: SimpleTextEditorProps) {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const fields = TEXT_FIELDS[platform] || [];
-  const platformName = platform === 'viajar' ? 'ViajARTur' : 'Descubra MS';
+  const platformName = platform === 'viajar' ? 'Guatá Labs' : 'Descubra MS';
   const prefix = platform === 'viajar' ? 'viajar_' : 'ms_';
 
   // Agrupar campos por seção

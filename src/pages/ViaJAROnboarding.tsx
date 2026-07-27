@@ -84,7 +84,7 @@ export default function ViaJAROnboarding() {
     baseSteps.push({
       id: isGovernmentPlan ? 4 : 5,
       title: 'Pronto!',
-      description: 'Bem-vindo ao ViajARTur',
+      description: 'Bem-vindo ao Guatá Labs',
       icon: <PartyPopper className="h-5 w-5" />,
     });
 
@@ -263,7 +263,7 @@ export default function ViaJAROnboarding() {
               Estamos quase lá!
             </h1>
             <p className="text-xl text-white/70 max-w-2xl mx-auto mb-6">
-              Vamos configurar sua conta ViajARTur em poucos passos
+              Vamos configurar sua conta Guatá Labs em poucos passos
               </p>
             
             {/* Progress Badge */}
@@ -533,7 +533,7 @@ export default function ViaJAROnboarding() {
                       🎉 Tudo Pronto!
                     </h2>
                     <p className="text-lg text-muted-foreground">
-                      Sua conta ViajARTur está configurada e pronta para uso
+                      Sua conta Guatá Labs está configurada e pronta para uso
                     </p>
                   </div>
 

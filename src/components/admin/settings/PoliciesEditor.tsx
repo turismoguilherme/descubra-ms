@@ -580,7 +580,7 @@ export default function PoliciesEditor() {
           </TabsTrigger>
           <TabsTrigger value="viajar" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            ViajARTur
+            Guatá Labs
           </TabsTrigger>
         </TabsList>
 
@@ -770,7 +770,7 @@ export default function PoliciesEditor() {
                               <div>
                                 <p className="text-sm font-medium text-purple-900">Política Compartilhada</p>
                                 <p className="text-xs text-purple-700 mt-1">
-                                  Esta política é compartilhada entre Descubra MS e ViajARTur. 
+                                  Esta política é compartilhada entre Descubra MS e Guatá Labs. 
                                   Qualquer alteração será aplicada para ambas as plataformas.
                                 </p>
                               </div>
@@ -839,12 +839,12 @@ export default function PoliciesEditor() {
 
         <TabsContent value="viajar" className="mt-6 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 w-full min-w-0">
-            {/* Lista de políticas - ViajARTur */}
+            {/* Lista de políticas - Guatá Labs */}
             <Card className="lg:col-span-1 bg-white border-gray-200 shadow-sm">
               <CardHeader className="pb-3 border-b border-gray-100">
                 <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-blue-600" />
-                  Documentos - ViajARTur
+                  Documentos - Guatá Labs
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -900,7 +900,7 @@ export default function PoliciesEditor() {
                           {currentPolicy.platform === 'viajar' && (
                             <Badge className="bg-blue-500/20 text-blue-600 border-blue-500/30 text-xs whitespace-nowrap flex-shrink-0">
                               <Building2 className="h-3 w-3 mr-1" />
-                              Apenas ViajARTur
+                              Apenas Guatá Labs
                             </Badge>
                           )}
                         </div>
@@ -1023,7 +1023,7 @@ export default function PoliciesEditor() {
                               <div>
                                 <p className="text-sm font-medium text-purple-900">Política Compartilhada</p>
                                 <p className="text-xs text-purple-700 mt-1">
-                                  Esta política é compartilhada entre Descubra MS e ViajARTur. 
+                                  Esta política é compartilhada entre Descubra MS e Guatá Labs. 
                                   Qualquer alteração será aplicada para ambas as plataformas.
                                 </p>
                               </div>
