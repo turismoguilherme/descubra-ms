@@ -1,9 +1,8 @@
 /**
- * Formulário Unificado para Cadastro de Eventos
- * Permite cadastrar eventos gratuitos ou solicitar destaque (pago)
+ * Formulário Unificado para Cadastro de Eventos (gratuito)
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   Calendar, 
   MapPin, 
@@ -21,20 +19,18 @@ import {
   Mail, 
   Phone, 
   Link as LinkIcon,
-  Star,
   CheckCircle2,
   Loader2,
   Megaphone,
-  Gift,
-  CreditCard
+  Gift
 } from "lucide-react";
-import { redirectToEventCheckout } from "@/services/stripe/eventCheckoutService";
 import { supabase } from "@/integrations/supabase/client";
 import EventImageUpload from "./EventImageUpload";
 
+
 const eventSchema = z.object({
-  // Tipo de cadastro
-  tipo: z.enum(["gratuito", "destaque"]),
+  // Dados do evento
+
 
   // Dados do evento
   titulo: z.string().min(5, "Título deve ter pelo menos 5 caracteres"),
@@ -77,17 +73,9 @@ const eventSchema = z.object({
       message: "No mesmo dia, o horário de término deve ser igual ou posterior ao de início",
       path: ["horario_fim"],
     }
-  )
-  .refine((data) => {
-  // Se for evento em destaque, vídeo OU logotipo é obrigatório
-  if (data.tipo === "destaque") {
-    return data.video_promocional || data.logo_evento;
-  }
-  return true; // Evento gratuito não precisa de vídeo/logotipo
-}, {
-  message: "Para eventos em destaque, vídeo promocional ou logotipo é obrigatório",
-  path: ["video_promocional"],
-});
+  );
+
+
 
 type EventFormData = z.infer<typeof eventSchema>;
 
@@ -107,8 +95,6 @@ export const EventSubmissionForm: React.FC = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [tipoSelecionado, setTipoSelecionado] = useState<"gratuito" | "destaque">("gratuito");
-  const [sponsorPrice, setSponsorPrice] = useState<number>(499.90); // Valor padrão
 
   const {
     register,
@@ -116,43 +102,15 @@ export const EventSubmissionForm: React.FC = () => {
     setValue,
     watch,
     formState: { errors },
+
   } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      tipo: "gratuito",
       cidade: "",
       categoria: "",
     },
   });
 
-  // Buscar preço configurável de eventos em destaque
-  useEffect(() => {
-    const fetchSponsorPrice = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('site_settings')
-          .select('setting_value')
-          .eq('platform', 'ms')
-          .eq('setting_key', 'event_sponsor_price')
-          .single();
-
-        if (!error && data?.setting_value) {
-          const priceValue = typeof data.setting_value === 'string' 
-            ? data.setting_value 
-            : String(data.setting_value);
-          const price = parseFloat(priceValue);
-          if (!isNaN(price)) {
-            setSponsorPrice(price);
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao buscar preço configurável:', error);
-        // Manter valor padrão se houver erro
-      }
-    };
-
-    fetchSponsorPrice();
-  }, []);
 
   // Função para detectar a região turística baseada na cidade
   const detectTouristRegion = async (cidade: string): Promise<string | null> => {
@@ -218,8 +176,7 @@ export const EventSubmissionForm: React.FC = () => {
         contato_email: data.organizador_email,
         contato_telefone: data.organizador_telefone,
         is_visible: false,
-        is_sponsored: data.tipo === "destaque",
-        sponsor_payment_status: data.tipo === "destaque" ? "pending" : null,
+        is_sponsored: false,
         start_time: data.horario_inicio,
         end_time: data.horario_fim,
       };
@@ -229,7 +186,7 @@ export const EventSubmissionForm: React.FC = () => {
       }
 
       // Criar evento no banco
-      const { data: createdEvents, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from("events")
         .insert(eventData as any)
         .select("id");
@@ -239,73 +196,7 @@ export const EventSubmissionForm: React.FC = () => {
         throw new Error(`${insertError.message || "Erro ao enviar evento"}${statusLabel}`);
       }
 
-      const eventId = createdEvents[0]?.id;
 
-      // Se for evento em destaque, redirecionar para checkout Stripe
-      if (data.tipo === "destaque" && eventId) {
-        toast({
-          title: "Redirecionando para pagamento...",
-          description: "Você será redirecionado para a página de pagamento seguro.",
-        });
-
-        // Pequeno delay para mostrar o toast
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        const { data: createdEventData } = await supabase
-          .from('events')
-          .select('stripe_payment_link_url')
-          .eq('id', eventId)
-          .single();
-
-        let paymentLink = (createdEventData as any)?.stripe_payment_link_url;
-        if (!paymentLink) {
-          const { data: defaultLink } = await supabase
-            .from('site_settings')
-            .select('setting_value')
-            .eq('platform', 'ms')
-            .eq('setting_key', 'event_sponsorship_payment_link')
-            .single();
-          
-          if (defaultLink?.setting_value) {
-            // setting_value é JSONB, pode ser string direta ou objeto
-            paymentLink = typeof defaultLink.setting_value === 'string' 
-              ? defaultLink.setting_value 
-              : (defaultLink.setting_value as any)?.url || defaultLink.setting_value;
-          }
-        }
-
-        // Se houver link (próprio ou padrão), usar ele (com client_reference_id)
-        if (paymentLink) {
-          // Salvar return_domain no evento antes de redirecionar
-          const returnDomain = window.location.origin;
-          await supabase
-            .from('events')
-            .update({ return_domain: returnDomain } as any)
-            .eq('id', eventId);
-
-          const paymentUrl = `${paymentLink}${paymentLink.includes('?') ? '&' : '?'}prefilled_email=${encodeURIComponent(data.organizador_email)}&client_reference_id=${eventId}`;
-          window.location.href = paymentUrl;
-          return;
-        }
-
-        // Caso contrário, usar checkout dinâmico
-        try {
-          await redirectToEventCheckout({
-            eventId,
-            eventName: data.titulo,
-            organizerEmail: data.organizador_email,
-            organizerName: data.organizador_nome,
-          });
-          return;
-        } catch (checkoutError: unknown) {
-          console.error('Erro ao criar checkout:', checkoutError);
-          toast({
-            title: "Erro no pagamento",
-            description: "Não foi possível iniciar o pagamento. Por favor, entre em contato com o suporte.",
-            variant: "destructive",
-          });
-        }
-      }
 
       // Evento gratuito - mostra sucesso
       setSubmitSuccess(true);
@@ -359,75 +250,20 @@ export const EventSubmissionForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      {/* Escolha do Tipo */}
+      {/* Cadastro gratuito */}
       <Card>
         <CardHeader>
-          <CardTitle>Escolha o tipo de cadastro</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Gift className="w-5 h-5 text-green-600" />
+            Cadastro gratuito de evento
+          </CardTitle>
           <CardDescription>
-            Você pode cadastrar seu evento gratuitamente ou solicitar destaque
+            O cadastro é 100% gratuito. Após a análise da equipe, seu evento aparece no calendário do Descubra MS.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <RadioGroup
-            defaultValue="gratuito"
-            onValueChange={(value) => {
-              setTipoSelecionado(value as "gratuito" | "destaque");
-              setValue("tipo", value as "gratuito" | "destaque");
-            }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
-            {/* Opção Gratuito */}
-            <div className={`relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              tipoSelecionado === "gratuito" 
-                ? "border-ms-primary-blue bg-blue-50" 
-                : "border-gray-200 hover:border-gray-300"
-            }`}>
-              <RadioGroupItem value="gratuito" id="gratuito" className="mt-1" />
-              <label htmlFor="gratuito" className="ml-3 cursor-pointer flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Gift className="w-5 h-5 text-green-600" />
-                  <span className="font-semibold text-gray-900">Gratuito</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Cadastre seu evento gratuitamente. Ideal para prefeituras e organizadores.
-                </p>
-                <ul className="mt-2 text-xs text-gray-500 space-y-1">
-                  <li>✓ Aparece no calendário</li>
-                  <li>✓ Visível para todos os usuários</li>
-                  <li>✓ Sem custo</li>
-                </ul>
-              </label>
-            </div>
-
-            {/* Opção Destaque */}
-            <div className={`relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all ${
-              tipoSelecionado === "destaque" 
-                ? "border-yellow-400 bg-yellow-50" 
-                : "border-gray-200 hover:border-gray-300"
-            }`}>
-              <RadioGroupItem value="destaque" id="destaque" className="mt-1" />
-              <label htmlFor="destaque" className="ml-3 cursor-pointer flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <Star className="w-5 h-5 text-yellow-500" />
-                  <span className="font-semibold text-gray-900">Em Destaque</span>
-                  <span className="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">
-                    R$ {sponsorPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Destaque seu evento para maior visibilidade.
-                </p>
-                <ul className="mt-2 text-xs text-gray-500 space-y-1">
-                  <li>⭐ Badge "Em Destaque"</li>
-                  <li>⭐ Posição privilegiada</li>
-                  <li>⭐ Visual destacado</li>
-                  <li>⭐ Válido por 30 dias</li>
-                </ul>
-              </label>
-            </div>
-          </RadioGroup>
-        </CardContent>
       </Card>
+
+
 
       {/* Dados do Evento */}
       <Card>
@@ -591,7 +427,7 @@ export const EventSubmissionForm: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <LinkIcon className="w-5 h-5 text-ms-primary-blue" />
-            Links {tipoSelecionado === "destaque" ? "(vídeo ou logotipo obrigatório)" : "(opcional)"}
+            Links (opcional)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -621,43 +457,24 @@ export const EventSubmissionForm: React.FC = () => {
             <p className="text-xs text-gray-500 mt-1">
               💡 Tamanho ideal: 1920x1080px (16:9) para imagem principal ou 512x512px (quadrado) para logo
             </p>
-            {tipoSelecionado === "destaque" && (
-              <p className="text-sm text-amber-600 mt-1">
-                ⚠️ Para eventos em destaque, vídeo OU logotipo é obrigatório
-              </p>
-            )}
           </div>
         </CardContent>
       </Card>
 
+
       {/* Resumo e Envio */}
-      <Card className={tipoSelecionado === "destaque" 
-        ? "bg-gradient-to-r from-yellow-400 to-orange-500" 
-        : "bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal"
-      }>
+      <Card className="bg-gradient-to-r from-ms-primary-blue to-ms-discovery-teal">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="text-white">
-              {tipoSelecionado === "destaque" ? (
-                <>
-                  <p className="text-white/80 text-sm">Investimento:</p>
-                  <p className="text-2xl font-bold">R$ {sponsorPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-lg font-normal text-white/80">/ 30 dias</span></p>
-                </>
-              ) : (
-                <>
-                  <p className="text-white/80 text-sm">Cadastro:</p>
-                  <p className="text-2xl font-bold">Gratuito</p>
-                </>
-              )}
+              <p className="text-white/80 text-sm">Cadastro:</p>
+              <p className="text-2xl font-bold">Gratuito</p>
             </div>
             <Button 
               type="submit" 
               size="lg"
               disabled={isSubmitting}
-              className={tipoSelecionado === "destaque" 
-                ? "bg-white text-yellow-600 hover:bg-white/90 font-bold px-8"
-                : "bg-white text-ms-primary-blue hover:bg-white/90 font-bold px-8"
-              }
+              className="bg-white text-ms-primary-blue hover:bg-white/90 font-bold px-8"
             >
               {isSubmitting ? (
                 <>
@@ -665,23 +482,16 @@ export const EventSubmissionForm: React.FC = () => {
                   Enviando...
                 </>
               ) : (
-                <>
-                  {tipoSelecionado === "destaque" ? (
-                    <><Star className="w-4 h-4 mr-2" /> Solicitar Destaque</>
-                  ) : (
-                    <><Megaphone className="w-4 h-4 mr-2" /> Cadastrar Evento</>
-                  )}
-                </>
+                <><Megaphone className="w-4 h-4 mr-2" /> Cadastrar Evento</>
               )}
             </Button>
           </div>
           <p className="text-white/70 text-sm mt-4">
-            {tipoSelecionado === "destaque" 
-              ? "* Após enviar, você será redirecionado automaticamente para o pagamento seguro."
-              : "* Seu evento será analisado antes de ser publicado no calendário."}
+            * Seu evento será analisado antes de ser publicado no calendário.
           </p>
         </CardContent>
       </Card>
+
     </form>
   );
 };

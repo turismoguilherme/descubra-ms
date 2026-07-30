@@ -116,6 +116,7 @@ export interface RouteExtended {
   passport_number_prefix?: string | null;
   google_maps_embed_url?: string | null;
   map_image_url?: string | null;
+  checkpoint_order_mode?: string | null;
   // Relacionamentos
   configuration?: PassportConfiguration | null;
   checkpoints?: RouteCheckpointExtended[];

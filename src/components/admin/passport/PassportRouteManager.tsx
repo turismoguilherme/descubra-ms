@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { passportAdminService } from '@/services/admin/passportAdminService';
@@ -35,6 +36,7 @@ interface Route {
   map_image_url?: string;
   google_maps_embed_url?: string | null;
   image_url?: string | null;
+  checkpoint_order_mode?: string | null;
   is_active?: boolean;
   is_published?: boolean;
   checkpoints_count?: number;
@@ -83,6 +85,7 @@ const PassportRouteManager: React.FC = () => {
     passport_number_prefix: 'MS',
     google_maps_embed_url: '',
     image_url: '',
+    checkpoint_order_mode: 'sequential' as 'sequential' | 'free',
   });
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
@@ -507,6 +510,8 @@ const PassportRouteManager: React.FC = () => {
       passport_number_prefix: route.passport_number_prefix || 'MS',
       google_maps_embed_url: route.google_maps_embed_url || '',
       image_url: route.image_url || '',
+      checkpoint_order_mode:
+        (route.checkpoint_order_mode as 'sequential' | 'free') === 'free' ? 'free' : 'sequential',
     });
     setCoverImageFile(null);
     setCoverImageRemoved(false);
@@ -627,6 +632,7 @@ const PassportRouteManager: React.FC = () => {
         passport_number_prefix: formData.passport_number_prefix || 'MS',
         google_maps_embed_url: googleMapsEmbedUrl,
         image_url: heroImageUrl,
+        checkpoint_order_mode: formData.checkpoint_order_mode,
         updated_at: new Date().toISOString(),
       });
 
@@ -1045,6 +1051,21 @@ const PassportRouteManager: React.FC = () => {
                   <SelectItem value="dificil">Difícil</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+              <div>
+                <Label htmlFor="free_order">Permitir concluir em qualquer ordem</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Quando ativo, o visitante pode fazer check-in nos pontos de parada na ordem que quiser.
+                </p>
+              </div>
+              <Switch
+                id="free_order"
+                checked={formData.checkpoint_order_mode === 'free'}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, checkpoint_order_mode: checked ? 'free' : 'sequential' })
+                }
+              />
             </div>
             <div>
               <Label htmlFor="video_url">URL do Vídeo</Label>

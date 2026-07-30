@@ -19,7 +19,6 @@ interface EventItem {
   image_url?: string;
   logo_evento?: string;
   is_sponsored: boolean;
-  sponsor_payment_status?: string;
 }
 
 const EventosDestaqueSection = () => {
@@ -37,7 +36,7 @@ const EventosDestaqueSection = () => {
       const { data, error } = await supabase
         .from('events_public')
         .select(
-          'id, titulo, descricao, data_inicio, data_fim, start_time, end_time, local, imagem_principal, is_visible, is_sponsored, sponsor_payment_status'
+          'id, titulo, descricao, data_inicio, data_fim, start_time, end_time, local, imagem_principal, is_visible, is_sponsored'
         )
         .order('data_inicio', { ascending: true })
         .limit(80);
@@ -68,8 +67,7 @@ const EventosDestaqueSection = () => {
         end_time: et,
         location: event.local || '',
         image_url: event.imagem_principal || undefined,
-        is_sponsored: event.is_sponsored && (event.sponsor_payment_status === 'paid' || !event.sponsor_payment_status),
-        sponsor_payment_status: event.sponsor_payment_status || undefined,
+        is_sponsored: Boolean(event.is_sponsored),
       };
       });
 

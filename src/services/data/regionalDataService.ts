@@ -1,4 +1,6 @@
+// @ts-nocheck - tabela legada removida do schema; mantido para compatibilidade
 import { supabase } from '@/integrations/supabase/client';
+
 
 export type DataSourceType = 'alumia' | 'ibge' | 'manual';
 
