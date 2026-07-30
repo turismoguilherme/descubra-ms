@@ -247,6 +247,9 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
               routeId={route.id}
               progress={progress}
               requireSequential={
+                route.checkpoint_order_mode === 'free'
+                  ? false
+                  :
                 route.configuration?.require_sequential ||
                 // Roteiros multi-dia exigem sequência total automaticamente
                 (route.checkpoints || []).some(
