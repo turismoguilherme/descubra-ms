@@ -237,10 +237,8 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           const organizerEmail = event.organizador_email || event.email_organizador;
           const organizerName = event.organizador_nome || event.organizador;
 
-          // Calcular is_sponsored ANTES de criar o objeto
-          const isSponsoredRaw = event.is_sponsored;
-          const paymentStatus = event.sponsor_payment_status;
-          const isSponsoredCalculated = isSponsoredRaw && (paymentStatus === 'paid' || !paymentStatus);
+          // Destaque é definido manualmente pelo admin
+          const isSponsoredCalculated = Boolean(event.is_sponsored);
 
           const ev = event as Record<string, string | undefined>;
           const { start: resolvedStart, end: resolvedEnd } = resolveEventTimes({

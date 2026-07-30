@@ -24,8 +24,6 @@ import { checkAvailability } from "./tools/checkAvailability.ts";
 import { createEventDraft } from "./tools/createEventDraft.ts";
 import { createReservation } from "./tools/createReservation.ts";
 import { createCheckoutLink } from "./tools/createCheckoutLink.ts";
-import { getEventListingPrice } from "./tools/getEventListingPrice.ts";
-import { createEventCheckoutLink } from "./tools/createEventCheckoutLink.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,13 +58,11 @@ function buildContextContent(knowledgeBase?: KnowledgeItem[]): string {
 
 const WRITE_ACTIONS = new Set([
   "create_event_draft",
-  "create_event_checkout_link",
   "create_reservation",
   "create_checkout_link",
 ]);
 const ACTION_LABELS: Record<string, string> = {
   create_event_draft: "cadastrar_evento",
-  create_event_checkout_link: "pagar",
   create_reservation: "reservar",
   create_checkout_link: "pagar",
 };
@@ -135,12 +131,8 @@ async function runToolCallingConversation(params: {
           result = (await searchPartners(ctx, fc.args as never)) as Record<string, unknown>;
         } else if (fc.name === "check_availability") {
           result = (await checkAvailability(ctx, fc.args as never)) as Record<string, unknown>;
-        } else if (fc.name === "get_event_listing_price") {
-          result = (await getEventListingPrice(ctx)) as Record<string, unknown>;
         } else if (fc.name === "create_event_draft") {
           result = (await createEventDraft(ctx, fc.args as never)) as Record<string, unknown>;
-        } else if (fc.name === "create_event_checkout_link") {
-          result = (await createEventCheckoutLink(ctx, fc.args as never)) as Record<string, unknown>;
         } else if (fc.name === "create_reservation") {
           result = (await createReservation(ctx, fc.args as never)) as Record<string, unknown>;
         } else if (fc.name === "create_checkout_link") {

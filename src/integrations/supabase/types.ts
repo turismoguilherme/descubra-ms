@@ -5502,6 +5502,7 @@ export type Database = {
       }
       routes: {
         Row: {
+          checkpoint_order_mode: string
           city_id: string | null
           created_at: string | null
           created_by: string | null
@@ -5525,6 +5526,7 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          checkpoint_order_mode?: string
           city_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -5548,6 +5550,7 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          checkpoint_order_mode?: string
           city_id?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -6405,6 +6408,7 @@ export type Database = {
           full_name: string | null
           gender: string | null
           id: string
+          leaderboard_opt_out: boolean
           neighborhood: string | null
           occupation: string | null
           other_motive: string | null
@@ -6442,6 +6446,7 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          leaderboard_opt_out?: boolean
           neighborhood?: string | null
           occupation?: string | null
           other_motive?: string | null
@@ -6479,6 +6484,7 @@ export type Database = {
           full_name?: string | null
           gender?: string | null
           id?: string
+          leaderboard_opt_out?: boolean
           neighborhood?: string | null
           occupation?: string | null
           other_motive?: string | null
@@ -7246,6 +7252,26 @@ export type Database = {
         Returns: Json
       }
       get_current_user_role: { Args: never; Returns: string }
+      get_my_leaderboard_position: {
+        Args: { p_period?: string; p_region?: string }
+        Returns: {
+          rank_position: number
+          total_participants: number
+          total_points: number
+          total_stamps: number
+        }[]
+      }
+      get_passport_leaderboard: {
+        Args: { p_limit?: number; p_period?: string; p_region?: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          rank_position: number
+          ranked_user_id: string
+          total_points: number
+          total_stamps: number
+        }[]
+      }
       get_user_role: { Args: { check_user_id: string }; Returns: string }
       get_user_states: {
         Args: { check_user_id: string }
