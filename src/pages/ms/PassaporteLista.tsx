@@ -5,16 +5,17 @@ import PassportProfileGate from '@/components/passport/PassportProfileGate';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   MapPin, 
   Clock, 
-  Users,
   Star,
   ArrowRight,
-  Compass
+  Compass,
+  Trophy
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import PassportRankingPanel from '@/components/passport/ranking/PassportRankingPanel';
 // Removido useRouteManagement - usando query direta
 
 interface PassaporteRoute {
@@ -231,8 +232,25 @@ const PassaporteLista = () => {
             </p>
           </div>
 
+          <Tabs defaultValue="routes" className="mb-6">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+              <TabsTrigger value="routes" className="gap-2">
+                <Compass className="h-4 w-4" />
+                Roteiros
+              </TabsTrigger>
+              <TabsTrigger value="ranking" className="gap-2">
+                <Trophy className="h-4 w-4" />
+                Ranking
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="ranking" className="mt-0">
+              <PassportRankingPanel />
+            </TabsContent>
+
+            <TabsContent value="routes" className="mt-0 space-y-10">
           {/* Como funciona */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border-ms-primary-blue/20 bg-white">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base text-ms-primary-blue">1. Crie sua conta</CardTitle>
@@ -363,6 +381,8 @@ const PassaporteLista = () => {
             ))}
           </div>
           )}
+            </TabsContent>
+          </Tabs>
 
         </div>
       </main>

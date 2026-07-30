@@ -7272,6 +7272,14 @@ export type Database = {
           total_stamps: number
         }[]
       }
+      count_consecutive_months_in_top: {
+        Args: { p_max_rank?: number; p_lookback?: number }
+        Returns: number
+      }
+      user_is_regional_monthly_leader: {
+        Args: never
+        Returns: boolean
+      }
       get_user_role: { Args: { check_user_id: string }; Returns: string }
       get_user_states: {
         Args: { check_user_id: string }

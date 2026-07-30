@@ -122,6 +122,33 @@ export const achievementService = {
         case 'all_regions':
           shouldUnlock = stats.uniqueRegions >= 10;
           break;
+        case 'leaderboard_monthly_top': {
+          const maxRank = Number(achievement.criteria.max_rank) || 10;
+          const { data: posRows } = await supabase.rpc('get_my_leaderboard_position', {
+            p_period: 'month',
+            p_region: null,
+          });
+          const pos = posRows?.[0]?.rank_position;
+          shouldUnlock = typeof pos === 'number' && pos > 0 && pos <= maxRank;
+          break;
+        }
+        case 'leaderboard_regional_first': {
+          const { data: isLeader, error: leaderErr } = await supabase.rpc(
+            'user_is_regional_monthly_leader'
+          );
+          shouldUnlock = !leaderErr && Boolean(isLeader);
+          break;
+        }
+        case 'leaderboard_top50_streak': {
+          const maxRank = Number(achievement.criteria.max_rank) || 50;
+          const months = Number(achievement.criteria.months) || 3;
+          const { data: streak, error: streakErr } = await supabase.rpc(
+            'count_consecutive_months_in_top',
+            { p_max_rank: maxRank, p_lookback: months }
+          );
+          shouldUnlock = !streakErr && Number(streak) >= months;
+          break;
+        }
       }
 
       // Desbloquear conquista se atender critérios

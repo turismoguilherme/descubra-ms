@@ -1,9 +1,20 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Mail, Lock, AlertCircle, Sparkles, LayoutDashboard, Users } from 'lucide-react';
+import {
+  Shield,
+  Mail,
+  Lock,
+  AlertCircle,
+  Sparkles,
+  LayoutDashboard,
+  Users,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import guataLabsLogo from '@/assets/guata-labs-logo.png';
 
@@ -16,9 +27,12 @@ const HIGHLIGHTS = [
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [error, setError] = useState('');
-  const { signIn } = useAuth();
+  const emailRef = useRef<HTMLInputElement>(null);
+  const { signIn, resetPassword } = useAuth();
   const { toast } = useToast();
 
   const runSignIn = async (e: string, p: string) => {
@@ -35,15 +49,14 @@ export default function AdminLogin() {
             ? 'Email não confirmado. Verifique sua caixa de entrada.'
             : raw || 'Credenciais inválidas';
         setError(errorMessage);
-        // AuthProvider já exibe toast; evita duplicar mensagem em inglês
       } else if (result.data) {
         setTimeout(() => {
           window.location.reload();
         }, 400);
       }
     } catch (err: unknown) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      const errorMessage = error.message || 'Ocorreu um erro inesperado';
+      const caught = err instanceof Error ? err : new Error(String(err));
+      const errorMessage = caught.message || 'Ocorreu um erro inesperado';
       setError(errorMessage);
       toast({
         title: 'Erro no login',
@@ -60,10 +73,32 @@ export default function AdminLogin() {
     await runSignIn(email, password);
   };
 
+  const handleForgotPassword = async () => {
+    const target = email.trim();
+    if (!target) {
+      setError('Informe seu email para recuperar a senha.');
+      emailRef.current?.focus();
+      return;
+    }
+    setIsResetting(true);
+    setError('');
+    try {
+      await resetPassword(target);
+      toast({
+        title: 'Email enviado',
+        description: 'Se o email existir, você receberá o link para redefinir a senha.',
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erro ao solicitar recuperação.';
+      setError(message);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-guata-cream flex items-center justify-center p-4">
       <div className="w-full max-w-5xl grid lg:grid-cols-2 rounded-2xl overflow-hidden shadow-xl border border-guata-paper bg-card">
-        {/* Painel de marca */}
         <aside className="hidden lg:flex flex-col justify-between bg-guata-deep p-10 text-guata-cream">
           <div>
             <img
@@ -96,7 +131,6 @@ export default function AdminLogin() {
           </p>
         </aside>
 
-        {/* Formulário */}
         <div className="p-8 sm:p-12 flex flex-col justify-center">
           <div className="lg:hidden mb-8 text-center">
             <img
@@ -136,49 +170,77 @@ export default function AdminLogin() {
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  ref={emailRef}
                   id="email"
                   type="email"
                   autoComplete="email"
+                  autoFocus
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 h-11"
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isResetting}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">
-                Senha
-              </Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Senha
+                </Label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={isLoading || isResetting}
+                  className="text-xs font-medium text-guata-forest hover:underline disabled:opacity-50"
+                >
+                  {isResetting ? 'Enviando…' : 'Esqueci minha senha'}
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-11"
+                  className="pl-10 pr-11 h-11"
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || isResetting}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
             <Button
               type="submit"
               className="w-full h-11 bg-guata-forest hover:bg-guata-deep text-guata-cream font-semibold"
-              disabled={isLoading}
+              disabled={isLoading || isResetting}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Preferir o formulário dedicado?{' '}
+            <Link to="/descubrams/forgot-password" className="text-guata-forest hover:underline">
+              Recuperar senha
+            </Link>
+          </p>
+
+          <p className="mt-4 text-center text-xs text-muted-foreground">
             Apenas usuários com permissão de administrador podem acessar.
           </p>
         </div>
