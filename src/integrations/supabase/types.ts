@@ -5380,6 +5380,7 @@ export type Database = {
           order_sequence: number
           partner_code: string | null
           partner_id: string | null
+          points_reward: number
           requires_photo: boolean | null
           route_id: string
           stamp_fragment_number: number | null
@@ -5400,6 +5401,7 @@ export type Database = {
           order_sequence: number
           partner_code?: string | null
           partner_id?: string | null
+          points_reward?: number
           requires_photo?: boolean | null
           route_id: string
           stamp_fragment_number?: number | null
@@ -5420,6 +5422,7 @@ export type Database = {
           order_sequence?: number
           partner_code?: string | null
           partner_id?: string | null
+          points_reward?: number
           requires_photo?: boolean | null
           route_id?: string
           stamp_fragment_number?: number | null

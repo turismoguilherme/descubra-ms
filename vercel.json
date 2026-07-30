@@ -6,12 +6,19 @@
   "functions": {
     "api/evento/[id].ts": {
       "maxDuration": 30
+    },
+    "api/ranking/compartilhar.ts": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
     {
       "source": "/evento/:id",
       "destination": "/api/evento/:id"
+    },
+    {
+      "source": "/ranking/compartilhar",
+      "destination": "/api/ranking/compartilhar"
     },
     {
       "source": "/((?!assets|_next|favicon\\.ico|favicon-.*\\.png|apple-touch-icon\\.png|manifest\\.webmanifest|robots.txt|sitemap.xml|api|downloads|branding|images|icons|cartilhas).*)",

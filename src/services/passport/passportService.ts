@@ -710,10 +710,12 @@ class PassportService {
         };
       }
 
-      // Calcular pontos
-      let pointsEarned = 10;
-      if (checkpoint.routes.difficulty === 'medium') pointsEarned = 20;
-      if (checkpoint.routes.difficulty === 'hard') pointsEarned = 35;
+      // Pontos do checkpoint (admin define points_reward; padrão 10)
+      const rawPoints = Number(
+        (checkpoint as { points_reward?: number | null }).points_reward
+      );
+      const pointsEarned =
+        Number.isFinite(rawPoints) && rawPoints > 0 ? Math.min(rawPoints, 1000) : 10;
 
       // Criar carimbo
       const { data: stamp, error: stampError } = await supabase

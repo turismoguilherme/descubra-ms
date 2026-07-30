@@ -88,6 +88,7 @@ import EventosMS from "@/pages/ms/EventosMS";
 import EventShareRedirect from "@/pages/EventShareRedirect";
 import PassaporteLista from "@/pages/ms/PassaporteLista";
 import PassportDigital from "@/pages/PassportDigital";
+import RankingSharePage from "@/pages/ms/RankingSharePage";
 import RegiaoDetalhes from "@/pages/RegiaoDetalhes";
 import ProfilePageFixed from "@/pages/ProfilePageFixed";
 import Register from "@/pages/Register";
@@ -347,6 +348,7 @@ function AppRoutes() {
                                 <Route path="/descubrams/guata" element={<Guata />} />
                                 <Route path="/descubrams/chatguata" element={<ChatGuata />} />
                                 <Route path="/descubrams/passaporte" element={<PassaporteLista />} />
+                                <Route path="/descubrams/ranking/compartilhar" element={<RankingSharePage />} />
                                 <Route path="/descubrams/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
                                 <Route path="/descubrams/profile" element={<ProfilePageFixed />} />
                                 {/* Descubra MS Auth Routes */}

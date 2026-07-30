@@ -34,6 +34,7 @@ const PassportCheckpointManager: React.FC = () => {
     latitude: null as number | null,
     longitude: null as number | null,
     geofence_radius: 100,
+    points_reward: 10,
     validation_mode: 'geofence' as 'geofence' | 'code' | 'mixed',
     partner_id: null as string | null,
     partner_code: '',
@@ -49,6 +50,7 @@ const PassportCheckpointManager: React.FC = () => {
     latitude: null as number | null,
     longitude: null as number | null,
     geofence_radius: 100,
+    points_reward: 10,
     validation_mode: 'geofence' as 'geofence' | 'code' | 'mixed',
     partner_id: null as string | null,
     partner_code: '',
@@ -290,6 +292,7 @@ const PassportCheckpointManager: React.FC = () => {
         latitude: newCheckpointForm.latitude,
         longitude: newCheckpointForm.longitude,
         geofence_radius: newCheckpointForm.geofence_radius,
+        points_reward: newCheckpointForm.points_reward || 10,
         validation_mode: newCheckpointForm.validation_mode,
         partner_id: newCheckpointForm.partner_id || null,
         partner_code: newCheckpointForm.partner_code || null,
@@ -325,6 +328,7 @@ const PassportCheckpointManager: React.FC = () => {
         latitude: null,
         longitude: null,
         geofence_radius: 100,
+        points_reward: 10,
         validation_mode: 'geofence',
         partner_id: null,
         partner_code: '',
@@ -369,7 +373,9 @@ const PassportCheckpointManager: React.FC = () => {
       latitude: checkpoint.latitude,
       longitude: checkpoint.longitude,
       geofence_radius: checkpoint.geofence_radius || 100,
+      points_reward: checkpoint.points_reward || 10,
       validation_mode: checkpoint.validation_mode || 'geofence',
+      partner_id: checkpoint.partner_id || null,
       partner_code: checkpoint.partner_code || '',
       requires_photo: checkpoint.requires_photo || false,
       stamp_fragment_number: checkpoint.stamp_fragment_number,
@@ -880,6 +886,33 @@ const PassportCheckpointManager: React.FC = () => {
                           Distância máxima para validar check-in (padrão: 100m)
                         </p>
                       </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Label htmlFor="new_points">Pontos no ranking</Label>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <p>Pontos creditados ao carimbar este ponto no Passaporte Digital.</p>
+                              <p className="mt-1 text-xs">Padrão: 10. Use valores maiores para pontos mais difíceis.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <Input
+                          id="new_points"
+                          type="number"
+                          min="1"
+                          max="1000"
+                          value={newCheckpointForm.points_reward}
+                          onChange={(e) =>
+                            setNewCheckpointForm({
+                              ...newCheckpointForm,
+                              points_reward: Math.max(1, parseInt(e.target.value) || 10),
+                            })
+                          }
+                        />
+                      </div>
                       <div className="flex items-center space-x-2 pt-6">
                         <Checkbox
                           id="new_photo"
@@ -896,8 +929,7 @@ const PassportCheckpointManager: React.FC = () => {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent>
+                            </TooltipTrigger>                            <TooltipContent>
                               <p>Se marcado, o turista será obrigado a tirar uma foto ao fazer check-in neste checkpoint.</p>
                             </TooltipContent>
                           </Tooltip>
@@ -940,10 +972,13 @@ const PassportCheckpointManager: React.FC = () => {
                             name: '',
                             description: '',
                             order_sequence: checkpoints.length + 1,
+                            day_number: 1,
                             latitude: null,
                             longitude: null,
                             geofence_radius: 100,
+                            points_reward: 10,
                             validation_mode: 'geofence',
+                            partner_id: null,
                             partner_code: '',
                             requires_photo: false,
                             stamp_fragment_number: null,
@@ -1116,6 +1151,21 @@ const PassportCheckpointManager: React.FC = () => {
                                     setEditCheckpointForm({
                                       ...editCheckpointForm,
                                       geofence_radius: parseInt(e.target.value) || 100,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <Label>Pontos no ranking</Label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="1000"
+                                  value={editCheckpointForm.points_reward}
+                                  onChange={(e) =>
+                                    setEditCheckpointForm({
+                                      ...editCheckpointForm,
+                                      points_reward: Math.max(1, parseInt(e.target.value) || 10),
                                     })
                                   }
                                 />
