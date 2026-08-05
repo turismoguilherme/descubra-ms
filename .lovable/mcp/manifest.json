@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://hvtrpkbjgbuypkskqcqm.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "descubra-ms",
+      "version": "0.1.0",
+      "title": "descubra-ms"
+    },
+    "tools": [
+      {
+        "name": "search_events",
+        "title": "Buscar eventos",
+        "description": "Busca eventos turísticos aprovados e visíveis do Descubra MS. Filtra por cidade, categoria e período.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Palavra-chave no título do evento."
+            },
+            "city": {
+              "type": "string",
+              "description": "Cidade em MS, ex.: 'Bonito'."
+            },
+            "category": {
+              "type": "string",
+              "description": "Categoria do evento."
+            },
+            "from_date": {
+              "type": "string",
+              "description": "Data inicial YYYY-MM-DD (padrão: hoje)."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Máximo de resultados (padrão 10, máx 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_partners",
+        "title": "Buscar parceiros",
+        "description": "Busca parceiros ativos e aprovados do Descubra MS (pousadas, restaurantes, agências, atrativos).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Nome ou palavra-chave do parceiro."
+            },
+            "partner_type": {
+              "type": "string",
+              "description": "Tipo de parceiro (opcional)."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Máximo de resultados (padrão 10, máx 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_passport_routes",
+        "title": "Listar roteiros do passaporte",
+        "description": "Lista roteiros publicados do Passaporte Digital do Descubra MS, com dificuldade, duração e número de dias. Passe route_id para receber também os checkpoints do roteiro.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "route_id": {
+              "type": "string",
+              "description": "UUID do roteiro para detalhar checkpoints."
+            },
+            "region": {
+              "type": "string",
+              "description": "Região turística (opcional)."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Máximo de roteiros (padrão 20, máx 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_my_passport_progress",
+        "title": "Meu progresso no passaporte",
+        "description": "Retorna os selos (check-ins) do Passaporte Digital do usuário logado, com pontos acumulados. Opcionalmente filtra por roteiro.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "route_id": {
+              "type": "string",
+              "description": "UUID do roteiro para filtrar (opcional)."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Máximo de selos (padrão 50, máx 200)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_my_reservations",
+        "title": "Minhas reservas",
+        "description": "Lista as reservas do usuário logado com parceiros do Descubra MS (status, valor, código e datas).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "description": "Filtrar por status, ex.: 'pending', 'confirmed', 'cancelled'."
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Máximo de reservas (padrão 20, máx 100)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
