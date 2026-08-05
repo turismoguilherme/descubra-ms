@@ -7175,6 +7175,10 @@ export type Database = {
           deleted_ids: string[]
         }[]
       }
+      count_consecutive_months_in_top: {
+        Args: { p_lookback?: number; p_max_rank?: number }
+        Returns: number
+      }
       create_attendant_user: {
         Args: {
           send_invite?: boolean
@@ -7274,14 +7278,6 @@ export type Database = {
           total_points: number
           total_stamps: number
         }[]
-      }
-      count_consecutive_months_in_top: {
-        Args: { p_max_rank?: number; p_lookback?: number }
-        Returns: number
-      }
-      user_is_regional_monthly_leader: {
-        Args: never
-        Returns: boolean
       }
       get_user_role: { Args: { check_user_id: string }; Returns: string }
       get_user_states: {
@@ -7495,6 +7491,7 @@ export type Database = {
         Args: { p_points: number; p_state_id: string; p_user_id: string }
         Returns: undefined
       }
+      user_is_regional_monthly_leader: { Args: never; Returns: boolean }
       validate_and_stamp_checkpoint: {
         Args: {
           p_checkpoint_id: string
