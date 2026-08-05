@@ -231,6 +231,8 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     siteIdentityPlugin(brand),
+    mcpPlugin(),
+
     react(),
     mode === 'development' && componentTagger(),
     // Plugin para normalizar barras invertidas em desenvolvimento
