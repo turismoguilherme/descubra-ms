@@ -181,6 +181,9 @@ function AppRoutes() {
       <VLibrasWidget />
       <div className="min-h-screen bg-background font-sans antialiased">
         <Routes>
+                            {/* Consentimento OAuth (integrações de agentes / MCP) — sempre disponível */}
+                            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+
                             {/* ViaJAR SaaS Routes - apenas se não for domínio MS */}
                             {showViajar && (
                               <>
