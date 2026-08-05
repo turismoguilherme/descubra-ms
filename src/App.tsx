@@ -201,6 +201,7 @@ function AppRoutes() {
                                 {/* /login sem prefixo caía no catch-all Guatá Labs — redireciona ao login MS */}
                                 <Route path="/login" element={<RedirectToMsLogin />} />
 
+
                                 {/* Chatbot Guatá Standalone - Totem */}
                                 <Route path="/chatguata" element={<ChatGuata />} />
 
