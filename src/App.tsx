@@ -94,6 +94,8 @@ import ProfilePageFixed from "@/pages/ProfilePageFixed";
 import Register from "@/pages/Register";
 const EventStatus = lazy(() => import("@/pages/ms/EventStatus"));
 import AuthPage from "@/pages/AuthPage";
+import OAuthConsent from "@/pages/OAuthConsent";
+
 import SobreMS from "@/pages/ms/SobreMS";
 import BaixarAppMS from "@/pages/ms/BaixarAppMS";
 import CartilhasMS from "@/pages/ms/CartilhasMS";
@@ -179,6 +181,9 @@ function AppRoutes() {
       <VLibrasWidget />
       <div className="min-h-screen bg-background font-sans antialiased">
         <Routes>
+                            {/* Consentimento OAuth (integrações de agentes / MCP) — sempre disponível */}
+                            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+
                             {/* ViaJAR SaaS Routes - apenas se não for domínio MS */}
                             {showViajar && (
                               <>
@@ -198,6 +203,7 @@ function AppRoutes() {
 
                                 {/* /login sem prefixo caía no catch-all Guatá Labs — redireciona ao login MS */}
                                 <Route path="/login" element={<RedirectToMsLogin />} />
+
 
                                 {/* Chatbot Guatá Standalone - Totem */}
                                 <Route path="/chatguata" element={<ChatGuata />} />
