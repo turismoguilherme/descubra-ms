@@ -94,6 +94,8 @@ import ProfilePageFixed from "@/pages/ProfilePageFixed";
 import Register from "@/pages/Register";
 const EventStatus = lazy(() => import("@/pages/ms/EventStatus"));
 import AuthPage from "@/pages/AuthPage";
+import OAuthConsent from "@/pages/OAuthConsent";
+
 import SobreMS from "@/pages/ms/SobreMS";
 import BaixarAppMS from "@/pages/ms/BaixarAppMS";
 import CartilhasMS from "@/pages/ms/CartilhasMS";
