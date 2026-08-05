@@ -129,7 +129,15 @@ const AuthPage = () => {
       // Se estamos em descubrams.com, FORÇAR https://descubrams.com/ms
       // Se estamos em viajartur.com, FORÇAR https://viajartur.com/auth/callback
       let redirectPath: string;
-      if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
+      const safeNext =
+        redirectUrlParam?.startsWith('/') && !redirectUrlParam.startsWith('//')
+          ? redirectUrlParam
+          : null;
+
+      if (safeNext) {
+        // Preserva o destino solicitado (ex.: consentimento OAuth) no mesmo origin
+        redirectPath = `${window.location.origin}${safeNext}`;
+      } else if (hostname === 'descubrams.com' || hostname.includes('descubrams')) {
         // FORÇAR absoluto para descobrams.com
         redirectPath = 'https://descubrams.com/ms';
       } else if (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com') {
@@ -139,6 +147,7 @@ const AuthPage = () => {
         // Fallback: usar origin atual
         redirectPath = `${window.location.origin}${callbackPath}`;
       }
+
       
       console.log('🔍 [AuthPage] PRE_OAUTH:', {
         hostname,
