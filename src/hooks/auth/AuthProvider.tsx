@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { sendPasswordResetEmail } from "@/lib/passwordReset";
 import { supabase } from "@/integrations/supabase/client";
 import { UserProfile } from "@/types/auth";
 import { AuthContext, AuthContextType } from "./AuthContext";
@@ -470,9 +471,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      const redirectTo = `${window.location.origin}/reset-password`;
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
-      if (error) throw error;
+      await sendPasswordResetEmail(email);
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       toast({

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { sendPasswordResetEmail } from "@/lib/passwordReset";
 import { supabase } from "@/integrations/supabase/client";
 import { ViaJARUserProfile } from "@/types/viajar-auth";
 import { ViaJARAuthContext, ViaJARAuthContextType } from "./ViaJARAuthContext";
@@ -123,11 +124,7 @@ export const ViaJARAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (email: string): Promise<void> => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/viajar/forgot-password`
-      });
-
-      if (error) throw error;
+      await sendPasswordResetEmail(email, 'guata-labs');
     } catch (error) {
       console.error("Erro ao resetar senha:", error);
       throw error;

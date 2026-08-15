@@ -235,7 +235,7 @@ export default function AdminLogin() {
 
           <p className="mt-4 text-center text-xs text-muted-foreground">
             Preferir o formulário dedicado?{' '}
-            <Link to="/descubrams/forgot-password" className="text-guata-forest hover:underline">
+            <Link to="/viajar/forgot-password" className="text-guata-forest hover:underline">
               Recuperar senha
             </Link>
           </p>

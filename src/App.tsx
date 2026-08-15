@@ -54,7 +54,7 @@ const ViaJARLogin = lazy(() => import("@/pages/OverflowOneLogin"));
 const ViaJARRegister = lazy(() => import("@/pages/OverflowOneRegister"));
 const PaymentSuccess = lazy(() => import("@/pages/PaymentSuccess"));
 const ViaJARForgotPassword = lazy(() => import("@/pages/OverflowOneForgotPassword"));
-const PasswordResetForm = lazy(() => import("@/components/auth/PasswordResetForm"));
+const ResetPasswordUpdate = lazy(() => import("@/pages/ResetPasswordUpdate"));
 const ViaJARInventory = lazy(() => import("@/pages/OverflowOneInventory"));
 const ViaJARReports = lazy(() => import("@/pages/ReportsPage"));
 const ViaJARLeads = lazy(() => import("@/pages/LeadsPage"));
@@ -221,7 +221,7 @@ function AppRoutes() {
                                 <Route path="/viajar/login" element={<Suspense fallback={<LoadingFallback />}><ViaJARLogin /></Suspense>} />
                                 <Route path="/viajar/register" element={<Suspense fallback={<LoadingFallback />}><ViaJARRegister /></Suspense>} />
                                 <Route path="/viajar/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
-                                <Route path="/reset-password" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
+                                <Route path="/reset-password" element={<Suspense fallback={<LoadingFallback />}><ResetPasswordUpdate /></Suspense>} />
 
                                 {/* ViaJAR Onboarding & Pricing (públicas) */}
                                 <Route path="/viajar/onboarding" element={<Suspense fallback={<LoadingFallback />}><ViaJAROnboarding /></Suspense>} />
@@ -361,7 +361,7 @@ function AppRoutes() {
                                 <Route path="/descubrams/login" element={<AuthPage />} />
                                 <Route path="/descubrams/register" element={<Register />} />
                                 <Route path="/descubrams/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
-                                <Route path="/reset-password" element={<Suspense fallback={<LoadingFallback />}><PasswordResetForm /></Suspense>} />
+                                <Route path="/reset-password" element={<Suspense fallback={<LoadingFallback />}><ResetPasswordUpdate /></Suspense>} />
 
                                 {/* Descubra MS - Políticas */}
                                 <Route path="/descubrams/privacidade" element={<PrivacidadeMS />} />
