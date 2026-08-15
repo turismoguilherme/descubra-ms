@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CheckCircle, Eye, EyeOff, KeyRound, Loader2, TriangleAlert } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Eye, EyeOff, KeyRound, Loader2, AlertTriangle } from 'lucide-react';
 import { loginPathForBrand, type ResetBrand } from '@/lib/passwordReset';
 
 type Status = 'checking' | 'ready' | 'invalid' | 'done';
@@ -186,7 +186,7 @@ const ResetPasswordUpdate = () => {
 
             {status === 'invalid' && (
               <div className="py-6 text-center space-y-4">
-                <TriangleAlert className="w-10 h-10 mx-auto text-amber-500" />
+                <AlertTriangle className="w-10 h-10 mx-auto text-amber-500" />
                 <p className="text-sm text-muted-foreground">{error}</p>
                 <Link to={forgotPath}>
                   <Button className={`w-full ${theme.button}`} size="lg">
