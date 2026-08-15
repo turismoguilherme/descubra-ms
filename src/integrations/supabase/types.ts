@@ -7385,6 +7385,7 @@ export type Database = {
         Args: { reservation_partner_id: string }
         Returns: boolean
       }
+      is_partner_owner: { Args: { p_partner_id: string }; Returns: boolean }
       is_plano_diretor_colaborador: {
         Args: { plano_id: string; required_permission: string; user_id: string }
         Returns: boolean
