@@ -92,7 +92,7 @@ const OverflowOneForgotPassword: React.FC = () => {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-guata-cream flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <Card className="shadow-xl">
             <CardContent className="p-8 text-center">
@@ -210,10 +210,10 @@ const OverflowOneForgotPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-guata-cream flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to={loginPath} className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
+          <Link to={loginPath} className="inline-flex items-center text-guata-forest hover:text-guata-deep mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar para o login
           </Link>
@@ -245,7 +245,7 @@ const OverflowOneForgotPassword: React.FC = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="w-full bg-guata-forest hover:bg-guata-deep text-guata-cream"
                 disabled={isLoading}
               >
                 {isLoading ? 'Enviando...' : 'Enviar link de redefinição'}
@@ -255,7 +255,7 @@ const OverflowOneForgotPassword: React.FC = () => {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Lembrou da senha?{' '}
-                <Link to={loginPath} className="text-blue-600 hover:text-blue-700 font-medium">
+                <Link to={loginPath} className="text-guata-forest hover:text-guata-deep font-medium">
                   Faça login aqui
                 </Link>
               </p>
@@ -266,7 +266,7 @@ const OverflowOneForgotPassword: React.FC = () => {
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>
             Precisa de ajuda?{' '}
-            <Link to="/suporte" className="text-blue-600 hover:text-blue-700">
+            <Link to="/suporte" className="text-guata-forest hover:text-guata-deep">
               Entre em contato conosco
             </Link>
           </p>

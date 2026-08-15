@@ -323,12 +323,16 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
       }
 
       console.log('📝 [PartnerApplicationForm] Iniciando processo de cadastro...');
+      // Normalizar e-mail para evitar divergência entre Auth e tabela de parceiros
+      const normalizedEmail = data.contact_email.trim().toLowerCase();
+      data.contact_email = normalizedEmail;
+
       // 1. Se includePassword, criar conta no Supabase Auth primeiro
       let authUserId: string | null = null;
       if (includePassword && data.password) {
         console.log('🔐 [PartnerApplicationForm] Criando conta no Supabase Auth...');
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: data.contact_email,
+          email: normalizedEmail,
           password: data.password,
           options: {
             emailRedirectTo: `${window.location.origin}/descubrams/partner/login`,
@@ -337,38 +341,56 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
 
         if (authError) {
           console.warn('⚠️ [PartnerApplicationForm] Erro ao criar conta:', authError);
-          // Se email já existe, verificar se já existe um parceiro com esse email
-          if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
-            console.log('🔄 [PartnerApplicationForm] Email já existe, verificando se já existe parceiro...');
-            
-            // Verificar se já existe um parceiro com esse email
-            const { data: existingPartner, error: checkError } = await supabase
-              .from('institutional_partners')
-              .select('id, name, contact_email')
-              .eq('contact_email', data.contact_email)
-              .maybeSingle();
-            
-            if (existingPartner) {
-              // Parceiro já existe com esse email
-              throw new Error('Já existe uma solicitação de parceria com este email. Entre em contato conosco se precisar de ajuda.');
-            }
-            
-            // Email existe no auth mas não há parceiro
-            // NÃO criar parceiro sem conta no Auth (segurança e para garantir que login funcione)
-            throw new Error('Este email já está cadastrado em nossa plataforma. Por favor, faça login primeiro ou use outro email para criar uma nova conta de parceiro.');
-          } else {
+          const emailAlreadyUsed =
+            authError.message.includes('already registered') ||
+            authError.message.includes('User already registered');
+
+          if (!emailAlreadyUsed) {
             throw new Error(`Erro ao criar conta: ${authError.message}`);
           }
+
+          console.log('🔄 [PartnerApplicationForm] Email já existe no Auth, verificando parceria ativa...');
+
+          // Existe parceria ativa/pendente com esse e-mail? Então é duplicidade real.
+          const { data: existingPartner } = await supabase
+            .from('institutional_partners')
+            .select('id, name, contact_email, status')
+            .ilike('contact_email', normalizedEmail)
+            .maybeSingle();
+
+          if (existingPartner) {
+            throw new Error(
+              'Já existe uma solicitação de parceria com este e-mail. Faça login na Área do Parceiro ou fale com a equipe Descubra MS.',
+            );
+          }
+
+          // A conta de acesso continua existindo, mas a parceria foi excluída.
+          // Reaproveitamos a conta: autenticamos com a senha informada e seguimos o cadastro.
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password: data.password,
+          });
+
+          if (signInError || !signInData?.user?.id) {
+            throw new Error(
+              'Este e-mail já possui uma conta de acesso na plataforma. Informe a senha dessa conta para reaproveitá-la ou use "Esqueceu sua senha?" na Área do Parceiro para redefini-la e continuar o cadastro.',
+            );
+          }
+
+          authUserId = signInData.user.id;
+          console.log('✅ [PartnerApplicationForm] Conta existente reaproveitada para o novo cadastro');
         } else {
           authUserId = authData?.user?.id || null;
           console.log('✅ [PartnerApplicationForm] Conta criada com sucesso');
-          
+
           // Garantir que sempre temos authUserId quando includePassword é true
           if (!authUserId) {
             throw new Error('Falha ao criar conta: usuário não foi criado corretamente. Tente novamente.');
           }
         }
       }
+
+
 
       // Validação de segurança: se includePassword é true, authUserId deve existir
       if (includePassword && !authUserId) {
