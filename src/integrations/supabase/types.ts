@@ -1794,41 +1794,6 @@ export type Database = {
         }
         Relationships: []
       }
-      flowtrip_state_features: {
-        Row: {
-          config: Json | null
-          created_at: string | null
-          feature_name: string
-          id: string
-          is_enabled: boolean | null
-          state_id: string | null
-        }
-        Insert: {
-          config?: Json | null
-          created_at?: string | null
-          feature_name: string
-          id?: string
-          is_enabled?: boolean | null
-          state_id?: string | null
-        }
-        Update: {
-          config?: Json | null
-          created_at?: string | null
-          feature_name?: string
-          id?: string
-          is_enabled?: boolean | null
-          state_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "flowtrip_state_features_state_id_fkey"
-            columns: ["state_id"]
-            isOneToOne: false
-            referencedRelation: "flowtrip_states"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       flowtrip_states: {
         Row: {
           accent_color: string | null
@@ -4394,33 +4359,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      password_reset_tokens: {
-        Row: {
-          created_at: string | null
-          expires_at: string
-          id: string
-          token_hash: string
-          used_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at: string
-          id?: string
-          token_hash: string
-          used_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string
-          id?: string
-          token_hash?: string
-          used_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
       }
       pending_refunds: {
         Row: {
@@ -7201,10 +7139,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      create_password_reset_token: {
-        Args: { user_email: string }
-        Returns: string
-      }
       create_test_user_profiles: {
         Args: never
         Returns: {
@@ -7514,10 +7448,6 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
-      }
-      validate_password_reset_token: {
-        Args: { token_hash: string; user_email: string }
-        Returns: boolean
       }
     }
     Enums: {
