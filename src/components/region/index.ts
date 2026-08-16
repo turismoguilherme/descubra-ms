@@ -1,0 +1,9 @@
+export { default as RegionHero } from './RegionHero';
+export { default as RegionAbout } from './RegionAbout';
+export { default as RegionCities } from './RegionCities';
+export { default as RegionAttractions } from './RegionAttractions';
+export { default as RegionVideo } from './RegionVideo';
+export { default as RegionGallery } from './RegionGallery';
+export { default as RegionMap } from './RegionMap';
+export { default as RegionInfo } from './RegionInfo';
+export { default as RegionCTA } from './RegionCTA';
