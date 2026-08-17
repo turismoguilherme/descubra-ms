@@ -7390,15 +7390,6 @@ export type Database = {
         Args: { p_route_id: string; p_user_id: string }
         Returns: number
       }
-      save_guata_cartilha_content: {
-        Args: {
-          p_content: Json
-          p_email: string
-          p_password: string
-          p_slug: string
-        }
-        Returns: Json
-      }
       secure_ai_consultant_operation: {
         Args: {
           p_config_id?: string
