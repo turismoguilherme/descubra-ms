@@ -161,33 +161,15 @@ serve(async (req) => {
       throw new Error('Nome do parceiro inválido');
     }
 
-    // Validar URLs de retorno para prevenir open redirect
-    const isValidUrl = (url: string): boolean => {
-      try {
-        const parsed = new URL(url);
-        const allowedDomains = [
-          'localhost',
-          '127.0.0.1',
-          'descubra-ms.vercel.app',
-          'viajartur.com',
-          'www.viajartur.com',
-          'descubrams.com',
-          'www.descubrams.com',
-          supabaseUrl.replace('https://', '').replace('.supabase.co', '')
-        ];
-        const hostname = parsed.hostname.replace(/^www\./, '');
-        return allowedDomains.some(domain => hostname === domain || hostname.endsWith('.' + domain));
-      } catch {
-        return false;
-      }
-    };
+    // Validar URLs de retorno para prevenir open redirect (lista compartilhada)
+    const isValidUrl = (url: string): boolean => isAllowedRedirectUrl(url, supabaseUrl);
 
-    if (returnUrl && !isValidUrl(returnUrl)) {
+    if (!returnUrl || !isValidUrl(returnUrl)) {
       await logSecurityEvent(supabase, {
         action: 'stripe_connect_invalid_input',
         userId: user.id,
         success: false,
-        errorMessage: 'URL de retorno inválida (possível open redirect)',
+        errorMessage: 'URL de retorno ausente ou inválida (possível open redirect)',
         ipAddress: clientIP,
         userAgent: userAgent,
         metadata: {
@@ -195,15 +177,15 @@ serve(async (req) => {
           providedReturnUrl: returnUrl,
         },
       });
-      throw new Error('URL de retorno inválida');
+      throw new Error('URL de retorno inválida ou não permitida para este domínio.');
     }
 
-    if (refreshUrl && !isValidUrl(refreshUrl)) {
+    if (!refreshUrl || !isValidUrl(refreshUrl)) {
       await logSecurityEvent(supabase, {
         action: 'stripe_connect_invalid_input',
         userId: user.id,
         success: false,
-        errorMessage: 'URL de refresh inválida (possível open redirect)',
+        errorMessage: 'URL de refresh ausente ou inválida (possível open redirect)',
         ipAddress: clientIP,
         userAgent: userAgent,
         metadata: {
@@ -211,8 +193,9 @@ serve(async (req) => {
           providedRefreshUrl: refreshUrl,
         },
       });
-      throw new Error('URL de refresh inválida');
+      throw new Error('URL de refresh inválida ou não permitida para este domínio.');
     }
+
 
     console.log('Criando/recuperando conta Stripe Connect para parceiro:', partnerId);
 
