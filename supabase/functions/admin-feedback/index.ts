@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { requireUser, guardResponse, serviceClient } from '../_shared/authGuard.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -8,19 +8,20 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id, type, feedback_type, data, comment } = await req.json();
+    // Identidade vem SEMPRE do JWT — nunca do corpo da requisição
+    const auth = await requireUser(req);
+    if (!auth.ok) return guardResponse(auth, corsHeaders);
 
-    if (!user_id || !type || !feedback_type) {
-      return new Response(JSON.stringify({ error: 'Campos obrigatórios ausentes: user_id, type, feedback_type.' }), {
+    const { type, feedback_type, data, comment } = await req.json();
+
+    if (!type || !feedback_type) {
+      return new Response(JSON.stringify({ error: 'Campos obrigatórios ausentes: type, feedback_type.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseAdmin = serviceClient();
 
     let score: number | null = null;
     if (feedback_type === 'positive') {
@@ -30,6 +31,7 @@ serve(async (req) => {
     } else if (feedback_type === 'neutral') {
       score = 3; // Exemplo: 3 para neutro
     }
+
 
     const { error: logError } = await supabaseAdmin.from('ai_feedback_log').insert({
       interaction_id: data?.interactionId || null, // Se você tiver um ID de interação para registrar
