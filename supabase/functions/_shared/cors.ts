@@ -19,10 +19,15 @@ const getAllowedOrigins = (): string[] => {
     'https://www.descubrams.com',
     'https://descubra-ms.vercel.app',
     'https://*.vercel.app',
+    // Lovable (preview e publicado)
+    'https://*.lovable.app',
+    'https://*.lovable.dev',
+    'https://*.lovableproject.com',
     // Desenvolvimento - aceita portas dinâmicas
     'http://localhost',
     'http://127.0.0.1'
   ];
+
 };
 
 /**
