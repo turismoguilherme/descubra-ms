@@ -2,6 +2,8 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.5.0';
 import { getCorsHeaders } from '../_shared/cors.ts';
+import { isAllowedRedirectUrl } from '../_shared/allowedRedirects.ts';
+
 import { getAuthUserFromRequest, resolveServiceRoleKey } from '../_shared/getAuthUserFromRequest.ts';
 import { checkRateLimit } from '../_shared/rateLimit.ts';
 import { logSecurityEvent, getClientIP, getClientUserAgent } from '../_shared/securityLog.ts';
