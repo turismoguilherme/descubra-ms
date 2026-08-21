@@ -354,8 +354,9 @@ serve(async (req) => {
     
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: refreshUrl || `${returnUrl}?stripe_connect=refresh`,
-      return_url: returnUrl || `${returnUrl}?stripe_connect=success`,
+      refresh_url: refreshUrl,
+      return_url: returnUrl,
+
       type: 'account_onboarding',
     });
 
