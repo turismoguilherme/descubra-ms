@@ -42,10 +42,9 @@ serve(async (req) => {
       hasServiceId: !!serviceId,
     });
 
-    if (!partnerId || !totalAmount || !guestName || !guestEmail) {
+    if (!partnerId || !guestName || !guestEmail) {
       const missingFields = [];
       if (!partnerId) missingFields.push('partnerId');
-      if (!totalAmount) missingFields.push('totalAmount');
       if (!guestName) missingFields.push('guestName');
       if (!guestEmail) missingFields.push('guestEmail');
       
@@ -59,10 +58,64 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabase = serviceClient();
+
+    // ===== Preço calculado SEMPRE no servidor (nunca confiar no valor do cliente) =====
+    const guestCount = Math.max(1, Math.min(Number(guests) || 1, 100));
+
+    if (!serviceId) {
+      return new Response(
+        JSON.stringify({ error: 'Serviço inválido: serviceId é obrigatório para calcular o valor.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    const { data: pricing, error: pricingError } = await supabase
+      .from('partner_pricing')
+      .select('*')
+      .eq('id', serviceId)
+      .eq('partner_id', partnerId)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (pricingError || !pricing) {
+      return new Response(
+        JSON.stringify({ error: 'Serviço não encontrado ou indisponível.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if (
+      (pricing.min_guests && guestCount < pricing.min_guests) ||
+      (pricing.max_guests && guestCount > pricing.max_guests)
+    ) {
+      return new Response(
+        JSON.stringify({ error: 'Número de pessoas fora do permitido para este serviço.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    let computedAmount = 0;
+    if (pricing.pricing_type === 'per_person' && pricing.price_per_person) {
+      computedAmount = Number(pricing.price_per_person) * guestCount;
+    } else if (pricing.pricing_type === 'per_night' && pricing.price_per_night) {
+      computedAmount = Number(pricing.price_per_night);
+    } else {
+      computedAmount = Number(
+        pricing.base_price ?? pricing.price_per_person ?? pricing.price_per_night ?? 0,
+      );
+    }
+    computedAmount = Math.round(computedAmount * 100) / 100;
+
+    if (!computedAmount || computedAmount <= 0) {
+      return new Response(
+        JSON.stringify({ error: 'Preço do serviço não configurado. Contate o parceiro.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    const totalAmount = computedAmount;
+
 
     // Buscar dados do parceiro
     const { data: partner, error: partnerError } = await supabase
