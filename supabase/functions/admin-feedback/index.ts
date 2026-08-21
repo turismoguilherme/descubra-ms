@@ -35,7 +35,7 @@ serve(async (req) => {
 
     const { error: logError } = await supabaseAdmin.from('ai_feedback_log').insert({
       interaction_id: data?.interactionId || null, // Se você tiver um ID de interação para registrar
-      feedback_by_user_id: user_id,
+      feedback_by_user_id: auth.user.id,
       feedback_type: feedback_type,
       score: score,
       comments: comment || null,
