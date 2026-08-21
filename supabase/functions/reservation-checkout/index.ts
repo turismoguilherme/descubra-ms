@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 import { corsHeaders } from '../_shared/cors.ts';
-import { serviceClient } from '../_shared/authGuard.ts';
+import { serviceClient, requireUser } from '../_shared/authGuard.ts';
 
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
@@ -234,6 +234,8 @@ serve(async (req) => {
       .from('partner_reservations')
       .insert({
         partner_id: partnerId,
+        user_id: authUserId,
+
         service_id: serviceId || null, // Salvar service_id se fornecido
         reservation_type: reservationType || 'other',
         service_name: serviceName || 'Serviço',
