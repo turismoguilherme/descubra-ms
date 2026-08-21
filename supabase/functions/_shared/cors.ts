@@ -66,14 +66,18 @@ const isOriginAllowed = (origin: string | null): boolean => {
  * Get CORS headers based on request origin
  */
 export const getCorsHeaders = (origin: string | null): Record<string, string> => {
-  const allowedOrigin = isOriginAllowed(origin) ? origin : getAllowedOrigins()[0];
-  
+  // Origem reconhecida: reflete a própria origem. Não reconhecida: 'null'
+  // (evita devolver o domínio de outro projeto, que confunde o diagnóstico).
+  const allowedOrigin = isOriginAllowed(origin) ? (origin as string) : 'null';
+
   return {
-    'Access-Control-Allow-Origin': allowedOrigin || '*',
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Vary': 'Origin',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with, accept',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
     'Access-Control-Max-Age': '86400',
     'Access-Control-Allow-Credentials': 'true',
+
     // Security headers
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
