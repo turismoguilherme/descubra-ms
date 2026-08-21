@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 import { corsHeaders } from '../_shared/cors.ts';
+import { requireUser, guardResponse, serviceClient } from '../_shared/authGuard.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2024-11-20.acacia',
@@ -14,6 +14,9 @@ serve(async (req) => {
   }
 
   try {
+    const auth = await requireUser(req);
+    if (!auth.ok) return guardResponse(auth, corsHeaders);
+
     const body = await req.json();
     const { reservationId, reason } = body;
 
@@ -27,10 +30,7 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabase = serviceClient();
 
     // Buscar dados da reserva
     const { data: reservation, error: reservationError } = await supabase
@@ -55,6 +55,25 @@ serve(async (req) => {
         }
       );
     }
+
+    // Só o titular da reserva, o parceiro dono ou um admin podem cancelar
+    let canCancel = auth.isAdmin || reservation.user_id === auth.user.id;
+    if (!canCancel && reservation.partner_id) {
+      const { data: isOwner } = await supabase.rpc('is_partner_owner', {
+        p_partner_id: reservation.partner_id,
+      });
+      canCancel = isOwner === true;
+    }
+    if (!canCancel) {
+      return new Response(
+        JSON.stringify({ error: 'Você não tem permissão para cancelar esta reserva' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        }
+      );
+    }
+
 
     // Verificar se reserva pode ser cancelada
     if (reservation.status === 'cancelled') {

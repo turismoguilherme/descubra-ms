@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { requireAdmin, guardResponse, serviceClient } from '../_shared/authGuard.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -8,7 +8,11 @@ serve(async (req) => {
   }
 
   try {
-    const { workflow_id, initial_params, requester_user_id } = await req.json();
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return guardResponse(auth, corsHeaders);
+
+    const { workflow_id, initial_params } = await req.json();
+    const requester_user_id = auth.user?.id ?? null;
 
     if (!workflow_id) {
       return new Response(JSON.stringify({ error: 'O ID do workflow é obrigatório.' }), {
@@ -17,10 +21,8 @@ serve(async (req) => {
       });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseAdmin = serviceClient();
+
 
     // 1. Buscar a definição do workflow
     const { data: workflow, error: workflowError } = await supabaseAdmin

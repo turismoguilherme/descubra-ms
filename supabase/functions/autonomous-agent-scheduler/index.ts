@@ -1,15 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { requireAdmin, guardResponse, serviceClient } from '../_shared/authGuard.ts';
 
 /**
  * Edge Function: Autonomous Agent Scheduler
  * Executa tarefas agendadas da IA Autônoma 24/7
- * 
- * Esta função é chamada periodicamente via pg_cron e:
- * 1. Verifica quais tarefas precisam ser executadas
- * 2. Executa as tarefas automaticamente
- * 3. Salva os resultados no banco
+ *
+ * Acesso restrito: chamadas internas (pg_cron com segredo/service role) ou admins.
  */
 
 interface AITask {
@@ -27,10 +25,11 @@ serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return guardResponse(auth, corsHeaders);
+
+    const supabase = serviceClient();
+
 
     console.log('🤖 [AutonomousAgentScheduler] Iniciando verificação de tarefas agendadas...');
 

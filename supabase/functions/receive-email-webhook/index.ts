@@ -1,71 +1,82 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serviceClient } from '../_shared/authGuard.ts';
 
-// Esta Edge Function seria configurada como um webhook no seu provedor de e-mail (ex: SendGrid)
+/**
+ * Webhook de recebimento de e-mails (ex.: SendGrid Inbound Parse).
+ *
+ * Segurança: o provedor deve chamar esta função com um segredo compartilhado
+ * (header `x-webhook-secret` ou query `?token=`) igual ao secret
+ * EMAIL_WEBHOOK_SECRET. Sem o segredo configurado, a função recusa tudo
+ * (fail-closed) para evitar injeção de mensagens falsas.
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+function isAuthorized(req: Request): boolean {
+  const expected = Deno.env.get('EMAIL_WEBHOOK_SECRET')?.trim();
+  if (!expected) return false;
+  const header = req.headers.get('x-webhook-secret')?.trim() ?? '';
+  if (header && timingSafeEqual(header, expected)) return true;
+  try {
+    const token = new URL(req.url).searchParams.get('token')?.trim() ?? '';
+    return !!token && timingSafeEqual(token, expected);
+  } catch {
+    return false;
+  }
+}
+
 serve(async (req) => {
   try {
-    // SendGrid envia dados de e-mail em formato de formulário ou JSON, dependendo da configuração.
-    // Para simplificar, assumiremos JSON. A implementação real pode precisar parsear form-data.
+    if (!isAuthorized(req)) {
+      console.warn('receive-email-webhook: chamada não autorizada');
+      return new Response('Forbidden', { status: 403 });
+    }
+
     const body = await req.json();
 
-    // Exemplo de como SendGrid envia dados (simplificado)
     const fromAddress = body.from;
     const toAddress = body.to;
     const subject = body.subject;
-    const emailBody = body.text || body.html; // Ou você pode escolher um ou outro
+    const emailBody = body.text || body.html;
 
     if (!fromAddress || !toAddress || !subject || !emailBody) {
-      console.error('Dados de webhook de e-mail incompletos:', body);
       return new Response(JSON.stringify({ error: 'Dados de webhook de e-mail incompletos.' }), {
         status: 400,
       });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabaseAdmin = serviceClient();
 
-    // Registrar o e-mail recebido no log de comunicação
     const { data: loggedEmail, error: logError } = await supabaseAdmin
       .from('communication_logs')
       .insert({
         direction: 'in',
         channel: 'email',
-        from_address: fromAddress,
-        to_address: toAddress,
-        subject_or_topic: subject,
-        body: emailBody,
+        from_address: String(fromAddress).slice(0, 320),
+        to_address: String(toAddress).slice(0, 320),
+        subject_or_topic: String(subject).slice(0, 300),
+        body: String(emailBody),
         status: 'received',
-        ai_generated_response: false, // Será atualizado quando Cris responder
+        ai_generated_response: false,
       })
-      .select()
+      .select('id')
       .single();
 
     if (logError) {
-      console.error('Erro ao registrar e-mail recebido no Supabase:', logError);
-      return new Response(JSON.stringify({ error: 'Falha ao registrar e-mail.' }), {
-        status: 500,
-      });
+      console.error('receive-email-webhook: erro ao registrar e-mail', logError.message);
+      return new Response(JSON.stringify({ error: 'Falha ao registrar e-mail.' }), { status: 500 });
     }
 
-    // Tentar processar com Cris automaticamente (opcional - pode ser feito via scheduler)
-    // Por enquanto, apenas registrar. O scheduler vai processar periodicamente.
-    console.log(`✅ [receive-email-webhook] Email registrado. ID: ${loggedEmail?.id}. Será processado pelo Cris no próximo ciclo.`);
-
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       message: 'E-mail recebido e log registrado',
       email_id: loggedEmail?.id,
-      will_be_processed_by_cris: true
-    }), {
-      status: 200,
-    });
-
+    }), { status: 200 });
   } catch (error) {
-    console.error('Erro na Edge Function receive-email-webhook:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-    });
+    console.error('receive-email-webhook: erro', error instanceof Error ? error.message : error);
+    return new Response(JSON.stringify({ error: 'Erro interno' }), { status: 500 });
   }
-}); 
+});
