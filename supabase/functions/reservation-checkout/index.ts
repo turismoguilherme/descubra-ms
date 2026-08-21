@@ -15,8 +15,12 @@ serve(async (req) => {
   }
 
   try {
+    // Identidade opcional (reserva de convidado é permitida), vinda do JWT
+    const auth = await requireUser(req);
+    const authUserId = auth.ok ? auth.user.id : null;
+
     const body = await req.json();
-    console.log('[reservation-checkout] Request body received:', JSON.stringify(body, null, 2));
+
     
     const { 
       partnerId, 
