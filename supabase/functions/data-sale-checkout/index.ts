@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 import { corsHeaders } from '../_shared/cors.ts';
+import { requireAdmin, guardResponse, serviceClient } from '../_shared/authGuard.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2024-11-20.acacia',
@@ -14,17 +14,19 @@ serve(async (req) => {
   }
 
   try {
+    const auth = await requireAdmin(req);
+    if (!auth.ok) return guardResponse(auth, corsHeaders);
+
     const body = await req.json();
     const { 
       requestId,
-      amount,
       successUrl,
       cancelUrl
     } = body;
 
-    if (!requestId || !amount) {
+    if (!requestId) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: requestId, amount' }),
+        JSON.stringify({ error: 'Missing required field: requestId' }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
@@ -32,10 +34,7 @@ serve(async (req) => {
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    const supabase = serviceClient();
 
     // Buscar solicitação de dados
     const { data: request, error: requestError } = await supabase
@@ -70,8 +69,23 @@ serve(async (req) => {
     const defaultSuccessUrl = successUrl || `${baseUrl}/viajar/admin/financial/contact-leads?payment=success&session_id={CHECKOUT_SESSION_ID}`;
     const defaultCancelUrl = cancelUrl || `${baseUrl}/viajar/admin/financial/contact-leads?payment=cancelled`;
 
-    // Converter valor para centavos
-    const amountInCents = Math.round(parseFloat(amount) * 100);
+    // Valor definido no servidor a partir da solicitação aprovada (nunca do cliente)
+    const serverAmount = Number(
+      (request as Record<string, unknown>).final_price ??
+      (request as Record<string, unknown>).price ??
+      (request as Record<string, unknown>).amount ??
+      0,
+    );
+
+    if (!serverAmount || serverAmount <= 0) {
+      return new Response(
+        JSON.stringify({ error: 'Valor da solicitação não definido. Defina o preço antes de cobrar.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    const amountInCents = Math.round(serverAmount * 100);
+
 
     // Criar sessão de checkout no Stripe (pagamento único)
     // Métodos de pagamento: Cartão, PIX e Boleto (habilitados para Brasil)
