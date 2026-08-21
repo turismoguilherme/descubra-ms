@@ -33,7 +33,10 @@ serve(async (req) => {
 
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
-      throw new Error('STRIPE_SECRET_KEY não configurada');
+      throw new Error(
+        'Pagamentos ainda não estão configurados na plataforma (STRIPE_SECRET_KEY ausente nos secrets das Edge Functions). Fale com o administrador.',
+      );
+
     }
 
     const stripe = new Stripe(stripeSecretKey, {
