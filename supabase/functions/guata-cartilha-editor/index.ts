@@ -1,17 +1,12 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { requireAdmin } from "../_shared/authGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-/** Credenciais do editor da cartilha (mesmo login do HTML). Preferir secrets no painel. */
-const EDITOR_EMAIL =
-  Deno.env.get("CARTILHA_EDITOR_EMAIL") ?? "guilhermearevalo27@gmail.com";
-const EDITOR_PASSWORD =
-  Deno.env.get("CARTILHA_EDITOR_PASSWORD") ?? "99212361701040";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -20,11 +15,6 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function assertEditor(email: unknown, password: unknown) {
-  const e = typeof email === "string" ? email.trim().toLowerCase() : "";
-  const p = typeof password === "string" ? password.trim() : "";
-  return e === EDITOR_EMAIL.toLowerCase() && p === EDITOR_PASSWORD;
-}
 
 function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; contentType: string; ext: string } | null {
   const match = /^data:([^;]+);base64,(.+)$/i.exec(dataUrl);
