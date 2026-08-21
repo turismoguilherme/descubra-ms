@@ -2,6 +2,8 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.5.0';
 import { getCorsHeaders } from '../_shared/cors.ts';
+import { isAllowedRedirectUrl } from '../_shared/allowedRedirects.ts';
+
 import { getAuthUserFromRequest, resolveServiceRoleKey } from '../_shared/getAuthUserFromRequest.ts';
 import { checkRateLimit } from '../_shared/rateLimit.ts';
 import { logSecurityEvent, getClientIP, getClientUserAgent } from '../_shared/securityLog.ts';
@@ -33,7 +35,10 @@ serve(async (req) => {
 
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
-      throw new Error('STRIPE_SECRET_KEY não configurada');
+      throw new Error(
+        'Pagamentos ainda não estão configurados na plataforma (STRIPE_SECRET_KEY ausente nos secrets das Edge Functions). Fale com o administrador.',
+      );
+
     }
 
     const stripe = new Stripe(stripeSecretKey, {
@@ -161,33 +166,15 @@ serve(async (req) => {
       throw new Error('Nome do parceiro inválido');
     }
 
-    // Validar URLs de retorno para prevenir open redirect
-    const isValidUrl = (url: string): boolean => {
-      try {
-        const parsed = new URL(url);
-        const allowedDomains = [
-          'localhost',
-          '127.0.0.1',
-          'descubra-ms.vercel.app',
-          'viajartur.com',
-          'www.viajartur.com',
-          'descubrams.com',
-          'www.descubrams.com',
-          supabaseUrl.replace('https://', '').replace('.supabase.co', '')
-        ];
-        const hostname = parsed.hostname.replace(/^www\./, '');
-        return allowedDomains.some(domain => hostname === domain || hostname.endsWith('.' + domain));
-      } catch {
-        return false;
-      }
-    };
+    // Validar URLs de retorno para prevenir open redirect (lista compartilhada)
+    const isValidUrl = (url: string): boolean => isAllowedRedirectUrl(url, supabaseUrl);
 
-    if (returnUrl && !isValidUrl(returnUrl)) {
+    if (!returnUrl || !isValidUrl(returnUrl)) {
       await logSecurityEvent(supabase, {
         action: 'stripe_connect_invalid_input',
         userId: user.id,
         success: false,
-        errorMessage: 'URL de retorno inválida (possível open redirect)',
+        errorMessage: 'URL de retorno ausente ou inválida (possível open redirect)',
         ipAddress: clientIP,
         userAgent: userAgent,
         metadata: {
@@ -195,15 +182,15 @@ serve(async (req) => {
           providedReturnUrl: returnUrl,
         },
       });
-      throw new Error('URL de retorno inválida');
+      throw new Error('URL de retorno inválida ou não permitida para este domínio.');
     }
 
-    if (refreshUrl && !isValidUrl(refreshUrl)) {
+    if (!refreshUrl || !isValidUrl(refreshUrl)) {
       await logSecurityEvent(supabase, {
         action: 'stripe_connect_invalid_input',
         userId: user.id,
         success: false,
-        errorMessage: 'URL de refresh inválida (possível open redirect)',
+        errorMessage: 'URL de refresh ausente ou inválida (possível open redirect)',
         ipAddress: clientIP,
         userAgent: userAgent,
         metadata: {
@@ -211,8 +198,9 @@ serve(async (req) => {
           providedRefreshUrl: refreshUrl,
         },
       });
-      throw new Error('URL de refresh inválida');
+      throw new Error('URL de refresh inválida ou não permitida para este domínio.');
     }
+
 
     console.log('Criando/recuperando conta Stripe Connect para parceiro:', partnerId);
 
@@ -371,8 +359,9 @@ serve(async (req) => {
     
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: refreshUrl || `${returnUrl}?stripe_connect=refresh`,
-      return_url: returnUrl || `${returnUrl}?stripe_connect=success`,
+      refresh_url: refreshUrl,
+      return_url: returnUrl,
+
       type: 'account_onboarding',
     });
 

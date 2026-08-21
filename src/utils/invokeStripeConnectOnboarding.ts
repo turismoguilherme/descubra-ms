@@ -79,8 +79,14 @@ export async function invokeStripeConnectOnboarding(
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return { data: null, error: new Error(`Falha de rede ao chamar Stripe Connect: ${msg}`) };
+    return {
+      data: null,
+      error: new Error(
+        `A chamada ao Stripe Connect foi bloqueada pelo navegador (provável CORS/rede) a partir de ${window.location.origin}. Detalhe: ${msg}`,
+      ),
+    };
   }
+
 
   const json = (await response.json().catch(() => null)) as
     | { url?: string; error?: string; code?: string; diagnostic?: string }
