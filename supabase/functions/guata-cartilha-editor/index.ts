@@ -67,9 +67,12 @@ serve(async (req) => {
       });
     }
 
-    if (!assertEditor(body.email, body.password)) {
-      return json({ ok: false, error: "Credenciais de editor inválidas" }, 401);
+    // Escrita/upload exige administrador autenticado (sem credenciais no código)
+    const auth = await requireAdmin(req);
+    if (!auth.ok) {
+      return json({ ok: false, error: auth.error }, auth.status);
     }
+
 
     if (action === "upload") {
       const dataUrl = typeof body.dataUrl === "string" ? body.dataUrl : "";
