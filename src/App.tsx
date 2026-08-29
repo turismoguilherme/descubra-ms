@@ -35,6 +35,12 @@ import { safeLog } from "@/utils/safeLog";
 import { initSupabaseInterceptor } from "@/utils/supabaseInterceptor";
 import { useDomainValidation } from "@/hooks/useDomainValidation";
 import { isViajarTestLoginEnabled } from "@/utils/viajarTestLogin";
+import {
+  brandFromHost,
+  stripBrandPrefix,
+  MS_PREFIX,
+  LABS_PREFIX,
+} from "@/lib/brandRoutes";
 
 // Inicializar interceptor do Supabase para renovação automática de tokens
 initSupabaseInterceptor();
@@ -157,21 +163,35 @@ const RedirectOldMSRoute = () => {
 // /login legado → login Descubra MS (preserva ?redirect=)
 const RedirectToMsLogin = () => {
   const location = useLocation();
-  return <Navigate to={`/descubrams/login${location.search}`} replace />;
+  return <Navigate to={`${MS_PREFIX}/login${location.search}`} replace />;
+};
+
+// Em domínio próprio, o prefixo legado é redirecionado para a URL limpa
+const RedirectToCleanUrl = () => {
+  const location = useLocation();
+  const target = `${stripBrandPrefix(location.pathname)}${location.search}${location.hash}`;
+  return <Navigate to={target} replace />;
 };
 
 // Componente interno que usa useLocation (deve estar dentro do Router)
 function AppRoutes() {
-  // Validar domínio e determinar qual conteúdo mostrar
-  const { shouldShowMSContent, shouldShowViajarContent, currentDomain } = useDomainValidation();
   const location = useLocation();
 
-  // Lógica: mostrar conteúdo baseado no domínio E no path
-  // Se o path começar com /descubrams, sempre mostrar MS (funciona em qualquer domínio/preview)
-  const showMS = currentDomain === 'descubrams.com' || 
-                 location.pathname.startsWith('/descubrams');
-  const showViajar = currentDomain === 'viajartur.com' || 
-                     !location.pathname.startsWith('/descubrams');
+  // Marca definida pelo domínio próprio (null em preview/localhost/vercel)
+  const hostBrand = brandFromHost();
+  const cleanUrls = hostBrand !== null;
+
+  // Em domínio compartilhado, o prefixo do caminho continua decidindo a marca
+  const pathIsMS =
+    location.pathname === MS_PREFIX ||
+    location.pathname.startsWith(`${MS_PREFIX}/`) ||
+    location.pathname.startsWith('/descubramatogrossodosul') ||
+    location.pathname === '/ms' ||
+    location.pathname.startsWith('/ms/');
+
+  const showMS = hostBrand === 'ms' || (!cleanUrls && pathIsMS);
+  const showViajar = hostBrand === 'labs' || (!cleanUrls && !pathIsMS);
+
 
   return (
     <BrandProvider>
