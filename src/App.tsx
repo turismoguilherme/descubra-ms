@@ -347,66 +347,49 @@ function AppRoutes() {
                               </>
                             )}
 
-                            {/* Descubra Mato Grosso do Sul Routes - apenas se for domínio MS */}
+                            {/* Descubra Mato Grosso do Sul */}
                             {showMS && (
                               <>
-                                <Route path="/descubrams" element={<MSIndex />} />
-                                <Route path="/descubrams/mapa-turistico" element={<MapaTuristico />} />
-                                <Route path="/descubrams/destinos" element={<Destinos />} />
-                                <Route path="/descubrams/regioes/:slug" element={<RegiaoDetalhes />} />
-                                <Route path="/descubrams/eventos" element={<EventosMS />} />
-                                <Route path="/descubrams/cadastrar-evento" element={<Suspense fallback={<LoadingFallback />}><CadastrarEventoMS /></Suspense>} />
-                                <Route path="/descubrams/eventos/status/:eventId" element={<Suspense fallback={<LoadingFallback />}><EventStatus /></Suspense>} />
-                                <Route path="/descubrams/parceiros" element={<Partners />} />
-                                <Route path="/descubrams/parceiros/:id/reservar" element={<Suspense fallback={<LoadingFallback />}><PartnerReservationPage /></Suspense>} />
-                                <Route path="/descubrams/seja-um-parceiro" element={<Suspense fallback={<LoadingFallback />}><SejaUmParceiroMS /></Suspense>} />
-                                <Route path="/descubrams/seja-um-parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
-                                <Route path="/descubrams/seja_um_parceiro/success" element={<Suspense fallback={<LoadingFallback />}><PartnerSuccessPage /></Suspense>} />
-                                <Route path="/descubrams/partner/login" element={<PartnerLoginPage />} />
+                                {/* Rotas na raiz (domínio próprio: /passaporte, /parceiros, ...) */}
+                                {cleanUrls &&
+                                  MS_ROUTE_DEFS.map((r) => (
+                                    <Route key={`ms-clean-${r.path}`} path={r.path || '/'} element={r.element} />
+                                  ))}
+
+                                {/* Prefixo legado /descubrams — em domínio próprio, redireciona para a URL limpa */}
+                                {MS_ROUTE_DEFS.map((r) => (
+                                  <Route
+                                    key={`ms-legacy-${r.path}`}
+                                    path={`${MS_PREFIX}${r.path}`}
+                                    element={cleanUrls ? <RedirectToCleanUrl /> : r.element}
+                                  />
+                                ))}
+
+                                {/* Rotas sem prefixo (válidas nos dois modos) */}
                                 <Route path="/partner/dashboard" element={<Suspense fallback={<LoadingFallback />}><PartnerDashboard /></Suspense>} />
                                 <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                                 <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
-                                <Route path="/descubrams/sobre" element={<SobreMS />} />
-                                <Route path="/descubrams/baixar-app" element={<BaixarAppMS />} />
-                                <Route path="/baixar-app" element={<Navigate to="/descubrams/baixar-app" replace />} />
-                                <Route path="/descubrams/cartilhas" element={<CartilhasMS />} />
-                                <Route path="/descubrams/cartilhas/:slug" element={<CartilhaViewer />} />
-                                <Route path="/descubrams/guata" element={<Guata />} />
-                                <Route path="/descubrams/chatguata" element={<ChatGuata />} />
-                                <Route path="/descubrams/passaporte" element={<PassaporteLista />} />
-                                <Route path="/descubrams/ranking/compartilhar" element={<RankingSharePage />} />
-                                <Route path="/descubrams/passaporte/:routeId?" element={<Suspense fallback={<LoadingFallback />}><PassportDigital /></Suspense>} />
-                                <Route path="/descubrams/profile" element={<ProfilePageFixed />} />
-                                {/* Descubra MS Auth Routes */}
-                                <Route path="/descubrams/login" element={<AuthPage />} />
-                                <Route path="/descubrams/register" element={<Register />} />
-                                <Route path="/descubrams/forgot-password" element={<Suspense fallback={<LoadingFallback />}><ViaJARForgotPassword /></Suspense>} />
                                 <Route path="/reset-password" element={<Suspense fallback={<LoadingFallback />}><ResetPasswordUpdate /></Suspense>} />
+                                {!cleanUrls && (
+                                  <Route path="/baixar-app" element={<Navigate to={`${MS_PREFIX}/baixar-app`} replace />} />
+                                )}
 
-                                {/* Descubra MS - Políticas */}
-                                <Route path="/descubrams/privacidade" element={<PrivacidadeMS />} />
-                                <Route path="/descubrams/termos" element={<TermosUsoMS />} />
-                                <Route path="/descubrams/cookies" element={<CookiesMS />} />
+                                {/* Compatibilidade: /descubramatogrossodosul → /descubrams */}
+                                <Route path="/descubramatogrossodosul" element={<Navigate to={MS_PREFIX} replace />} />
+                                <Route path="/descubramatogrossodosul/:path*" element={<RedirectOldMSRoute />} />
 
-                                {/* Redirecionamentos de /descubramatogrossodosul para /descubrams (compatibilidade) */}
-                                <Route path="/descubramatogrossodosul" element={<Navigate to="/descubrams" replace />} />
-                                <Route
-                                  path="/descubramatogrossodosul/:path*"
-                                  element={<RedirectOldMSRoute />}
-                                />
-
-                                {/* Redirecionamentos legados de /ms para /descubrams */}
+                                {/* Legado /ms (callback OAuth precisa processar antes de redirecionar) */}
                                 <Route path="/ms/login" element={<AuthPage />} />
                                 <Route path="/ms/register" element={<Register />} />
-                                {/* Callback OAuth - processar antes de redirecionar */}
                                 <Route path="/ms" element={<Suspense fallback={<LoadingFallback />}><OAuthCallback /></Suspense>} />
-                                <Route path="/ms/*" element={<Navigate to="/descubrams" replace />} />
+                                <Route path="/ms/*" element={<Navigate to={cleanUrls ? '/' : MS_PREFIX} replace />} />
 
                                 {/* Fallback para MS */}
-                                <Route path="/descubrams/*" element={<MSIndex />} />
+                                <Route path={`${MS_PREFIX}/*`} element={cleanUrls ? <RedirectToCleanUrl /> : <MSIndex />} />
                                 <Route path="*" element={<MSIndex />} />
                               </>
                             )}
+
 
                             {/* Fallback baseado no domínio */}
                             {showMS ? (
