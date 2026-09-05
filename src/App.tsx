@@ -189,8 +189,15 @@ function AppRoutes() {
         : LABS_PREFIX
       : null;
 
-  const showMS = pathIsMS || (hostBrand === 'ms' && !!rootRedirect);
+  const showMS = pathIsMS || hostBrand === 'ms';
   const showViajar = !showMS;
+
+  // Raiz do domínio próprio → prefixo da marca
+  if (rootRedirect) {
+    return <Navigate to={rootRedirect} replace />;
+  }
+
+
 
 
 
