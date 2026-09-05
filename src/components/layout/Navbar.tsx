@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import UserMenu from "./UserMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useBrand } from "@/context/BrandContext";
+import { withBrandPath } from "@/lib/brandRoutes";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
