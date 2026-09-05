@@ -1,11 +1,9 @@
 /**
  * Resolução única de marca (Descubra MS x Guatá Labs) e montagem de links.
  *
- * Ordem de decisão:
- *  1. Domínio próprio (descubrams.com / viajartur.com|guatalabs.com) → marca definida,
- *     e as URLs ficam SEM prefixo (`/passaporte`, `/parceiros`, ...).
- *  2. Domínio compartilhado (preview da Lovable, localhost, vercel.app) → a marca é
- *     definida pelo prefixo do caminho, que continua existindo para poder alternar.
+ * Regra: os caminhos SEMPRE levam o prefixo da marca (`/descubrams`, `/viajar`),
+ * em qualquer domínio. O domínio próprio serve apenas para redirecionar a raiz
+ * (`descubrams.com/` → `/descubrams`, `guatalabs.com/` → `/viajar`).
  */
 
 export type Brand = "ms" | "labs";
