@@ -33,14 +33,8 @@ import "@/services/events/IntelligentEventActivator";
 // Importar utilitário centralizado de log seguro
 import { safeLog } from "@/utils/safeLog";
 import { initSupabaseInterceptor } from "@/utils/supabaseInterceptor";
-import { useDomainValidation } from "@/hooks/useDomainValidation";
 import { isViajarTestLoginEnabled } from "@/utils/viajarTestLogin";
-import {
-  brandFromHost,
-  stripBrandPrefix,
-  MS_PREFIX,
-  LABS_PREFIX,
-} from "@/lib/brandRoutes";
+import { brandFromHost, MS_PREFIX, LABS_PREFIX } from "@/lib/brandRoutes";
 
 // Inicializar interceptor do Supabase para renovação automática de tokens
 initSupabaseInterceptor();
