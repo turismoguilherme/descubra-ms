@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import UserMenu from "./UserMenu";
 import { LanguageSelector } from "./LanguageSelector";
 import { useBrand } from "@/context/BrandContext";
+import { withBrandPath } from "@/lib/brandRoutes";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,32 +28,11 @@ const Navbar = () => {
     // BrandContext não disponível, usar fallback
   }
   
-  // Detectar tenant do path atual
-  const pathSegments = location.pathname.split('/').filter(Boolean);
-  const currentTenant = pathSegments[0]; // 'ms', 'descubramatogrossodosul', etc.
+  // A Navbar é usada nas páginas do Descubra MS: links sempre com o prefixo da marca
+  const getPathWithTenant = (path: string) => withBrandPath(path, "ms");
+
+  const isActivePath = (path: string) => location.pathname === getPathWithTenant(path);
   
-  // Verificar se é um path do Descubra MS (aceita 'ms' ou 'descubramatogrossodosul')
-  const isDescubraMS = currentTenant === 'descubramatogrossodosul' || currentTenant === 'ms';
-  // Aceita também outros tenants de 2 caracteres para compatibilidade
-  const isTenantPath = isDescubraMS || (currentTenant && currentTenant.length === 2);
-  
-  console.log("🏛️ NAVBAR: Tenant detectado:", currentTenant, "isTenantPath:", isTenantPath, "isDescubraMS:", isDescubraMS);
-  
-  const isActivePath = (path: string) => {
-    // Considerar tenant no path ativo
-    // Para Descubra MS, usar sempre 'descubramatogrossodosul' como prefixo
-    const tenantPrefix = isDescubraMS ? 'descubramatogrossodosul' : currentTenant;
-    const fullPath = isTenantPath ? `/${tenantPrefix}${path}` : path;
-    return location.pathname === fullPath;
-  };
-  
-  const getPathWithTenant = (path: string) => {
-    // Para Descubra MS, usar sempre 'descubramatogrossodosul' como prefixo
-    if (isDescubraMS) {
-      return `/descubrams${path}`;
-    }
-    return isTenantPath ? `/${currentTenant}${path}` : path;
-  };
   
   const navItems = [{
     nameKey: "nav.home",
