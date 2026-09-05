@@ -61,17 +61,11 @@ export function resolveBrand(hostname?: string, pathname?: string): Brand {
   return brandFromHost(hostname) ?? brandFromPath(pathname) ?? "labs";
 }
 
-/** True quando as URLs devem ser servidas sem prefixo (domínio próprio). */
-export function isCleanUrlDomain(hostname?: string): boolean {
-  return brandFromHost(hostname) !== null;
-}
-
 /**
- * Prefixo a aplicar nos links da marca informada (vazio em domínio próprio).
- * `brand` padrão = marca efetiva do contexto atual.
+ * Prefixo a aplicar nos links da marca informada.
+ * O prefixo existe em TODOS os domínios; o domínio apenas define para onde a raiz redireciona.
  */
 export function brandPrefix(brand: Brand = resolveBrand()): string {
-  if (isCleanUrlDomain()) return "";
   return brand === "ms" ? MS_PREFIX : LABS_PREFIX;
 }
 
