@@ -166,22 +166,14 @@ const RedirectToMsLogin = () => {
   return <Navigate to={`${MS_PREFIX}/login${location.search}`} replace />;
 };
 
-// Em domínio próprio, o prefixo legado é redirecionado para a URL limpa
-const RedirectToCleanUrl = () => {
-  const location = useLocation();
-  const target = `${stripBrandPrefix(location.pathname)}${location.search}${location.hash}`;
-  return <Navigate to={target} replace />;
-};
-
 // Componente interno que usa useLocation (deve estar dentro do Router)
 function AppRoutes() {
   const location = useLocation();
 
   // Marca definida pelo domínio próprio (null em preview/localhost/vercel)
   const hostBrand = brandFromHost();
-  const cleanUrls = hostBrand !== null;
 
-  // Em domínio compartilhado, o prefixo do caminho continua decidindo a marca
+  // O prefixo do caminho sempre decide a marca, em qualquer domínio
   const pathIsMS =
     location.pathname === MS_PREFIX ||
     location.pathname.startsWith(`${MS_PREFIX}/`) ||
@@ -189,8 +181,17 @@ function AppRoutes() {
     location.pathname === '/ms' ||
     location.pathname.startsWith('/ms/');
 
-  const showMS = hostBrand === 'ms' || (!cleanUrls && pathIsMS);
-  const showViajar = hostBrand === 'labs' || (!cleanUrls && !pathIsMS);
+  // Na raiz do domínio próprio, redireciona para o prefixo da marca
+  const rootRedirect =
+    location.pathname === '/' && hostBrand
+      ? hostBrand === 'ms'
+        ? MS_PREFIX
+        : LABS_PREFIX
+      : null;
+
+  const showMS = pathIsMS || (hostBrand === 'ms' && !!rootRedirect);
+  const showViajar = !showMS;
+
 
 
   return (
