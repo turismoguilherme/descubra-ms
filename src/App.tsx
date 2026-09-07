@@ -189,15 +189,22 @@ function AppRoutes() {
   // Link de redefinição de senha que caiu em outra página (ex.: raiz do site):
   // encaminha para a tela de nova senha preservando os tokens do Supabase.
   const rawHash = typeof window !== 'undefined' ? window.location.hash : '';
+  const searchParams = new URLSearchParams(location.search);
+  const isBrandRoot =
+    location.pathname === '/' || location.pathname === MS_PREFIX || location.pathname === LABS_PREFIX;
   const isRecoveryLink =
     location.pathname !== '/reset-password' &&
     (rawHash.includes('type=recovery') ||
-      new URLSearchParams(location.search).get('type') === 'recovery');
+      searchParams.get('type') === 'recovery' ||
+      (isBrandRoot && !!searchParams.get('code')));
 
   if (isRecoveryLink) {
     const brandParam = showMS ? 'ms' : 'guata-labs';
-    return <Navigate to={`/reset-password?brand=${brandParam}${rawHash}`} replace />;
+    const code = searchParams.get('code');
+    const codeParam = code ? `&code=${encodeURIComponent(code)}` : '';
+    return <Navigate to={`/reset-password?brand=${brandParam}${codeParam}${rawHash}`} replace />;
   }
+
 
   // Raiz do domínio próprio → prefixo da marca
   if (rootRedirect) {
