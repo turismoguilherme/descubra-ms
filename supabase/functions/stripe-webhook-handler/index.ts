@@ -42,6 +42,7 @@ serve(async (req) => {
         throw new Error('STRIPE_WEBHOOK_SECRET não configurado');
       }
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      console.log('Stripe webhook recebido:', event.type, event.id);
     } catch (err: any) {
       console.error('Erro ao validar webhook:', err.message);
       return new Response(JSON.stringify({ error: `Webhook Error: ${err.message}` }), {

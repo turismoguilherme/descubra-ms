@@ -40,3 +40,9 @@ otp_expiry = 86400
 
 [auth.sms]
 enable_signup = false
+
+[functions.stripe-webhook-handler]
+verify_jwt = false
+
+[functions.partner-account-reset]
+verify_jwt = false
