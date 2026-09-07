@@ -349,36 +349,46 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
             throw new Error(`Erro ao criar conta: ${authError.message}`);
           }
 
-          console.log('🔄 [PartnerApplicationForm] Email já existe no Auth, verificando parceria ativa...');
+          console.log('🔄 [PartnerApplicationForm] Email já existe no Auth, verificando parceria...');
 
-          // Existe parceria ativa/pendente com esse e-mail? Então é duplicidade real.
-          const { data: existingPartner } = await supabase
-            .from('institutional_partners')
-            .select('id, name, contact_email, status')
-            .ilike('contact_email', normalizedEmail)
-            .maybeSingle();
+          // Se não há parceria vinculada, a conta antiga é removida e recriada com a nova senha.
+          const { data: resetData, error: resetError } = await supabase.functions.invoke(
+            'partner-account-reset',
+            { body: { email: normalizedEmail } },
+          );
 
-          if (existingPartner) {
-            throw new Error(
-              'Já existe uma solicitação de parceria com este e-mail. Faça login na Área do Parceiro ou fale com a equipe Descubra MS.',
-            );
+          const resetMessage =
+            (resetData as { message?: string } | null)?.message ||
+            'Já existe uma solicitação de parceria com este e-mail. Faça login na Área do Parceiro ou fale com a equipe Descubra MS.';
+
+          if (resetError || !(resetData as { reset?: boolean } | null)) {
+            throw new Error(resetMessage);
           }
 
-          // A conta de acesso continua existindo, mas a parceria foi excluída.
-          // Reaproveitamos a conta: autenticamos com a senha informada e seguimos o cadastro.
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          if ((resetData as { reset?: boolean }).reset === false &&
+              (resetData as { reason?: string }).reason !== 'no_account') {
+            throw new Error(resetMessage);
+          }
+
+          // Conta antiga liberada: cria novamente com a senha informada agora.
+          const { data: retryAuth, error: retryError } = await supabase.auth.signUp({
             email: normalizedEmail,
             password: data.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/descubrams/partner/login`,
+            },
           });
 
-          if (signInError || !signInData?.user?.id) {
+          if (retryError || !retryAuth?.user?.id) {
             throw new Error(
-              'Este e-mail já possui uma conta de acesso na plataforma. Informe a senha dessa conta para reaproveitá-la ou use "Esqueceu sua senha?" na Área do Parceiro para redefini-la e continuar o cadastro.',
+              retryError?.message ||
+                'Não foi possível criar a conta com este e-mail. Tente novamente em alguns minutos.',
             );
           }
 
-          authUserId = signInData.user.id;
-          console.log('✅ [PartnerApplicationForm] Conta existente reaproveitada para o novo cadastro');
+          authUserId = retryAuth.user.id;
+          console.log('✅ [PartnerApplicationForm] Conta recriada para o novo cadastro');
+
         } else {
           authUserId = authData?.user?.id || null;
           console.log('✅ [PartnerApplicationForm] Conta criada com sucesso');

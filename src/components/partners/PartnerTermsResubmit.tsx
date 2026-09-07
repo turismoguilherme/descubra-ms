@@ -88,9 +88,15 @@ export default function PartnerTermsResubmit({
     const { error } = await supabase.storage.from('documents').upload(fileName, uploadedPdf, {
       contentType: 'application/pdf',
     });
-    if (error) return '';
+    if (error) {
+      console.error('Erro upload PDF assinado:', error);
+      throw new Error(`Não foi possível enviar o PDF assinado: ${error.message}`);
+    }
     const { data } = supabase.storage.from('documents').getPublicUrl(fileName);
-    return data?.publicUrl || '';
+    if (!data?.publicUrl) {
+      throw new Error('O PDF foi enviado, mas não foi possível gerar o link do arquivo.');
+    }
+    return data.publicUrl;
   };
 
   const handleSubmit = async () => {
@@ -109,7 +115,6 @@ export default function PartnerTermsResubmit({
         /* ignore */
       }
       const uploadedPdfUrl = await uploadSignedPdf();
-      if (!uploadedPdfUrl) throw new Error('Falha ao enviar o PDF.');
 
       let pdfUrl = '';
       try {

@@ -1,7 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
-import { corsHeaders } from '../_shared/cors.ts';
+
+// Webhook: a chamada vem dos servidores do Stripe (nunca do navegador),
+// portanto não usamos CORS aqui — apenas JSON simples.
+const jsonHeaders = { 'Content-Type': 'application/json' };
+const corsHeaders = jsonHeaders;
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
   apiVersion: '2025-12-15.clover',
@@ -11,13 +15,17 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || '';
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      headers: jsonHeaders,
+      status: 405,
+    });
   }
 
   try {
     const signature = req.headers.get('stripe-signature');
     const body = await req.text();
+
     
     if (!signature) {
       return new Response(JSON.stringify({ error: 'Missing stripe signature' }), {
@@ -34,6 +42,7 @@ serve(async (req) => {
         throw new Error('STRIPE_WEBHOOK_SECRET não configurado');
       }
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      console.log('Stripe webhook recebido:', event.type, event.id);
     } catch (err: any) {
       console.error('Erro ao validar webhook:', err.message);
       return new Response(JSON.stringify({ error: `Webhook Error: ${err.message}` }), {

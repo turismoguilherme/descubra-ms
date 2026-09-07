@@ -13,8 +13,8 @@ port = 54323
 
 [auth]
 enabled = true
-site_url = "http://localhost:3000"
-additional_redirect_urls = ["https://670105f7-06c6-4b08-bcbc-08cdf03b5546.lovableproject.com/**", "https://descubra-ms.lovable.app/**", "https://id-preview--670105f7-06c6-4b08-bcbc-08cdf03b5546.lovable.app/**", "https://preview--descubra-ms.lovable.app/**", "http://localhost:3000", "http://localhost:3000/*"]
+site_url = "https://viajartur.com"
+additional_redirect_urls = ["https://viajartur.com/**", "https://www.viajartur.com/**", "https://guatalabs.com/**", "https://www.guatalabs.com/**", "https://descubrams.com/**", "https://www.descubrams.com/**", "https://descubra-ms.vercel.app/**", "https://descubra-ms.lovable.app/**", "https://id-preview--670105f7-06c6-4b08-bcbc-08cdf03b5546.lovable.app/**", "https://preview--descubra-ms.lovable.app/**", "https://670105f7-06c6-4b08-bcbc-08cdf03b5546.lovableproject.com/**", "http://localhost:8080/**", "http://localhost:3000/**"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10
@@ -40,3 +40,9 @@ otp_expiry = 86400
 
 [auth.sms]
 enable_signup = false
+
+[functions.stripe-webhook-handler]
+verify_jwt = false
+
+[functions.partner-account-reset]
+verify_jwt = false
