@@ -186,10 +186,24 @@ function AppRoutes() {
   const showMS = pathIsMS || hostBrand === 'ms';
   const showViajar = !showMS;
 
+  // Link de redefinição de senha que caiu em outra página (ex.: raiz do site):
+  // encaminha para a tela de nova senha preservando os tokens do Supabase.
+  const rawHash = typeof window !== 'undefined' ? window.location.hash : '';
+  const isRecoveryLink =
+    location.pathname !== '/reset-password' &&
+    (rawHash.includes('type=recovery') ||
+      new URLSearchParams(location.search).get('type') === 'recovery');
+
+  if (isRecoveryLink) {
+    const brandParam = showMS ? 'ms' : 'guata-labs';
+    return <Navigate to={`/reset-password?brand=${brandParam}${rawHash}`} replace />;
+  }
+
   // Raiz do domínio próprio → prefixo da marca
   if (rootRedirect) {
     return <Navigate to={rootRedirect} replace />;
   }
+
 
 
 
