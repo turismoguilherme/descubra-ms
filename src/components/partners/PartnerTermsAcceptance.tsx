@@ -80,19 +80,19 @@ export default function PartnerTermsAcceptance({
 
   const uploadSignedPdf = async (): Promise<string> => {
     if (!uploadedPdf) return '';
-    try {
-      const fileName = `partner-terms-uploaded/${partnerId}-${Date.now()}.pdf`;
-      const { error } = await supabase.storage.from('documents').upload(fileName, uploadedPdf, { contentType: 'application/pdf' });
-      if (error) {
-        console.error('Erro upload PDF assinado:', error);
-        return '';
-      }
-      const { data } = supabase.storage.from('documents').getPublicUrl(fileName);
-      return data?.publicUrl || '';
-    } catch (err) {
-      console.error('Erro upload PDF assinado:', err);
-      return '';
+    const fileName = `partner-terms-uploaded/${partnerId}-${Date.now()}.pdf`;
+    const { error } = await supabase.storage
+      .from('documents')
+      .upload(fileName, uploadedPdf, { contentType: 'application/pdf' });
+    if (error) {
+      console.error('Erro upload PDF assinado:', error);
+      throw new Error(`Não foi possível enviar o PDF assinado: ${error.message}`);
     }
+    const { data } = supabase.storage.from('documents').getPublicUrl(fileName);
+    if (!data?.publicUrl) {
+      throw new Error('O PDF foi enviado, mas não foi possível gerar o link do arquivo.');
+    }
+    return data.publicUrl;
   };
 
   const handleAcceptTerms = async () => {
@@ -115,9 +115,6 @@ export default function PartnerTermsAcceptance({
       } catch { /* ignore */ }
 
       const uploadedPdfUrl = await uploadSignedPdf();
-      if (!uploadedPdfUrl) {
-        throw new Error('Falha ao enviar o PDF assinado. Tente novamente.');
-      }
 
       let pdfUrl = '';
       try {
