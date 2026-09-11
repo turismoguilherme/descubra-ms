@@ -39,6 +39,7 @@ export default function StripeConnectStep({
   const [checking, setChecking] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   // Verificar se já está conectado
   useEffect(() => {
@@ -141,6 +142,7 @@ export default function StripeConnectStep({
 
   const handleConnectStripe = async () => {
     setLoading(true);
+    setConnectError(null);
     try {
       // Chamar Edge Function para criar link de onboarding
       const { data, error } = await invokeStripeConnectOnboarding({
@@ -164,9 +166,11 @@ export default function StripeConnectStep({
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao iniciar Stripe Connect:', err);
+      const message = err.message || 'Não foi possível iniciar a conexão com o Stripe.';
+      setConnectError(message);
       toast({
         title: 'Erro ao conectar',
-        description: err.message || 'Não foi possível iniciar a conexão com o Stripe.',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -211,6 +215,14 @@ export default function StripeConnectStep({
           <AlertDescription className="text-amber-700">
             Para receber pagamentos de reservas diretamente, você precisa conectar uma conta Stripe.
           </AlertDescription>
+        </Alert>
+      )}
+
+      {connectError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle>Não foi possível iniciar a conexão</AlertTitle>
+          <AlertDescription className="break-words">{connectError}</AlertDescription>
         </Alert>
       )}
 

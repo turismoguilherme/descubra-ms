@@ -142,7 +142,7 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
 
     if (error) {
       console.error('Erro ao fazer upload do logo:', error);
-      return null;
+      throw new Error(`Não foi possível enviar a logo: ${error.message}`);
     }
 
     const { data: urlData } = supabase.storage
@@ -166,7 +166,9 @@ export default function PartnerBusinessEditor({ partnerId, onUpdate }: PartnerBu
 
       if (error) {
         console.error('Erro ao fazer upload:', error);
-        continue;
+        throw new Error(
+          `Não foi possível enviar a imagem "${file.name}": ${error.message}`,
+        );
       }
 
       const { data: urlData } = supabase.storage

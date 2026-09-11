@@ -292,7 +292,8 @@ export default function FooterSettingsManager() {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  const BUCKET_NAME = 'site-assets';
+  // Usa o bucket público de imagens já existente no projeto
+  const BUCKET_NAME = 'tourism-images';
   const currentPlatform = activeTab;
 
   // Função para upload de logo
@@ -312,14 +313,6 @@ export default function FooterSettingsManager() {
         });
 
       if (uploadError) {
-        if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
-          toast({
-            title: 'Aviso',
-            description: 'Bucket de imagens não encontrado. Você pode usar uma URL manualmente.',
-            variant: 'default',
-          });
-          return null;
-        }
         throw uploadError;
       }
 
