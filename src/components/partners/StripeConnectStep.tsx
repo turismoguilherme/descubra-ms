@@ -141,6 +141,7 @@ export default function StripeConnectStep({
 
   const handleConnectStripe = async () => {
     setLoading(true);
+    setConnectError(null);
     try {
       // Chamar Edge Function para criar link de onboarding
       const { data, error } = await invokeStripeConnectOnboarding({
