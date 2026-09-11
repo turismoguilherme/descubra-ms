@@ -290,7 +290,9 @@ export const PartnerApplicationForm = ({ onComplete, includePassword = false }: 
 
       if (error) {
         console.error('Erro ao fazer upload:', error);
-        continue;
+        throw new Error(
+          `Não foi possível enviar a imagem "${file.name}": ${error.message}`,
+        );
       }
 
       const { data: urlData } = supabase.storage
