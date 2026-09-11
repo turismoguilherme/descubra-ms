@@ -24,6 +24,25 @@ serve(async (req) => {
     // Verificar autenticação
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      // Registrar também esta saída antecipada, para que qualquer tentativa real
+      // fique rastreável em security_audit_log.
+      try {
+        const supabaseUrlEarly = Deno.env.get('SUPABASE_URL') || '';
+        const serviceKeyEarly = resolveServiceRoleKey() || '';
+        if (supabaseUrlEarly && serviceKeyEarly) {
+          await logSecurityEvent(createClient(supabaseUrlEarly, serviceKeyEarly), {
+            action: 'stripe_connect_missing_auth_header',
+            success: false,
+            errorMessage: 'Requisição sem header Authorization',
+            ipAddress: getClientIP(req),
+            userAgent: getClientUserAgent(req),
+            metadata: { endpoint: 'stripe-connect-onboarding', origin },
+          });
+        }
+      } catch (logErr) {
+        console.error('stripe-connect-onboarding: log segurança (sem auth)', logErr);
+      }
+
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { 

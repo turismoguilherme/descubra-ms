@@ -17,6 +17,8 @@ const getAllowedOrigins = (): string[] => {
     'https://viajartur.com',
     'https://descubrams.com',
     'https://www.descubrams.com',
+    'https://guatalabs.com',
+    'https://www.guatalabs.com',
     'https://descubra-ms.vercel.app',
     'https://*.vercel.app',
     // Lovable (preview e publicado)
