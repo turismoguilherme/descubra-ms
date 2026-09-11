@@ -194,14 +194,6 @@ export default function LogoEditor({ platform }: LogoEditorProps) {
         });
 
       if (uploadError) {
-        if (uploadError.message?.includes('not found') || uploadError.message?.includes('Bucket')) {
-          toast({
-            title: 'Aviso',
-            description: 'Bucket de imagens não encontrado. Você pode usar uma URL manualmente.',
-            variant: 'default',
-          });
-          return null;
-        }
         throw uploadError;
       }
 
