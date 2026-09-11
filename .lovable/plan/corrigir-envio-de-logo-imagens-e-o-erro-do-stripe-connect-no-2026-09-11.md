@@ -10,7 +10,9 @@ O que verifiquei no banco:
 
 Correções:
 
-1. Criar a regra de leitura da lista de depósitos para pessoas conectadas (e leitura pública apenas dos depósitos já públicos). Isso destrava os envios de imagem em todas as telas.
+1. Criar a regra de leitura da lista de depósitos para pessoas conectadas (e leitura pública 
+
+1. apenas dos depósitos já públicos). Isso destrava os envios de imagem em todas as telas.
 2. Criar o depósito `site-assets` (público, só imagens, até 10 MB) para a tela de rodapé.
 3. Ajustar as telas de envio para mostrar o motivo real da falha em vez de um aviso genérico, e só sugerir "usar uma URL" quando o problema for realmente ausência de depósito.
 4. Confirmar que o logo enviado no cadastro/edição do parceiro fica na pasta com o identificador do parceiro, que é o formato aceito pelas regras de permissão atuais.
@@ -27,9 +29,9 @@ Plano:
 
 1. Fazer a tela mostrar e registrar a mensagem real devolvida pelo Stripe (hoje várias falhas viram o mesmo texto genérico), incluindo o código do erro.
 2. Reproduzir a conexão com um parceiro de teste e ler o registro da função para identificar a causa exata. As hipóteses mais prováveis, todas visíveis nesse registro:
-   - o recurso de repasse a terceiros (Connect) não estar ativado na conta Stripe em modo produção;
-   - o cadastro do parceiro sem e-mail de contato ou com e-mail diferente do da conta de acesso;
-   - sessão expirada no momento do clique.
+  - o recurso de repasse a terceiros (Connect) não estar ativado na conta Stripe em modo produção;
+  - o cadastro do parceiro sem e-mail de contato ou com e-mail diferente do da conta de acesso;
+  - sessão expirada no momento do clique.
 3. Corrigir o ponto identificado. Se for configuração da conta Stripe, te digo exatamente onde clicar no painel do Stripe.
 
 ## 3. Avisos do Vercel sobre as chaves do Stripe
