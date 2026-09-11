@@ -218,6 +218,14 @@ export default function StripeConnectStep({
         </Alert>
       )}
 
+      {connectError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-5 w-5" />
+          <AlertTitle>Não foi possível iniciar a conexão</AlertTitle>
+          <AlertDescription className="break-words">{connectError}</AlertDescription>
+        </Alert>
+      )}
+
       {/* Benefícios */}
       {!isConnected && (
         <Card>
