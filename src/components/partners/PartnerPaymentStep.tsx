@@ -96,16 +96,18 @@ export default function PartnerPaymentStep({
 
     setLoading(true);
     try {
-      const hostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
-      const successBaseUrl = (hostname === 'viajartur.com' || hostname.includes('viajartur') || hostname === 'viajar.com')
-        ? 'https://descubrams.com'
-        : window.location.origin;
-      const successUrl = `${successBaseUrl}/descubrams/seja-um-parceiro/success?partner_id=${partnerId}&session_id={CHECKOUT_SESSION_ID}`;
+      // Payment Links do Stripe ignoram "after_completion" via querystring.
+      // O que o Stripe aceita é client_reference_id (devolvido na sessão) e prefilled_email.
+      // A página de retorno é configurada no painel do Stripe com apenas
+      // ?session_id={CHECKOUT_SESSION_ID} e a página de sucesso resolve o parceiro
+      // a partir do client_reference_id da sessão.
+      const params = new URLSearchParams();
+      params.set('client_reference_id', partnerId);
+      if (partnerEmail) params.set('prefilled_email', partnerEmail);
 
       const separator = paymentLink.includes('?') ? '&' : '?';
-      const paymentLinkWithRedirect = `${paymentLink}${separator}after_completion[redirect][url]=${encodeURIComponent(successUrl)}`;
+      window.location.href = `${paymentLink}${separator}${params.toString()}`;
 
-      window.location.href = paymentLinkWithRedirect;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       console.error('Erro ao processar pagamento:', err);

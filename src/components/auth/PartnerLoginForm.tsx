@@ -168,8 +168,8 @@ const PartnerLoginForm = () => {
             return;
           }
 
-          if (partner.status === 'cancelled' || !partner.is_active) {
-            console.log("⚠️ Parceiro encontrado mas inativo");
+          if (partner.status === 'cancelled') {
+            console.log("⚠️ Parceiro cancelado");
             toast({
               title: "Acesso negado",
               description: "Sua conta de parceiro está inativa. Entre em contato conosco se precisar de ajuda.",
@@ -178,6 +178,20 @@ const PartnerLoginForm = () => {
             });
             return;
           }
+
+          // Parceiro em processo de cadastro (ainda não ativado): permitir entrar e
+          // continuar o onboarding na etapa do Stripe Connect.
+          if (!partner.is_active) {
+            console.log("🔄 Parceiro em cadastro, redirecionando para continuar onboarding");
+            toast({
+              title: "Cadastro em andamento",
+              description: "Vamos continuar seu cadastro na etapa de recebimento de pagamentos.",
+              duration: 5000,
+            });
+            navigate(`/descubrams/seja-um-parceiro?step=4&partner_id=${partner.id}`);
+            return;
+          }
+
           
           console.log("🤝 LOGIN: Parceiro detectado, redirecionando para dashboard");
           toast({
