@@ -197,7 +197,7 @@ export default function PartnerSuccessPage() {
                 Acessar Dashboard
               </Button>
             </>
-          ) : partnerId === '{PARTNER_ID}' ? (
+          ) : isInvalidId(resolvedPartnerId) && isInvalidId(partnerId) ? (
             <>
               <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
               <CardTitle className="text-2xl font-bold text-gray-800 mb-2">
