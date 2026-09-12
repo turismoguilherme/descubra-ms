@@ -41,53 +41,83 @@ export default function PartnerSuccessPage() {
     checkPartnerStatus();
   }, [partnerId]);
 
+  const isInvalidId = (id: string | null) =>
+    !id || id === '{PARTNER_ID}' || id.trim() === '';
+
+  /** Busca o parceiro pelo e-mail informado (mais recente primeiro). */
+  const findPartnerIdByEmail = async (email?: string | null) => {
+    if (!email) return null;
+    const { data, error } = await supabase
+      .from('institutional_partners')
+      .select('id')
+      .eq('contact_email', email.trim().toLowerCase())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.warn('⚠️ [PartnerSuccessPage] Erro ao buscar parceiro por email:', error);
+      return null;
+    }
+    return data?.id ?? null;
+  };
+
+  /** Resolve o parceiro a partir da sessão de pagamento do Stripe. */
+  const resolveFromStripeSession = async () => {
+    if (!sessionId || sessionId === '{CHECKOUT_SESSION_ID}') return null;
+    try {
+      const { data, error } = await supabase.functions.invoke('get-stripe-session', {
+        body: { session_id: sessionId },
+      });
+      if (error) {
+        console.warn('⚠️ [PartnerSuccessPage] get-stripe-session falhou:', error);
+        return null;
+      }
+      const session = data?.session;
+      if (!session) return null;
+
+      if (!isInvalidId(session.client_reference_id)) {
+        console.log('✅ [PartnerSuccessPage] Parceiro via client_reference_id');
+        return session.client_reference_id as string;
+      }
+      return await findPartnerIdByEmail(session.customer_email);
+    } catch (err) {
+      console.warn('⚠️ [PartnerSuccessPage] Erro ao consultar sessão do Stripe:', err);
+      return null;
+    }
+  };
+
   const checkPartnerStatus = async () => {
-    let partnerIdToUse = partnerId;
-    
-    // Validar se partner_id existe e não é o placeholder literal
-    const isInvalidPartnerId = !partnerIdToUse || partnerIdToUse === '{PARTNER_ID}' || partnerIdToUse.trim() === '';
-    
-    if (isInvalidPartnerId) {
-      console.warn('⚠️ [PartnerSuccessPage] partner_id inválido ou não fornecido, tentando buscar por email:', partnerId);
-      
-      // Tentar buscar parceiro pelo email do usuário autenticado
-      try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (user?.email) {
-          console.log('🔍 [PartnerSuccessPage] Buscando parceiro por email:', user.email);
-          
-          const { data: partnerData, error: emailError } = await supabase
-            .from('institutional_partners')
-            .select('id, status, is_active')
-            .eq('contact_email', user.email)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          
-          if (!emailError && partnerData) {
-            console.log('✅ [PartnerSuccessPage] Parceiro encontrado por email:', partnerData.id);
-            partnerIdToUse = partnerData.id;
-            resolvedPartnerIdRef.current = partnerData.id;
-            setResolvedPartnerId(partnerData.id);
-          } else {
-            console.warn('⚠️ [PartnerSuccessPage] Nenhum parceiro encontrado com email:', user.email);
-          }
-        } else {
-          console.warn('⚠️ [PartnerSuccessPage] Usuário não autenticado ou sem email');
+    let partnerIdToUse: string | null = partnerId;
+
+    if (isInvalidId(partnerIdToUse)) {
+      console.warn('⚠️ [PartnerSuccessPage] partner_id ausente, resolvendo pela sessão do Stripe');
+
+      partnerIdToUse = await resolveFromStripeSession();
+
+      // Último fallback: e-mail do usuário autenticado (se houver sessão)
+      if (isInvalidId(partnerIdToUse)) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          partnerIdToUse = await findPartnerIdByEmail(user?.email);
+        } catch (err) {
+          console.warn('⚠️ [PartnerSuccessPage] Sem sessão para fallback por email:', err);
         }
-      } catch (emailSearchError) {
-        console.error('❌ [PartnerSuccessPage] Erro ao buscar parceiro por email:', emailSearchError);
+      }
+
+      if (!isInvalidId(partnerIdToUse)) {
+        resolvedPartnerIdRef.current = partnerIdToUse;
+        setResolvedPartnerId(partnerIdToUse);
       }
     }
 
     // Se ainda não tiver partner_id válido, mostrar como pendente
-    if (!partnerIdToUse || partnerIdToUse === '{PARTNER_ID}' || partnerIdToUse.trim() === '') {
+    if (isInvalidId(partnerIdToUse)) {
       console.warn('⚠️ [PartnerSuccessPage] Não foi possível identificar o parceiro');
       setLoading(false);
       setPartnerStatus('pending');
       return;
     }
+
 
     resolvedPartnerIdRef.current = partnerIdToUse;
     setResolvedPartnerId(partnerIdToUse);
