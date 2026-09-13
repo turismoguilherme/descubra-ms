@@ -331,7 +331,7 @@ export default function StripeConnectStep({
           Voltar
         </Button>
 
-        {!isConnected ? (
+        {!isConnected && !isUnderReview ? (
           <>
             <Button
               onClick={handleConnectStripe}
@@ -363,13 +363,26 @@ export default function StripeConnectStep({
             )}
           </>
         ) : (
-          <Button
-            onClick={handleContinue}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-          >
-            <CheckCircle2 className="w-5 h-5" />
-            Continuar
-          </Button>
+          <>
+            <Button
+              onClick={handleContinue}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              Continuar
+            </Button>
+            {isUnderReview && (
+              <Button
+                variant="outline"
+                onClick={handleConnectStripe}
+                disabled={loading}
+                className="flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                Revisar dados no Stripe
+              </Button>
+            )}
+          </>
         )}
       </div>
 
