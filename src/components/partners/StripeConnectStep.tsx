@@ -38,6 +38,7 @@ export default function StripeConnectStep({
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [isUnderReview, setIsUnderReview] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
 
@@ -46,15 +47,22 @@ export default function StripeConnectStep({
     checkConnectionStatus();
   }, [partnerId]);
 
+  /** Remove apenas os parâmetros do Stripe, preservando step/partner_id da URL. */
+  const clearStripeParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    params.delete('stripe_connect');
+    const query = params.toString();
+    window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+  };
+
   // Verificar parâmetros da URL (callback do Stripe)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const stripeSuccess = urlParams.get('stripe_connect');
-    
-    if (stripeSuccess === 'success') {
-      // Limpar parâmetros da URL
-      window.history.replaceState({}, '', window.location.pathname);
-      
+
+    if (stripeSuccess === 'success' || stripeSuccess === 'refresh') {
+      clearStripeParams();
+
       // Chamar callback para verificar status atualizado
       const verifyConnection = async () => {
         try {
@@ -83,18 +91,16 @@ export default function StripeConnectStep({
           console.warn('Erro ao verificar conexão:', error);
           // Continuar mesmo se falhar
         }
-        
+
         // Verificar status atualizado no banco (com delay para dar tempo do webhook)
         setTimeout(() => {
-          checkConnectionStatus();
-        }, 2000);
+          checkConnectionStatus(true);
+        }, 1500);
       };
 
       verifyConnection();
-      
-      // Toast será mostrado após verificação do status
     } else if (stripeSuccess === 'error') {
-      window.history.replaceState({}, '', window.location.pathname);
+      clearStripeParams();
       toast({
         title: 'Erro na conexão',
         description: 'Houve um problema ao conectar sua conta Stripe. Tente novamente.',
@@ -103,7 +109,7 @@ export default function StripeConnectStep({
     }
   }, [partnerId]);
 
-  const checkConnectionStatus = async () => {
+  const checkConnectionStatus = async (justReturned = false) => {
     setChecking(true);
     try {
       const { data, error } = await supabase
@@ -117,21 +123,27 @@ export default function StripeConnectStep({
         return;
       }
 
-      if (data?.stripe_account_id && data?.stripe_connect_status === 'connected') {
-        setIsConnected(true);
-        setStripeAccountId(data.stripe_account_id);
-        
-        // Se acabou de conectar (veio do callback), mostrar toast
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('stripe_connect') === 'success') {
-          toast({
-            title: '✅ Conta Stripe conectada!',
-            description: 'Você está pronto para receber pagamentos.',
-          });
-        }
-      } else {
-        // Garantir que isConnected seja false se não estiver realmente conectado
-        setIsConnected(false);
+      const accountId = data?.stripe_account_id ?? null;
+      const status = data?.stripe_connect_status ?? null;
+      setStripeAccountId(accountId);
+
+      const connected = !!accountId && status === 'connected';
+      // Cadastro enviado ao Stripe e aguardando liberação/análise
+      const underReview = !!accountId && !connected && (status === 'restricted' || status === 'pending_verification');
+
+      setIsConnected(connected);
+      setIsUnderReview(underReview);
+
+      if (justReturned && connected) {
+        toast({
+          title: '✅ Conta Stripe conectada!',
+          description: 'Você está pronto para receber pagamentos.',
+        });
+      } else if (justReturned && underReview) {
+        toast({
+          title: 'Cadastro enviado ao Stripe',
+          description: 'O Stripe está analisando seus dados. Você já pode continuar.',
+        });
       }
     } catch (error) {
       console.error('Erro:', error);
@@ -149,8 +161,8 @@ export default function StripeConnectStep({
         partnerId,
         partnerEmail,
         partnerName,
-        returnUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=success`,
-        refreshUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=refresh`,
+        returnUrl: `${window.location.origin}/descubrams/seja-um-parceiro?step=4&partner_id=${partnerId}&stripe_connect=success`,
+        refreshUrl: `${window.location.origin}/descubrams/seja-um-parceiro?step=4&partner_id=${partnerId}&stripe_connect=refresh`,
       });
 
       if (error) {
@@ -179,7 +191,7 @@ export default function StripeConnectStep({
   };
 
   const handleContinue = () => {
-    if (isConnected) {
+    if (isConnected || isUnderReview) {
       onComplete();
     } else if (onSkip) {
       onSkip();
@@ -208,6 +220,17 @@ export default function StripeConnectStep({
             <span className="text-xs text-green-600">ID: {stripeAccountId}</span>
           </AlertDescription>
         </Alert>
+      ) : isUnderReview ? (
+        <Alert className="border-blue-200 bg-blue-50">
+          <Clock className="h-5 w-5 text-blue-600" />
+          <AlertTitle className="text-blue-800">Cadastro enviado — em análise pelo Stripe</AlertTitle>
+          <AlertDescription className="text-blue-700">
+            Recebemos seu cadastro e o Stripe está verificando seus dados. Você já pode continuar; avisaremos quando a
+            liberação for concluída.
+            <br />
+            <span className="text-xs text-blue-600">ID: {stripeAccountId}</span>
+          </AlertDescription>
+        </Alert>
       ) : (
         <Alert className="border-amber-200 bg-amber-50">
           <AlertCircle className="h-5 w-5 text-amber-600" />
@@ -227,7 +250,7 @@ export default function StripeConnectStep({
       )}
 
       {/* Benefícios */}
-      {!isConnected && (
+      {!isConnected && !isUnderReview && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -308,7 +331,7 @@ export default function StripeConnectStep({
           Voltar
         </Button>
 
-        {!isConnected ? (
+        {!isConnected && !isUnderReview ? (
           <>
             <Button
               onClick={handleConnectStripe}
@@ -340,13 +363,26 @@ export default function StripeConnectStep({
             )}
           </>
         ) : (
-          <Button
-            onClick={handleContinue}
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-          >
-            <CheckCircle2 className="w-5 h-5" />
-            Continuar
-          </Button>
+          <>
+            <Button
+              onClick={handleContinue}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+              Continuar
+            </Button>
+            {isUnderReview && (
+              <Button
+                variant="outline"
+                onClick={handleConnectStripe}
+                disabled={loading}
+                className="flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                Revisar dados no Stripe
+              </Button>
+            )}
+          </>
         )}
       </div>
 
