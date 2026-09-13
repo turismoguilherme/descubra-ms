@@ -47,15 +47,22 @@ export default function StripeConnectStep({
     checkConnectionStatus();
   }, [partnerId]);
 
+  /** Remove apenas os parâmetros do Stripe, preservando step/partner_id da URL. */
+  const clearStripeParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    params.delete('stripe_connect');
+    const query = params.toString();
+    window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+  };
+
   // Verificar parâmetros da URL (callback do Stripe)
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const stripeSuccess = urlParams.get('stripe_connect');
-    
-    if (stripeSuccess === 'success') {
-      // Limpar parâmetros da URL
-      window.history.replaceState({}, '', window.location.pathname);
-      
+
+    if (stripeSuccess === 'success' || stripeSuccess === 'refresh') {
+      clearStripeParams();
+
       // Chamar callback para verificar status atualizado
       const verifyConnection = async () => {
         try {
@@ -84,18 +91,16 @@ export default function StripeConnectStep({
           console.warn('Erro ao verificar conexão:', error);
           // Continuar mesmo se falhar
         }
-        
+
         // Verificar status atualizado no banco (com delay para dar tempo do webhook)
         setTimeout(() => {
-          checkConnectionStatus();
-        }, 2000);
+          checkConnectionStatus(true);
+        }, 1500);
       };
 
       verifyConnection();
-      
-      // Toast será mostrado após verificação do status
     } else if (stripeSuccess === 'error') {
-      window.history.replaceState({}, '', window.location.pathname);
+      clearStripeParams();
       toast({
         title: 'Erro na conexão',
         description: 'Houve um problema ao conectar sua conta Stripe. Tente novamente.',
