@@ -191,7 +191,7 @@ export default function StripeConnectStep({
   };
 
   const handleContinue = () => {
-    if (isConnected) {
+    if (isConnected || isUnderReview) {
       onComplete();
     } else if (onSkip) {
       onSkip();
@@ -218,6 +218,17 @@ export default function StripeConnectStep({
             Sua conta Stripe está configurada e você pode receber pagamentos de reservas.
             <br />
             <span className="text-xs text-green-600">ID: {stripeAccountId}</span>
+          </AlertDescription>
+        </Alert>
+      ) : isUnderReview ? (
+        <Alert className="border-blue-200 bg-blue-50">
+          <Clock className="h-5 w-5 text-blue-600" />
+          <AlertTitle className="text-blue-800">Cadastro enviado — em análise pelo Stripe</AlertTitle>
+          <AlertDescription className="text-blue-700">
+            Recebemos seu cadastro e o Stripe está verificando seus dados. Você já pode continuar; avisaremos quando a
+            liberação for concluída.
+            <br />
+            <span className="text-xs text-blue-600">ID: {stripeAccountId}</span>
           </AlertDescription>
         </Alert>
       ) : (
