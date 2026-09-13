@@ -250,7 +250,7 @@ export default function StripeConnectStep({
       )}
 
       {/* Benefícios */}
-      {!isConnected && (
+      {!isConnected && !isUnderReview && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
