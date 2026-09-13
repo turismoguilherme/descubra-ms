@@ -38,6 +38,7 @@ export default function StripeConnectStep({
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [isUnderReview, setIsUnderReview] = useState(false);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
 
