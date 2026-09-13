@@ -161,8 +161,8 @@ export default function StripeConnectStep({
         partnerId,
         partnerEmail,
         partnerName,
-        returnUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=success`,
-        refreshUrl: `${window.location.origin}/descubrams/seja-um-parceiro?stripe_connect=refresh`,
+        returnUrl: `${window.location.origin}/descubrams/seja-um-parceiro?step=4&partner_id=${partnerId}&stripe_connect=success`,
+        refreshUrl: `${window.location.origin}/descubrams/seja-um-parceiro?step=4&partner_id=${partnerId}&stripe_connect=refresh`,
       });
 
       if (error) {
