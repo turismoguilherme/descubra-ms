@@ -104,7 +104,7 @@ export default function StripeConnectStep({
     }
   }, [partnerId]);
 
-  const checkConnectionStatus = async () => {
+  const checkConnectionStatus = async (justReturned = false) => {
     setChecking(true);
     try {
       const { data, error } = await supabase
@@ -118,21 +118,27 @@ export default function StripeConnectStep({
         return;
       }
 
-      if (data?.stripe_account_id && data?.stripe_connect_status === 'connected') {
-        setIsConnected(true);
-        setStripeAccountId(data.stripe_account_id);
-        
-        // Se acabou de conectar (veio do callback), mostrar toast
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('stripe_connect') === 'success') {
-          toast({
-            title: '✅ Conta Stripe conectada!',
-            description: 'Você está pronto para receber pagamentos.',
-          });
-        }
-      } else {
-        // Garantir que isConnected seja false se não estiver realmente conectado
-        setIsConnected(false);
+      const accountId = data?.stripe_account_id ?? null;
+      const status = data?.stripe_connect_status ?? null;
+      setStripeAccountId(accountId);
+
+      const connected = !!accountId && status === 'connected';
+      // Cadastro enviado ao Stripe e aguardando liberação/análise
+      const underReview = !!accountId && !connected && (status === 'restricted' || status === 'pending_verification');
+
+      setIsConnected(connected);
+      setIsUnderReview(underReview);
+
+      if (justReturned && connected) {
+        toast({
+          title: '✅ Conta Stripe conectada!',
+          description: 'Você está pronto para receber pagamentos.',
+        });
+      } else if (justReturned && underReview) {
+        toast({
+          title: 'Cadastro enviado ao Stripe',
+          description: 'O Stripe está analisando seus dados. Você já pode continuar.',
+        });
       }
     } catch (error) {
       console.error('Erro:', error);
