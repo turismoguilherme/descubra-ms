@@ -600,16 +600,12 @@ export default function PartnerDashboard() {
                 )}
 
               {/* Banner: Parceiro Bloqueado (Inadimplente) */}
-              {partner && (
-                (!partner.is_active || 
-                 partner.subscription_status === 'past_due' || 
-                 partner.subscription_status === 'unpaid' || 
-                 partner.subscription_status === 'canceled') && 
-                partner.subscription_status !== 'active' && 
-                partner.subscription_status !== 'trialing' && (
+              {partner &&
+                (partner.subscription_status === 'past_due' ||
+                  partner.subscription_status === 'unpaid' ||
+                  partner.subscription_status === 'canceled') && (
                   <BlockedPartnerBanner subscriptionStatus={partner.subscription_status} />
-                )
-              )}
+                )}
 
               {/* Banner: Aguardando aprovação para listagem pública */}
               {!listingApproved &&
@@ -623,23 +619,22 @@ export default function PartnerDashboard() {
               {!listingApproved &&
                 partner &&
                 partner.status === 'pending' &&
-                (partner.is_active ||
-                  partner.subscription_status === 'active' ||
-                  partner.subscription_status === 'trialing') &&
                 partner.subscription_status !== 'past_due' &&
                 partner.subscription_status !== 'unpaid' && (
                   <PendingApprovalBanner variant="default" />
                 )}
 
-              {/* Banner: Stripe Connect não configurado */}
+              {/* Banner: status do cadastro de recebimentos (Stripe Connect) */}
               {partner.stripe_connect_status !== 'connected' && (
                 <StripeConnectBanner
                   partnerId={partner.id}
                   partnerEmail={partner.contact_email}
                   partnerName={partner.name}
+                  status={partner.stripe_connect_status || 'pending'}
                   onConnected={() => loadPartnerData()}
                 />
               )}
+
             </div>
 
             {/* Cards de Métricas com Gráficos - Apenas na aba Reservas */}
