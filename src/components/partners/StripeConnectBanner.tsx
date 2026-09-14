@@ -6,11 +6,14 @@ import { invokeStripeConnectOnboarding } from '@/utils/invokeStripeConnectOnboar
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
 
+export type StripeConnectStatus = 'pending' | 'connected' | 'restricted' | 'disabled';
+
 interface StripeConnectBannerProps {
   partnerId: string;
   partnerEmail: string;
   partnerName: string;
   className?: string;
+  status?: StripeConnectStatus;
   onConnected?: () => void;
 }
 
@@ -19,10 +22,12 @@ export default function StripeConnectBanner({
   partnerEmail, 
   partnerName, 
   className,
+  status = 'pending',
   onConnected 
 }: StripeConnectBannerProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+
 
   const handleConnectStripe = async () => {
     setLoading(true);
