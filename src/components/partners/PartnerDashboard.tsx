@@ -511,7 +511,26 @@ export default function PartnerDashboard() {
     </div>
   );
 
+  // Cadastro de recebimentos reprovado pelo Stripe: acesso ao painel bloqueado
+  if (partner?.stripe_connect_status === 'disabled') {
+    return (
+      <UniversalLayout>
+        <main className="flex-grow bg-gradient-to-b from-blue-50/30 via-white to-green-50/30">
+          <div className="ms-container py-12 max-w-2xl">
+            <StripeConnectBanner
+              partnerId={partner.id}
+              partnerEmail={partner.contact_email}
+              partnerName={partner.name}
+              status="disabled"
+            />
+          </div>
+        </main>
+      </UniversalLayout>
+    );
+  }
+
   return (
+
     <UniversalLayout>
       <main className="flex-grow bg-gradient-to-b from-blue-50/30 via-white to-green-50/30">
         {/* Hero Section Compacta */}
