@@ -511,7 +511,26 @@ export default function PartnerDashboard() {
     </div>
   );
 
+  // Cadastro de recebimentos reprovado pelo Stripe: acesso ao painel bloqueado
+  if (partner?.stripe_connect_status === 'disabled') {
+    return (
+      <UniversalLayout>
+        <main className="flex-grow bg-gradient-to-b from-blue-50/30 via-white to-green-50/30">
+          <div className="ms-container py-12 max-w-2xl">
+            <StripeConnectBanner
+              partnerId={partner.id}
+              partnerEmail={partner.contact_email}
+              partnerName={partner.name}
+              status="disabled"
+            />
+          </div>
+        </main>
+      </UniversalLayout>
+    );
+  }
+
   return (
+
     <UniversalLayout>
       <main className="flex-grow bg-gradient-to-b from-blue-50/30 via-white to-green-50/30">
         {/* Hero Section Compacta */}
@@ -600,16 +619,12 @@ export default function PartnerDashboard() {
                 )}
 
               {/* Banner: Parceiro Bloqueado (Inadimplente) */}
-              {partner && (
-                (!partner.is_active || 
-                 partner.subscription_status === 'past_due' || 
-                 partner.subscription_status === 'unpaid' || 
-                 partner.subscription_status === 'canceled') && 
-                partner.subscription_status !== 'active' && 
-                partner.subscription_status !== 'trialing' && (
+              {partner &&
+                (partner.subscription_status === 'past_due' ||
+                  partner.subscription_status === 'unpaid' ||
+                  partner.subscription_status === 'canceled') && (
                   <BlockedPartnerBanner subscriptionStatus={partner.subscription_status} />
-                )
-              )}
+                )}
 
               {/* Banner: Aguardando aprovação para listagem pública */}
               {!listingApproved &&
@@ -623,23 +638,22 @@ export default function PartnerDashboard() {
               {!listingApproved &&
                 partner &&
                 partner.status === 'pending' &&
-                (partner.is_active ||
-                  partner.subscription_status === 'active' ||
-                  partner.subscription_status === 'trialing') &&
                 partner.subscription_status !== 'past_due' &&
                 partner.subscription_status !== 'unpaid' && (
                   <PendingApprovalBanner variant="default" />
                 )}
 
-              {/* Banner: Stripe Connect não configurado */}
+              {/* Banner: status do cadastro de recebimentos (Stripe Connect) */}
               {partner.stripe_connect_status !== 'connected' && (
                 <StripeConnectBanner
                   partnerId={partner.id}
                   partnerEmail={partner.contact_email}
                   partnerName={partner.name}
+                  status={partner.stripe_connect_status || 'pending'}
                   onConnected={() => loadPartnerData()}
                 />
               )}
+
             </div>
 
             {/* Cards de Métricas com Gráficos - Apenas na aba Reservas */}

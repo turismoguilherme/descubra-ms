@@ -4,13 +4,16 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { invokeStripeConnectOnboarding } from '@/utils/invokeStripeConnectOnboarding';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
+import { AlertTriangle, Clock, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
+
+export type StripeConnectStatus = 'pending' | 'connected' | 'restricted' | 'disabled';
 
 interface StripeConnectBannerProps {
   partnerId: string;
   partnerEmail: string;
   partnerName: string;
   className?: string;
+  status?: StripeConnectStatus;
   onConnected?: () => void;
 }
 
@@ -19,10 +22,12 @@ export default function StripeConnectBanner({
   partnerEmail, 
   partnerName, 
   className,
+  status = 'pending',
   onConnected 
 }: StripeConnectBannerProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+
 
   const handleConnectStripe = async () => {
     setLoading(true);
@@ -56,6 +61,54 @@ export default function StripeConnectBanner({
     }
   };
 
+  if (status === 'restricted') {
+    return (
+      <Alert className={`border-blue-200 bg-blue-50 ${className || ''}`}>
+        <Clock className="h-5 w-5 text-blue-600" />
+        <AlertTitle className="text-blue-900 font-semibold">
+          Cadastro de recebimentos enviado — em análise
+        </AlertTitle>
+        <AlertDescription className="text-blue-800">
+          <p className="mb-3">
+            Recebemos seus dados e o Stripe está analisando. Você já pode usar o painel; assim que a
+            análise terminar, os recebimentos são liberados automaticamente.
+          </p>
+          <Button
+            variant="outline"
+            onClick={handleConnectStripe}
+            disabled={loading}
+            className="border-blue-300 text-blue-800 hover:bg-blue-100"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Abrindo...
+              </>
+            ) : (
+              <>
+                Revisar ou completar dados
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (status === 'disabled') {
+    return (
+      <Alert variant="destructive" className={className}>
+        <AlertTriangle className="h-5 w-5" />
+        <AlertTitle className="font-semibold">Cadastro de recebimentos reprovado</AlertTitle>
+        <AlertDescription>
+          O Stripe não aprovou sua conta de recebimentos, então o painel do parceiro está bloqueado.
+          Entre em contato com o suporte para entender o motivo e reenviar seus dados.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <Alert className={`border-amber-200 bg-amber-50 ${className || ''}`}>
       <AlertTriangle className="h-5 w-5 text-amber-600" />
@@ -88,5 +141,6 @@ export default function StripeConnectBanner({
       </AlertDescription>
     </Alert>
   );
+
 }
 

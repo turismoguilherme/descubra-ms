@@ -179,18 +179,18 @@ const PartnerLoginForm = () => {
             return;
           }
 
-          // Parceiro em processo de cadastro (ainda não ativado): permitir entrar e
-          // continuar o onboarding na etapa do Stripe Connect.
+          // Parceiro em processo de cadastro (ainda não ativado): entra no painel,
+          // onde os avisos de recebimento/Stripe aparecem em destaque.
           if (!partner.is_active) {
-            console.log("🔄 Parceiro em cadastro, redirecionando para continuar onboarding");
             toast({
-              title: "Cadastro em andamento",
-              description: "Vamos continuar seu cadastro na etapa de recebimento de pagamentos.",
+              title: "Bem-vindo!",
+              description: "Seu cadastro está em finalização. Veja os avisos no seu painel.",
               duration: 5000,
             });
-            navigate(`/descubrams/seja-um-parceiro?step=4&partner_id=${partner.id}`);
+            navigate('/partner/dashboard');
             return;
           }
+
 
           
           console.log("🤝 LOGIN: Parceiro detectado, redirecionando para dashboard");
