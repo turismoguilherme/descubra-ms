@@ -33,8 +33,6 @@ const GuataVideosManager = lazy(() => import('@/components/admin/GuataVideosMana
 const GuataCartilhasManager = lazy(() => import('@/components/admin/GuataCartilhasManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const TouristRegionsManager = lazy(() => import('@/components/admin/descubra_ms/TouristRegionsManager'));
-const SystemMonitoring = lazy(() => import('@/components/admin/system/SystemMonitoring'));
-const AuditLogs = lazy(() => import('@/components/admin/system/AuditLogs'));
 const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
 const KnowledgeBaseAdmin = lazy(() => import('@/components/admin/ai/KnowledgeBaseAdmin'));
 const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
@@ -312,7 +310,6 @@ function DashboardOverview() {
     { label: 'Passaporte Digital', to: '/viajar/admin/descubra-ms/passport', icon: Stamp },
     { label: 'Cartilhas Guatá Capacita', to: '/viajar/admin/descubra-ms/guata-cartilhas', icon: BookOpen },
     { label: 'Base de Conhecimento da IA', to: '/viajar/admin/ai/knowledge-base', icon: Bot },
-    { label: 'Monitoramento do sistema', to: '/viajar/admin/system/monitoring', icon: Activity },
   ];
 
   return (
