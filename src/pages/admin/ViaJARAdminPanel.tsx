@@ -189,17 +189,6 @@ export default function ViaJARAdminPanel() {
           </Suspense>
         } />
 
-        {/* Sistema */}
-        <Route path="system/monitoring" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <SystemMonitoring />
-          </Suspense>
-        } />
-        <Route path="system/logs" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <AuditLogs />
-          </Suspense>
-        } />
 
         {/* IA */}
         <Route path="ai/chat" element={

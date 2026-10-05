@@ -1,367 +1,126 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Search, Eye, Ban, Trash2, Users } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
-
-interface User {
-  id: string;
-  user_id: string;
-  full_name: string | null;
-  email: string;
-  role: string;
-  platform: 'Descubra MS' | 'Guatá Labs';
-  status: 'active' | 'inactive';
-  protectedAccount: boolean;
-  created_at: string;
-}
+import { adminUsersApi, AdminUser, UserPlatform } from '@/components/admin/users/adminUsersApi';
+import { UsersTable } from '@/components/admin/users/UsersTable';
+import { CreateUserDialog } from '@/components/admin/users/CreateUserDialog';
+import { PasswordRevealDialog } from '@/components/admin/users/PasswordRevealDialog';
 
 export default function UsersManagement() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [adminCanDelete, setAdminCanDelete] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [tab, setTab] = useState<UserPlatform>('descubra-ms');
+  const [creating, setCreating] = useState(false);
+  const [revealed, setRevealed] = useState<{ email: string; password: string } | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const currentUserId = authData.user?.id;
-
-      if (currentUserId) {
-        const { data: myRoles } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', currentUserId)
-          .in('role', ['admin', 'master_admin'])
-          .limit(1);
-
-        setAdminCanDelete(!!myRoles?.length);
-      } else {
-        setAdminCanDelete(false);
-      }
-
-      const { data: profiles, error } = await supabase
-        .from('user_profiles')
-        .select('id, full_name, user_id, user_type, created_at')
-        .order('created_at', { ascending: false })
-        .limit(300);
-
-      if (error) throw error;
-
-      const userIds = profiles?.map(p => p.user_id).filter(Boolean) || [];
-      let roles: Array<{ user_id: string; role: string }> = [];
-      let viajarRows: Array<{ user_id: string | null; is_active: boolean | null }> = [];
-      if (userIds.length > 0) {
-        const { data: rolesData } = await supabase
-          .from('user_roles')
-          .select('user_id, role')
-          .in('user_id', userIds);
-        roles = rolesData || [];
-
-        const { data: viajarData } = await supabase
-          .from('viajar_employees')
-          .select('user_id, is_active')
-          .in('user_id', userIds);
-        viajarRows = viajarData || [];
-      }
-
-      const rolesMap = new Map<string, string[]>();
-      roles.forEach((r) => {
-        const list = rolesMap.get(r.user_id) || [];
-        list.push(r.role);
-        rolesMap.set(r.user_id, list);
-      });
-
-      const viajarMap = new Map<string, boolean>();
-      viajarRows.forEach((v) => {
-        if (v.user_id) viajarMap.set(v.user_id, v.is_active !== false);
-      });
-
-      const usersData: User[] = (profiles || []).map(profile => {
-        const roleList = rolesMap.get(profile.user_id) || [];
-        const isViajar = viajarMap.has(profile.user_id);
-        const primaryRole = roleList.includes('banned')
-          ? 'banned'
-          : (roleList[0] || profile.user_type || 'user');
-        const protectedAccount = roleList.includes('admin') || roleList.includes('master_admin');
-        const isActive = isViajar ? (viajarMap.get(profile.user_id) ?? true) : !roleList.includes('banned');
-
-        return {
-          id: profile.id,
-          user_id: profile.user_id,
-          full_name: profile.full_name,
-          email: 'Não disponível',
-          role: primaryRole,
-          platform: isViajar ? 'Guatá Labs' : 'Descubra MS',
-          status: isActive ? 'active' : 'inactive',
-          protectedAccount,
-          created_at: profile.created_at || '',
-        };
-      });
-
-      setUsers(usersData);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      toast({
-        title: 'Erro',
-        description: err.message || 'Erro ao carregar usuários',
-        variant: 'destructive',
-      });
+      setUsers(await adminUsersApi.list());
+    } catch (e) {
+      toast({ title: 'Erro ao carregar usuários', description: (e as Error).message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const filteredUsers = users.filter(user =>
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.platform.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => { load(); }, [load]);
 
-  const metrics = {
-    descubraTotal: users.filter((u) => u.platform === 'Descubra MS').length,
-    descubraActive: users.filter((u) => u.platform === 'Descubra MS' && u.status === 'active').length,
-    viajarTotal: users.filter((u) => u.platform === 'Guatá Labs').length,
-    viajarActive: users.filter((u) => u.platform === 'Guatá Labs' && u.status === 'active').length,
-  };
+  const byPlatform = useMemo(() => {
+    const term = search.toLowerCase();
+    const match = (u: AdminUser) =>
+      !term || u.email.toLowerCase().includes(term) || (u.full_name ?? '').toLowerCase().includes(term);
+    return {
+      'descubra-ms': users.filter((u) => u.platform === 'descubra-ms'),
+      'guata-labs': users.filter((u) => u.platform === 'guata-labs'),
+      filter: (p: UserPlatform) => users.filter((u) => u.platform === p && match(u)),
+    };
+  }, [users, search]);
 
-  const handleToggleBlock = async (user: User) => {
-    if (user.protectedAccount) {
-      toast({
-        title: 'Conta protegida',
-        description: 'Contas admin/master_admin não podem ser bloqueadas por esta tela.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!confirm(`Tem certeza que deseja ${user.role === 'banned' ? 'desbloquear' : 'bloquear'} este usuário?`)) return;
-
+  const run = async (fn: () => Promise<unknown>, success: string) => {
     try {
-      const newRole = user.role === 'banned' ? 'user' : 'banned';
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .upsert(
-          { user_id: user.user_id, role: newRole },
-          { onConflict: 'user_id' }
-        );
-
-      if (roleError) throw roleError;
-
-      toast({
-        title: 'Sucesso',
-        description: `Usuário ${newRole === 'banned' ? 'bloqueado' : 'desbloqueado'} com sucesso`,
-      });
-      fetchUsers();
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      toast({
-        title: 'Erro',
-        description: err.message || 'Erro ao atualizar usuário',
-        variant: 'destructive',
-      });
+      await fn();
+      toast({ title: success });
+    } catch (e) {
+      toast({ title: 'Não foi possível concluir', description: (e as Error).message, variant: 'destructive' });
     }
   };
 
-  const handlePermanentDelete = async (user: User) => {
-    if (!adminCanDelete) {
-      toast({
-        title: 'Sem permissão',
-        description: 'Apenas admin/master_admin podem excluir permanentemente.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (user.protectedAccount) {
-      toast({
-        title: 'Conta protegida',
-        description: 'Contas admin/master_admin não podem ser excluídas por esta tela.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    const sure = confirm(`Excluir permanentemente ${user.full_name || 'este usuário'}? Essa ação é irreversível.`);
-    if (!sure) return;
-    const confirmation = prompt('Para confirmar, digite EXCLUIR');
-    if (confirmation !== 'EXCLUIR') {
-      toast({
-        title: 'Confirmação inválida',
-        description: 'Exclusão cancelada.',
-      });
-      return;
-    }
-
-    const { data, error } = await supabase.functions.invoke('admin-delete-user', {
-      body: { userId: user.user_id },
-    });
-
-    const remoteMessage =
-      data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string'
-        ? (data as { error: string }).error
-        : null;
-
-    if (error || remoteMessage) {
-      toast({
-        title: 'Erro ao excluir',
-        description: remoteMessage || error?.message || 'Falha ao excluir usuário.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    toast({
-      title: 'Usuário excluído',
-      description: 'A conta foi removida permanentemente.',
-    });
-    fetchUsers();
+  const handleDelete = (u: AdminUser) => {
+    if (!confirm(`Excluir permanentemente ${u.full_name || u.email}? Essa ação não pode ser desfeita.`)) return;
+    run(async () => { await adminUsersApi.remove(u.user_id); await load(); }, 'Usuário excluído');
   };
+
+  const handleTempPassword = (u: AdminUser) => {
+    if (!confirm(`Gerar nova senha para ${u.email}? A senha atual deixará de funcionar.`)) return;
+    adminUsersApi.tempPassword(u.user_id)
+      .then((password) => setRevealed({ email: u.email, password }))
+      .catch((e) => toast({ title: 'Erro', description: (e as Error).message, variant: 'destructive' }));
+  };
+
+  const tabLabel = (p: UserPlatform, name: string) => `${name} (${byPlatform[p].length})`;
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
         title="Usuários"
-        description="Gerencie usuários do Descubra MS e Guatá Labs. Bloqueie ou exclua contas conforme política e solicitações."
-        helpText="Exclusão permanente disponível apenas para admin/master_admin. Contas protegidas não podem ser removidas por esta tela."
+        description="Usuários de cada plataforma: adicione, exclua ou gere uma nova senha de acesso."
+        helpText="Contas de administrador principal e a sua própria conta não podem ser excluídas."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Descubra MS</CardDescription>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              {metrics.descubraTotal}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            {metrics.descubraActive} ativos / {metrics.descubraTotal - metrics.descubraActive} inativos
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Guatá Labs</CardDescription>
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              {metrics.viajarTotal}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            {metrics.viajarActive} ativos / {metrics.viajarTotal - metrics.viajarActive} inativos
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as UserPlatform)}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <TabsList>
+            <TabsTrigger value="descubra-ms">{tabLabel('descubra-ms', 'Descubra MS')}</TabsTrigger>
+            <TabsTrigger value="guata-labs">{tabLabel('guata-labs', 'Guatá Labs')}</TabsTrigger>
+          </TabsList>
+          <Button onClick={() => setCreating(true)}><UserPlus className="mr-2 h-4 w-4" /> Adicionar usuário</Button>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar por nome ou plataforma..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+        <Card className="mt-4">
+          <CardHeader>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input placeholder="Buscar por nome ou e-mail..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">Carregando...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Plataforma</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Data Cadastro</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      Nenhum usuário encontrado
-                    </TableCell>
-                  </TableRow>
+          </CardHeader>
+          <CardContent>
+            {(['descubra-ms', 'guata-labs'] as UserPlatform[]).map((p) => (
+              <TabsContent key={p} value={p} className="mt-0">
+                {loading ? (
+                  <div className="py-8 text-center text-muted-foreground">Carregando...</div>
                 ) : (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.full_name || '-'}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.platform}</TableCell>
-                      <TableCell>
-                        <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                          {user.status === 'active' ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{user.role}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {user.created_at 
-                          ? new Date(user.created_at).toLocaleDateString('pt-BR')
-                          : '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              toast({
-                                title: 'Detalhes do Usuário',
-                                description: `Nome: ${user.full_name || 'N/A'}\nPlataforma: ${user.platform}\nStatus: ${user.status}\nRole: ${user.role}\nCadastro: ${user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'N/A'}`,
-                              });
-                            }}
-                            title="Ver detalhes"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleToggleBlock(user)}
-                            title={user.role === 'banned' ? 'Desbloquear usuário' : 'Bloquear usuário'}
-                          >
-                            <Ban className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handlePermanentDelete(user)}
-                            title="Excluir permanentemente"
-                            disabled={!adminCanDelete || user.protectedAccount}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  <UsersTable
+                    users={byPlatform.filter(p)}
+                    currentUserId={user?.id}
+                    onResetEmail={(u) => run(() => adminUsersApi.sendResetEmail(u), `E-mail de nova senha enviado para ${u.email}`)}
+                    onTempPassword={handleTempPassword}
+                    onDelete={handleDelete}
+                  />
                 )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              </TabsContent>
+            ))}
+          </CardContent>
+        </Card>
+      </Tabs>
+
+      <CreateUserDialog
+        key={tab}
+        platform={tab}
+        open={creating}
+        onOpenChange={setCreating}
+        onCreated={(password, email) => { setRevealed({ email, password }); load(); }}
+      />
+      <PasswordRevealDialog data={revealed} onClose={() => setRevealed(null)} />
     </div>
   );
 }

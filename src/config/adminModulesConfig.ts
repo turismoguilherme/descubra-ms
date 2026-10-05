@@ -291,26 +291,6 @@ export const adminModulesConfig: AdminModule[] = [
     platform: 'system',
     children: [
       {
-        id: 'system-monitoring',
-        label: 'Monitoramento',
-        icon: Monitor,
-        path: '/viajar/admin/system/monitoring',
-        permission: 'system',
-        platform: 'system',
-        title: 'Monitoramento do Sistema',
-        description: 'Status e saúde dos sistemas em tempo real',
-      },
-      {
-        id: 'system-logs',
-        label: 'Auditoria',
-        icon: FileText,
-        path: '/viajar/admin/system/logs',
-        permission: 'system',
-        platform: 'system',
-        title: 'Auditoria',
-        description: 'Histórico completo de ações administrativas no sistema',
-      },
-      {
         id: 'settings-policies',
         label: 'Configurações - Políticas',
         icon: FileText,
