@@ -97,15 +97,14 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({
           table: 'reservation_messages',
           filter: `reservation_id=eq.${reservationId}`,
         },
-        (payload) => {
-          console.log('💬 Nova mensagem:', payload);
+        () => {
           loadMessages();
         }
       )
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   };
 
@@ -116,10 +115,10 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({
     try {
       await ReservationMessageService.sendMessage(
         reservationId,
-        'partner',
-        partnerId,
-        partnerName,
-        partnerEmail,
+        senderType,
+        isPartner ? partnerId : user?.id,
+        isPartner ? partnerName : (guestName || 'Cliente'),
+        isPartner ? partnerEmail : (guestEmail || user?.email || ''),
         newMessage.trim()
       );
 
