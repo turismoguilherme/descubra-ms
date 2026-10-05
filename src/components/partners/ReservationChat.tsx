@@ -28,6 +28,8 @@ interface ReservationChatProps {
   partnerEmail: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Quem está usando o chat: cliente (guest) ou anfitrião (partner) */
+  currentUserType: 'guest' | 'partner';
 }
 
 export const ReservationChat: React.FC<ReservationChatProps> = ({
@@ -40,8 +42,11 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({
   partnerEmail,
   open,
   onOpenChange,
+  currentUserType,
 }) => {
   const { user } = useAuth();
+  const isPartner = currentUserType === 'partner';
+  const senderType = currentUserType;
   const [messages, setMessages] = useState<ReservationMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
