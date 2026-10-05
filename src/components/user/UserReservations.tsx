@@ -431,6 +431,7 @@ export default function UserReservations() {
           partnerName={selectedReservation.partner_name || 'Parceiro'}
           partnerEmail={selectedReservation.partner_email || ''}
           open={!!selectedReservationForChat}
+          currentUserType="guest"
           onOpenChange={(open) => {
             if (!open) {
               setSelectedReservationForChat(null);
