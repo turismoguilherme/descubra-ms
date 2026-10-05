@@ -28,6 +28,8 @@ interface ReservationChatProps {
   partnerEmail: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Quem está usando o chat: cliente (guest) ou anfitrião (partner) */
+  currentUserType: 'guest' | 'partner';
 }
 
 export const ReservationChat: React.FC<ReservationChatProps> = ({
@@ -40,8 +42,11 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({
   partnerEmail,
   open,
   onOpenChange,
+  currentUserType,
 }) => {
   const { user } = useAuth();
+  const isPartner = currentUserType === 'partner';
+  const senderType = currentUserType;
   const [messages, setMessages] = useState<ReservationMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -92,15 +97,14 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({
           table: 'reservation_messages',
           filter: `reservation_id=eq.${reservationId}`,
         },
-        (payload) => {
-          console.log('💬 Nova mensagem:', payload);
+        () => {
           loadMessages();
         }
       )
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   };
 
@@ -111,10 +115,10 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({
     try {
       await ReservationMessageService.sendMessage(
         reservationId,
-        'partner',
-        partnerId,
-        partnerName,
-        partnerEmail,
+        senderType,
+        isPartner ? partnerId : user?.id,
+        isPartner ? partnerName : (guestName || 'Cliente'),
+        isPartner ? partnerEmail : (guestEmail || user?.email || ''),
         newMessage.trim()
       );
 
@@ -167,41 +171,36 @@ export const ReservationChat: React.FC<ReservationChatProps> = ({
           ) : (
             <div className="space-y-4 py-4">
               {messages.map((message) => {
-                const isPartner = message.sender_type === 'partner';
+                const fromPartner = message.sender_type === 'partner';
                 const isSystem = message.sender_type === 'system';
+                const isMine = message.sender_type === currentUserType;
 
                 return (
                   <div
                     key={message.id}
-                    className={cn(
-                      'flex gap-3',
-                      isPartner && 'flex-row-reverse'
-                    )}
+                    className={cn('flex gap-3', isMine && 'flex-row-reverse')}
                   >
                     <div className={cn(
                       'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center',
-                      isPartner ? 'bg-ms-primary-blue' : 'bg-gray-200',
-                      isSystem && 'bg-gray-400'
+                      isSystem ? 'bg-muted' : fromPartner ? 'bg-primary' : 'bg-secondary'
                     )}>
-                      {isPartner ? (
-                        <Building2 className="w-4 h-4 text-white" />
-                      ) : isSystem ? (
-                        <MessageSquare className="w-4 h-4 text-white" />
+                      {isSystem ? (
+                        <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                      ) : fromPartner ? (
+                        <Building2 className="w-4 h-4 text-primary-foreground" />
                       ) : (
-                        <User className="w-4 h-4 text-gray-600" />
+                        <User className="w-4 h-4 text-secondary-foreground" />
                       )}
                     </div>
-                    <div className={cn(
-                      'flex-1 max-w-[70%]',
-                      isPartner && 'items-end flex flex-col'
-                    )}>
+                    <div className={cn('flex-1 max-w-[70%]', isMine && 'items-end flex flex-col')}>
+                      <p className="text-xs text-muted-foreground mb-1 px-1">{message.sender_name}</p>
                       <div className={cn(
                         'rounded-lg px-4 py-2',
-                        isPartner
-                          ? 'bg-ms-primary-blue text-white'
+                        isMine
+                          ? 'bg-primary text-primary-foreground'
                           : isSystem
-                          ? 'bg-gray-100 text-gray-700'
-                          : 'bg-gray-200 text-gray-900'
+                          ? 'bg-muted text-muted-foreground'
+                          : 'bg-secondary text-secondary-foreground'
                       )}>
                         <p className="text-sm whitespace-pre-wrap break-words">
                           {message.message}

@@ -858,6 +858,7 @@ export default function PartnerDashboard() {
               partnerName={partner.name}
               partnerEmail={partner.contact_email}
               open={!!selectedReservationForChat}
+              currentUserType="partner"
               onOpenChange={(open) => {
                 if (!open) {
                   setSelectedReservationForChat(null);
