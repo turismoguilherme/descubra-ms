@@ -2,6 +2,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { buildResetRedirectUrl } from '@/lib/passwordReset';
 
 export type UserPlatform = 'descubra-ms' | 'guata-labs';
+export type UserKind = 'tourist' | 'partner' | 'staff';
+
+export const KIND_LABEL: Record<UserKind, string> = { tourist: 'Turista', partner: 'Parceiro', staff: 'Equipe' };
 
 export interface AdminUser {
   user_id: string;
@@ -10,6 +13,8 @@ export interface AdminUser {
   role: string;
   roles: string[];
   platform: UserPlatform;
+  kind?: UserKind;
+  partner_name?: string | null;
   blocked: boolean;
   protectedAccount: boolean;
   created_at: string;
