@@ -41,9 +41,16 @@ export function UsersTable({ users, currentUserId, onResetEmail, onTempPassword,
             const canDelete = !u.protectedAccount && u.user_id !== currentUserId;
             return (
               <TableRow key={u.user_id}>
-                <TableCell className="font-medium">{u.full_name || '—'}</TableCell>
+                <TableCell className="font-medium">
+                  {u.full_name || '—'}
+                  {u.partner_name && <div className="text-xs font-normal text-muted-foreground">{u.partner_name}</div>}
+                </TableCell>
                 <TableCell>{u.email}</TableCell>
-                <TableCell><Badge variant="outline">{roleLabel(u.role)}</Badge></TableCell>
+                <TableCell>
+                  <Badge variant={u.kind === 'partner' ? 'default' : u.kind === 'staff' ? 'secondary' : 'outline'}>
+                    {u.kind === 'partner' ? 'Parceiro' : roleLabel(u.role)}
+                  </Badge>
+                </TableCell>
                 <TableCell>
                   <Badge variant={u.blocked ? 'secondary' : 'default'}>{u.blocked ? 'Bloqueado' : 'Ativo'}</Badge>
                 </TableCell>

@@ -38,13 +38,19 @@ serve(async (req) => {
       if (error) throw error;
 
       const ids = list.users.map((u) => u.id);
-      const [{ data: profiles }, { data: roles }, { data: employees }] = await Promise.all([
+      const [{ data: profiles }, { data: roles }, { data: employees }, { data: partners }] = await Promise.all([
         admin.from('user_profiles').select('user_id, full_name, user_type').in('user_id', ids),
         admin.from('user_roles').select('user_id, role').in('user_id', ids),
         admin.from('viajar_employees').select('user_id, is_active').in('user_id', ids),
+        admin.from('institutional_partners').select('name, contact_email'),
       ]);
 
       const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+      const partnerMap = new Map(
+        (partners ?? [])
+          .filter((p) => p.contact_email)
+          .map((p) => [String(p.contact_email).trim().toLowerCase(), p.name as string]),
+      );
       const rolesMap = new Map<string, string[]>();
       (roles ?? []).forEach((r) => {
         rolesMap.set(r.user_id, [...(rolesMap.get(r.user_id) ?? []), r.role]);
@@ -56,6 +62,10 @@ serve(async (req) => {
         const isEmployee = employeeMap.has(u.id);
         const isInternal =
           isEmployee || roleList.some((r) => ['admin', 'master_admin', 'tech'].includes(r));
+        const partnerName = partnerMap.get((u.email ?? '').toLowerCase()) ?? null;
+        const isPartner = !!partnerName || roleList.includes('partner');
+        const isStaff = isInternal || roleList.some((r) => ['atendente', 'attendant', 'gestor_municipal'].includes(r));
+        const kind = isPartner ? 'partner' : isStaff ? 'staff' : 'tourist';
         return {
           user_id: u.id,
           email: u.email ?? '',
@@ -65,6 +75,8 @@ serve(async (req) => {
             : roleList[0] ?? profileMap.get(u.id)?.user_type ?? 'user',
           roles: roleList,
           platform: (isInternal ? 'guata-labs' : 'descubra-ms') as Platform,
+          kind,
+          partner_name: partnerName,
           blocked: roleList.includes('banned') || (isEmployee && employeeMap.get(u.id) === false),
           protectedAccount: roleList.some((r) => PROTECTED_ROLES.includes(r)),
           created_at: u.created_at,

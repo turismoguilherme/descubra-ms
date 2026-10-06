@@ -7,7 +7,7 @@ import { Search, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
-import { adminUsersApi, AdminUser, UserPlatform } from '@/components/admin/users/adminUsersApi';
+import { adminUsersApi, AdminUser, UserKind, UserPlatform } from '@/components/admin/users/adminUsersApi';
 import { UsersTable } from '@/components/admin/users/UsersTable';
 import { CreateUserDialog } from '@/components/admin/users/CreateUserDialog';
 import { PasswordRevealDialog } from '@/components/admin/users/PasswordRevealDialog';
@@ -18,6 +18,7 @@ export default function UsersManagement() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [kind, setKind] = useState<UserKind | 'all'>('all');
   const [tab, setTab] = useState<UserPlatform>('descubra-ms');
   const [creating, setCreating] = useState(false);
   const [revealed, setRevealed] = useState<{ email: string; password: string } | null>(null);
@@ -38,13 +39,19 @@ export default function UsersManagement() {
   const byPlatform = useMemo(() => {
     const term = search.toLowerCase();
     const match = (u: AdminUser) =>
-      !term || u.email.toLowerCase().includes(term) || (u.full_name ?? '').toLowerCase().includes(term);
+      !term || u.email.toLowerCase().includes(term) || (u.full_name ?? '').toLowerCase().includes(term) ||
+      (u.partner_name ?? '').toLowerCase().includes(term);
+    const kindOk = (u: AdminUser) => kind === 'all' || (u.kind ?? 'tourist') === kind;
     return {
       'descubra-ms': users.filter((u) => u.platform === 'descubra-ms'),
       'guata-labs': users.filter((u) => u.platform === 'guata-labs'),
-      filter: (p: UserPlatform) => users.filter((u) => u.platform === p && match(u)),
+      filter: (p: UserPlatform) =>
+        users.filter((u) => u.platform === p && match(u) && (p !== 'descubra-ms' || kindOk(u))),
     };
-  }, [users, search]);
+  }, [users, search, kind]);
+
+  const kindCount = (k: UserKind | 'all') =>
+    users.filter((u) => u.platform === 'descubra-ms' && (k === 'all' || (u.kind ?? 'tourist') === k)).length;
 
   const run = async (fn: () => Promise<unknown>, success: string) => {
     try {
@@ -92,6 +99,15 @@ export default function UsersManagement() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Buscar por nome ou e-mail..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
             </div>
+            {tab === 'descubra-ms' && (
+              <div className="flex flex-wrap gap-2 pt-2">
+                {(['all', 'tourist', 'partner', 'staff'] as const).map((k) => (
+                  <Button key={k} size="sm" variant={kind === k ? 'default' : 'outline'} onClick={() => setKind(k)}>
+                    {k === 'all' ? 'Todos' : k === 'tourist' ? 'Turistas' : k === 'partner' ? 'Parceiros' : 'Equipe'} ({kindCount(k)})
+                  </Button>
+                ))}
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {(['descubra-ms', 'guata-labs'] as UserPlatform[]).map((p) => (
