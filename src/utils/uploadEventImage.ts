@@ -30,7 +30,9 @@ export async function uploadEventLogo(file: File): Promise<UploadImageResult> {
   }
 
   const ext = EXT_BY_TYPE[file.type] ?? "png";
-  const path = `${FOLDER}/${crypto.randomUUID()}.${ext}`;
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return { error: "Faça login para enviar a imagem." };
+  const path = `${FOLDER}/${auth.user.id}/${crypto.randomUUID()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
