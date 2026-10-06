@@ -418,7 +418,7 @@ const ProfilePageFixed: React.FC = () => {
       setPhoneInput(formatBrazilPhoneDisplay(normalized));
       toast({
         title: "Telefone salvo!",
-        description: "No WhatsApp do Guatá, envie *vincular* para conectar sua conta.",
+        description: "Você receberá os avisos das suas reservas nesse número.",
       });
     } catch (error) {
       console.error('Erro ao salvar telefone:', error);
@@ -649,12 +649,11 @@ const ProfilePageFixed: React.FC = () => {
                     <CardContent className="p-4 space-y-3">
                       <div className="flex items-center gap-2 text-green-800 font-medium">
                         <Smartphone className="h-4 w-4" />
-                        WhatsApp do Guatá
+                        Seu WhatsApp (para avisos das reservas)
                       </div>
                       <p className="text-sm text-gray-600">
-                        Cadastre o <strong>mesmo número</strong> que você usa no WhatsApp.
-                        Depois envie <strong>vincular</strong> no chat do Guatá para reservar
-                        passeios e cadastrar eventos por lá.
+                        Avisamos por aqui quando o anfitrião responder. A conversa fica na aba
+                        <strong> Reservas</strong>, em "Conversar com o anfitrião".
                       </p>
                       <div className="flex flex-col sm:flex-row gap-2">
                         <div className="flex-1">
