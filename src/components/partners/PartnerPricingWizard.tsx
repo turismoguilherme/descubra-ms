@@ -628,7 +628,14 @@ export default function PartnerPricingWizard({
                   <p className="text-sm text-gray-600">
                     Clique nas datas do calendário para configurar disponibilidade. Você pode fazer isso depois também na aba "Disponibilidade".
                   </p>
-                  
+
+                  <AvailabilityPeriodFill
+                    onApply={(entries) => {
+                      const next = new Map(availabilityDates);
+                      entries.forEach(([d, c]) => next.set(d, c));
+                      setAvailabilityDates(next);
+                    }}
+                  />
                   {/* Navegação do mês */}
                   <div className="flex items-center justify-between">
                     <Button
@@ -709,7 +716,7 @@ export default function PartnerPricingWizard({
                   {/* Formulário de edição de data */}
                   {Array.from(availabilityDates.entries()).length > 0 && (
                     <div className="border rounded-lg p-4 space-y-2">
-                      <p className="text-sm font-semibold mb-2">Datas configuradas:</p>
+                      <p className="text-sm font-semibold mb-2 flex items-center">Datas configuradas:<HelpTooltip content="Cada linha é um dia em que o turista pode reservar. Desmarque 'Disponível' para bloquear o dia; em 'Vagas' coloque quantas pessoas cabem naquele dia (vazio = sem limite). Para muitos dias, use 'Aplicar para um período' acima." /></p>
                       {Array.from(availabilityDates.entries()).map(([dateString, config]) => (
                         <div key={dateString} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                           <span className="text-sm">
