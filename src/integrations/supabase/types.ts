@@ -4001,6 +4001,88 @@ export type Database = {
           },
         ]
       }
+      partner_rewards: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          discount_percentage: number | null
+          id: string
+          max_uses: number | null
+          partner_id: string
+          partner_name: string
+          reward_description: string
+          reward_type: string
+          route_id: string | null
+          status: string
+          updated_at: string
+          uses_count: number
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          discount_percentage?: number | null
+          id?: string
+          max_uses?: number | null
+          partner_id: string
+          partner_name: string
+          reward_description: string
+          reward_type: string
+          route_id?: string | null
+          status?: string
+          updated_at?: string
+          uses_count?: number
+          valid_from: string
+          valid_until: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          discount_percentage?: number | null
+          id?: string
+          max_uses?: number | null
+          partner_id?: string
+          partner_name?: string
+          reward_description?: string
+          reward_type?: string
+          route_id?: string | null
+          status?: string
+          updated_at?: string
+          uses_count?: number
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_rewards_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_rewards_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "institutional_partners_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_rewards_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_terms_acceptances: {
         Row: {
           created_at: string
