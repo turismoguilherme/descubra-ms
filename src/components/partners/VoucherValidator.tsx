@@ -323,8 +323,10 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
                 <div className="space-y-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-sm text-blue-800">
-                      Clique no botão abaixo para iniciar o scanner de QR code. 
-                      Certifique-se de permitir o acesso à câmera quando solicitado.
+                      <strong>Como funciona:</strong> o turista completa o roteiro do Passaporte e recebe um voucher no celular.
+                      Quando ele chegar, clique em "Iniciar Scanner", permita a câmera e aponte para o QR Code da tela dele.
+                      Se aparecer "Voucher Válido", aplique o benefício — ele já fica marcado como usado e não vale de novo.
+                      Sem câmera? Use a aba "Digitar Código".
                     </p>
                   </div>
                   <Button
