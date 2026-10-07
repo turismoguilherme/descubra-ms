@@ -34,6 +34,13 @@ import { format, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import VoucherValidator from './VoucherValidator';
 import VoucherList from './VoucherList';
+import { HelpTooltip } from '@/components/admin/ui/HelpTooltip';
+
+const readError = (e: unknown): string => {
+  if (e instanceof Error) return e.message;
+  if (e && typeof e === 'object' && 'message' in e) return String((e as { message: unknown }).message);
+  return String(e);
+};
 
 interface PartnerReward {
   id: string;
@@ -157,11 +164,11 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
       if (error) throw error;
       setRewards((data as any) || []);
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Erro ao carregar recompensas:', err);
+      const msg = readError(error);
+      console.error('Erro ao carregar recompensas:', msg);
       toast({
         title: 'Erro',
-        description: 'Não foi possível carregar suas recompensas',
+        description: `Não foi possível carregar suas recompensas: ${msg}`,
         variant: 'destructive',
       });
     } finally {
@@ -228,7 +235,7 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
       setShowForm(false);
       loadRewards();
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       console.error('Erro ao cadastrar recompensa:', err);
       toast({
         title: 'Erro ao cadastrar',
@@ -466,7 +473,7 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Válido a partir de</Label>
+                  <Label className="flex items-center">Válido a partir de<HelpTooltip content="Primeiro dia em que o turista pode usar o voucher no seu estabelecimento." /></Label>
                   <Input
                     type="date"
                     value={formData.valid_from}
@@ -475,7 +482,7 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Válido até</Label>
+                  <Label className="flex items-center">Válido até<HelpTooltip content="Depois desta data o voucher expira sozinho: o sistema compara com o dia de hoje e recusa a validação." /></Label>
                   <Input
                     type="date"
                     value={formData.valid_until}
@@ -484,7 +491,7 @@ export default function PartnerRewardsManager({ partnerId, partnerName }: Partne
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Limite de usos (opcional)</Label>
+                  <Label className="flex items-center">Limite de usos (opcional)<HelpTooltip content="Quantidade TOTAL de vouchers que você quer oferecer (ex.: 30 = os 30 primeiros turistas). Cada turista ganha só 1 voucher por roteiro. A cada validação o contador sobe; ao chegar no limite, a recompensa esgota. Em branco = sem limite." /></Label>
                   <Input
                     type="number"
                     min="1"
