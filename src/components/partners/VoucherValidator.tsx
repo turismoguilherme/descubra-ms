@@ -126,10 +126,15 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
   };
 
   const startQRScanner = async () => {
-    if (!scannerRef.current) return;
+    // A área da câmera só aparece depois de scanning=true; espera ela existir na tela
+    setScanning(true);
+    await new Promise((r) => setTimeout(r, 50));
+    if (!scannerRef.current) {
+      setScanning(false);
+      return;
+    }
 
     try {
-      setScanning(true);
       const html5QrCode = new Html5Qrcode('qr-reader');
       
       await html5QrCode.start(
@@ -153,7 +158,7 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
       console.error('Erro ao iniciar scanner:', err);
       toast({
         title: 'Erro ao acessar câmera',
-        description: 'Não foi possível acessar a câmera. Verifique as permissões.',
+        description: 'Permita o uso da câmera no navegador (ícone de cadeado ao lado do endereço) ou use a aba "Digitar Código".',
         variant: 'destructive',
       });
       setScanning(false);
