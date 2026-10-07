@@ -27,6 +27,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { HelpTooltip } from '@/components/admin/ui/HelpTooltip';
+import AvailabilityPeriodFill from './AvailabilityPeriodFill';
 
 interface PartnerPricing {
   id: string;
@@ -434,14 +436,16 @@ export default function PartnerPricingWizard({
                 </div>
 
                 <div>
-                  <Label htmlFor="base_price">Preço Base (R$) *</Label>
+                  <Label htmlFor="base_price" className="flex items-center">Preço Base (R$) *<HelpTooltip content="Valor principal do serviço. Digite direto (ex.: 150 ou 150,50); as setinhas sobem de R$ 1 em R$ 1. O link de pagamento NÃO precisa ser criado por você: quando o turista escolhe a data e clica em Reservar, a plataforma gera o pagamento na hora e o dinheiro cai na sua conta Stripe." /></Label>
                   <Input
                     id="base_price"
                     type="number"
-                    step="0.01"
+                    step="1"
                     min="0"
-                    value={formData.base_price}
-                    onChange={(e) => setFormData({ ...formData, base_price: parseFloat(e.target.value) || 0 })}
+                    inputMode="decimal"
+                    placeholder="Ex.: 150"
+                    value={formData.base_price || ''}
+                    onChange={(e) => setFormData({ ...formData, base_price: parseFloat(e.target.value.replace(',', '.')) || 0 })}
                   />
                 </div>
 
