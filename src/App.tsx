@@ -173,7 +173,11 @@ function AppRoutes() {
     location.pathname.startsWith(`${MS_PREFIX}/`) ||
     location.pathname.startsWith('/descubramatogrossodosul') ||
     location.pathname === '/ms' ||
-    location.pathname.startsWith('/ms/');
+    location.pathname.startsWith('/ms/') ||
+    location.pathname.startsWith('/partner/') ||
+    location.pathname.startsWith('/parceiro/login') ||
+    location.pathname.startsWith('/parceiros/login') ||
+    location.pathname.startsWith('/minhas-reservas');
 
   // Na raiz do domínio próprio, redireciona para o prefixo da marca
   const rootRedirect =
