@@ -148,57 +148,6 @@ const VoucherList: React.FC<VoucherListProps> = ({ partnerId, partnerName }) => 
 
   return (
     <div className="space-y-6">
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Emitidos</p>
-                <p className="text-2xl font-bold">{stats.total}</p>
-              </div>
-              <Gift className="w-8 h-8 text-ms-primary-blue opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Usados</p>
-                <p className="text-2xl font-bold text-green-600">{stats.used}</p>
-              </div>
-              <CheckCircle2 className="w-8 h-8 text-green-600 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Válidos</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.valid}</p>
-              </div>
-              <Clock className="w-8 h-8 text-blue-600 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Taxa de Uso</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.usageRate}%</p>
-              </div>
-              <Calendar className="w-8 h-8 text-orange-600 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Filtros e Busca */}
       <Card>
         <CardHeader>

@@ -28,6 +28,7 @@ import { PartnerMetricCard } from './PartnerMetricCard';
 import { PartnerReservationsTable } from './PartnerReservationsTable';
 import { PartnerCancellationDialog } from './PartnerCancellationDialog';
 import { PartnerTransactionHistory } from './PartnerTransactionHistory';
+import StripePayoutInfoCard from './StripePayoutInfoCard';
 import { PartnerNotifications } from './PartnerNotifications';
 import { ReservationChat } from './ReservationChat';
 import { ReservationMessageService } from '@/services/partners/reservationMessageService';
@@ -790,7 +791,10 @@ export default function PartnerDashboard() {
                     </Tabs>
                   </div>
                 ) : activeTab === 'transactions' ? (
-                  <PartnerTransactionHistory partnerId={partner.id} />
+                  <div className="space-y-6">
+                    <StripePayoutInfoCard />
+                    <PartnerTransactionHistory partnerId={partner.id} />
+                  </div>
                 ) : activeTab === 'business' ? (
                   <div className="space-y-6">
                     <Tabs value={businessSubTab} onValueChange={(v) => setBusinessSubTab(v as 'info' | 'pricing' | 'availability')}>

@@ -85,7 +85,7 @@ const PassportRouteManager: React.FC = () => {
     passport_number_prefix: 'MS',
     google_maps_embed_url: '',
     image_url: '',
-    checkpoint_order_mode: 'sequential' as 'sequential' | 'free',
+    checkpoint_order_mode: 'free' as 'sequential' | 'free',
   });
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
@@ -1056,7 +1056,7 @@ const PassportRouteManager: React.FC = () => {
               <div>
                 <Label htmlFor="free_order">Permitir concluir em qualquer ordem</Label>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Quando ativo, o visitante pode fazer check-in nos pontos de parada na ordem que quiser.
+                  Ativo (recomendado): o visitante carimba os pontos na ordem que quiser e a ordem cadastrada vira só uma sugestão. Desligado: só libera o próximo ponto depois do anterior (trilhas guiadas).
                 </p>
               </div>
               <Switch
