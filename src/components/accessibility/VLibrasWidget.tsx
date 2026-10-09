@@ -14,6 +14,8 @@ const VLibrasWidget = () => {
       path.startsWith('/descubrams') ||
       path.startsWith('/descubramatogrossodosul') ||
       path.startsWith('/ms') ||
+      path.startsWith('/partner/') ||
+      path.startsWith('/minhas-reservas') ||
       path === '/chatguata';
 
     const isAdminArea =

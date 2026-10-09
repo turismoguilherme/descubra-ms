@@ -173,7 +173,11 @@ function AppRoutes() {
     location.pathname.startsWith(`${MS_PREFIX}/`) ||
     location.pathname.startsWith('/descubramatogrossodosul') ||
     location.pathname === '/ms' ||
-    location.pathname.startsWith('/ms/');
+    location.pathname.startsWith('/ms/') ||
+    location.pathname.startsWith('/partner/') ||
+    location.pathname.startsWith('/parceiro/login') ||
+    location.pathname.startsWith('/parceiros/login') ||
+    location.pathname.startsWith('/minhas-reservas');
 
   // Na raiz do domínio próprio, redireciona para o prefixo da marca
   const rootRedirect =
@@ -406,6 +410,9 @@ function AppRoutes() {
 
                                 {/* Rotas sem prefixo (compartilhadas) */}
                                 <Route path="/partner/dashboard" element={<Suspense fallback={<LoadingFallback />}><PartnerDashboard /></Suspense>} />
+                                <Route path="/partner/login" element={<Navigate to={`${MS_PREFIX}/partner/login`} replace />} />
+                                <Route path="/parceiro/login" element={<Navigate to={`${MS_PREFIX}/partner/login`} replace />} />
+                                <Route path="/parceiros/login" element={<Navigate to={`${MS_PREFIX}/partner/login`} replace />} />
                                 <Route path="/minhas-reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                                 <Route path="/reservas" element={<Suspense fallback={<LoadingFallback />}><UserReservationsPage /></Suspense>} />
                                 <Route path="/reset-password" element={<Suspense fallback={<LoadingFallback />}><ResetPasswordUpdate /></Suspense>} />
