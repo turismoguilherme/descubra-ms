@@ -85,7 +85,7 @@ const PassportRouteManager: React.FC = () => {
     passport_number_prefix: 'MS',
     google_maps_embed_url: '',
     image_url: '',
-    checkpoint_order_mode: 'sequential' as 'sequential' | 'free',
+    checkpoint_order_mode: 'free' as 'sequential' | 'free',
   });
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [coverImagePreview, setCoverImagePreview] = useState<string | null>(null);
