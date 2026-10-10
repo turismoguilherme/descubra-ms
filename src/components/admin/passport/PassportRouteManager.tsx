@@ -74,6 +74,7 @@ const PassportRouteManager: React.FC = () => {
     region: '',
     difficulty: 'medio' as 'facil' | 'medio' | 'dificil',
   });
+  const [newOrderMode, setNewOrderMode] = useState<'free' | 'sequential'>('free');
   const [editRouteForm, setEditRouteForm] = useState({
     name: '',
     description: '',
@@ -749,6 +750,7 @@ const PassportRouteManager: React.FC = () => {
         region: newRouteForm.region || null,
         difficulty: dbDifficulty,
         is_active: true,
+        checkpoint_order_mode: newOrderMode,
         is_published: false, // Nova rota começa como rascunho
       }).select();
 
@@ -1247,6 +1249,19 @@ const PassportRouteManager: React.FC = () => {
                   <SelectItem value="dificil">Difícil</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+              <div>
+                <Label htmlFor="new_free_order">Permitir concluir em qualquer ordem</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ativo (recomendado): o visitante carimba os pontos na ordem que quiser. Desligado: só libera o próximo ponto depois do anterior.
+                </p>
+              </div>
+              <Switch
+                id="new_free_order"
+                checked={newOrderMode === 'free'}
+                onCheckedChange={(checked) => setNewOrderMode(checked ? 'free' : 'sequential')}
+              />
             </div>
             <div className="flex gap-2">
               <Button 
