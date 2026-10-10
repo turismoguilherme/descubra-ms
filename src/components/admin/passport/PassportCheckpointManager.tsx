@@ -1170,18 +1170,6 @@ const PassportCheckpointManager: React.FC = () => {
                                   }
                                 />
                               </div>
-                              <div className="flex items-center space-x-2 pt-6">
-                                <Checkbox
-                                  checked={editCheckpointForm.requires_photo}
-                                  onCheckedChange={(checked) =>
-                                    setEditCheckpointForm({
-                                      ...editCheckpointForm,
-                                      requires_photo: checked as boolean,
-                                    })
-                                  }
-                                />
-                                <Label>Foto obrigatória</Label>
-                              </div>
                             </div>
 
                             <div className="flex gap-2">
