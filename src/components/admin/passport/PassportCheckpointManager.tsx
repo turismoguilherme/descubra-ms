@@ -1214,11 +1214,6 @@ const PassportCheckpointManager: React.FC = () => {
                                       {checkpoint.stamp_fragment_number}
                                     </div>
                                   )}
-                                  {checkpoint.requires_photo && (
-                                    <div>
-                                      <span className="font-medium">📷 Foto obrigatória</span>
-                                    </div>
-                                  )}
                                 </div>
                               </div>
                               <div className="flex gap-2">
