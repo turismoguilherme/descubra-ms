@@ -7141,6 +7141,7 @@ export type Database = {
         Args: { p_document_id: string; p_user_id?: string }
         Returns: boolean
       }
+      can_manage_site_media: { Args: { _uid: string }; Returns: boolean }
       check_availability: {
         Args: {
           p_date: string

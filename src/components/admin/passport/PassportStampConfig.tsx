@@ -422,24 +422,9 @@ const PassportStampConfig: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox
-                id="require_sequential"
-                checked={formData.require_sequential}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, require_sequential: checked === true })
-                }
-              />
-              <div className="grid gap-1.5 leading-none">
-                <Label
-                  htmlFor="require_sequential"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                >
-                  Requer ordem sequencial
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Se marcado, checkpoints devem ser visitados em ordem (1, 2, 3...). Se desmarcado, permite ordem livre.
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                A ordem dos pontos (livre ou em sequência) é definida na aba <strong>Rotas</strong>, ao criar ou editar a rota, na opção "Permitir concluir em qualquer ordem".
+              </p>
             </div>
 
             <Button

@@ -242,22 +242,26 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
 
           {/* Checkpoints List */}
           {route.checkpoints && route.checkpoints.length > 0 && (
-            <CheckpointList
-              checkpoints={route.checkpoints}
-              routeId={route.id}
-              progress={progress}
-              requireSequential={
-                route.checkpoint_order_mode === 'free'
-                  ? false
-                  :
-                route.configuration?.require_sequential ||
-                // Roteiros multi-dia exigem sequência total automaticamente
-                (route.checkpoints || []).some(
-                  (cp) => ((cp as { day_number?: number }).day_number || 1) > 1
-                )
-              }
-              onCheckinSuccess={handleProgressUpdate}
-            />
+            <>
+              <div className="rounded-lg border bg-card p-4 text-sm shadow-sm">
+                {route.checkpoint_order_mode === 'sequential' ? (
+                  <p>
+                    <strong>Roteiro em sequência:</strong> carimbe os pontos na ordem da lista. O próximo ponto libera depois que o anterior for carimbado.
+                  </p>
+                ) : (
+                  <p>
+                    <strong>Ordem livre:</strong> você pode carimbar os pontos na ordem que preferir. A lista abaixo é só uma sugestão de percurso.
+                  </p>
+                )}
+              </div>
+              <CheckpointList
+                checkpoints={route.checkpoints}
+                routeId={route.id}
+                progress={progress}
+                requireSequential={route.checkpoint_order_mode === 'sequential'}
+                onCheckinSuccess={handleProgressUpdate}
+              />
+            </>
           )}
         </div>
 

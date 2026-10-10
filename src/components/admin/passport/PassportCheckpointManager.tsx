@@ -913,28 +913,6 @@ const PassportCheckpointManager: React.FC = () => {
                           }
                         />
                       </div>
-                      <div className="flex items-center space-x-2 pt-6">
-                        <Checkbox
-                          id="new_photo"
-                          checked={newCheckpointForm.requires_photo}
-                          onCheckedChange={(checked) =>
-                            setNewCheckpointForm({
-                              ...newCheckpointForm,
-                              requires_photo: checked as boolean,
-                            })
-                          }
-                        />
-                        <div className="flex items-center gap-2">
-                          <Label htmlFor="new_photo">Foto obrigatória</Label>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                            </TooltipTrigger>                            <TooltipContent>
-                              <p>Se marcado, o turista será obrigado a tirar uma foto ao fazer check-in neste checkpoint.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </div>
                     </div>
                     </TooltipProvider>
 
@@ -1169,18 +1147,6 @@ const PassportCheckpointManager: React.FC = () => {
                                     })
                                   }
                                 />
-                              </div>
-                              <div className="flex items-center space-x-2 pt-6">
-                                <Checkbox
-                                  checked={editCheckpointForm.requires_photo}
-                                  onCheckedChange={(checked) =>
-                                    setEditCheckpointForm({
-                                      ...editCheckpointForm,
-                                      requires_photo: checked as boolean,
-                                    })
-                                  }
-                                />
-                                <Label>Foto obrigatória</Label>
                               </div>
                             </div>
 
