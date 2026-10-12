@@ -406,7 +406,9 @@ export default function FooterSettingsManager() {
       updatedLogos = [...currentLogos, newLogo];
     }
 
-    setCurrentSettings({ ...currentSettings, partner_logos: updatedLogos });
+    const next = { ...currentSettings, partner_logos: updatedLogos };
+    setCurrentSettings(next);
+    saveSettings(setCurrentSettings === setMsSettings ? 'ms' : 'viajar', next);
     setLogoDialogOpen(false);
     setEditingLogo(null);
     setLogoFile(null);
@@ -419,11 +421,9 @@ export default function FooterSettingsManager() {
   const handleDeleteLogo = (logoId: string, currentSettings: FooterSettings, setCurrentSettings: React.Dispatch<React.SetStateAction<FooterSettings>>) => {
     const currentLogos = currentSettings.partner_logos || [];
     const updatedLogos = currentLogos.filter(logo => logo.id !== logoId);
-    setCurrentSettings({ ...currentSettings, partner_logos: updatedLogos });
-    toast({
-      title: 'Logo removido',
-      description: 'O logo foi removido. Não esqueça de salvar as configurações.',
-    });
+    const next = { ...currentSettings, partner_logos: updatedLogos };
+    setCurrentSettings(next);
+    saveSettings(setCurrentSettings === setMsSettings ? 'ms' : 'viajar', next);
   };
 
   // Função para reordenar logos
