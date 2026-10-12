@@ -22,7 +22,10 @@ import {
   RotateCcw,
   AlertTriangle,
   Maximize2,
+  GripVertical,
 } from 'lucide-react';
+import MyRouteOrderPlanner from './MyRouteOrderPlanner';
+import { useCustomCheckpointOrder } from '@/hooks/useCustomCheckpointOrder';
 import type { RouteExtended, StampProgress } from '@/types/passportDigital';
 import { passportService } from '@/services/passport/passportService';
 import { rewardsService } from '@/services/passport/rewardsService';
