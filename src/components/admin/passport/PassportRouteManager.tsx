@@ -914,6 +914,14 @@ const PassportRouteManager: React.FC = () => {
                             )}
                           </div>
                           <div className="text-sm">
+                            <span className="font-medium">Ordem dos pontos:</span>{' '}
+                            {route.checkpoint_order_mode === 'sequential' ? (
+                              <Badge variant="secondary">🔒 Trilha sequencial</Badge>
+                            ) : (
+                              <Badge variant="outline">🟢 Livre — turista monta a própria ordem</Badge>
+                            )}
+                          </div>
+                          <div className="text-sm">
                             <span className="font-medium">Prefixo:</span>{' '}
                             {route.passport_number_prefix || 'MS'}
                           </div>
@@ -1058,7 +1066,8 @@ const PassportRouteManager: React.FC = () => {
               <div>
                 <Label htmlFor="free_order">Permitir concluir em qualquer ordem</Label>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Ativo (recomendado): o visitante carimba os pontos na ordem que quiser e a ordem cadastrada vira só uma sugestão. Desligado: só libera o próximo ponto depois do anterior (trilhas guiadas).
+                  <strong>Ligado (recomendado) = Roteiro livre:</strong> o turista carimba na ordem que quiser e pode arrastar os pontos para montar o próprio roteiro; a ordem daqui vira só sugestão.<br />
+                  <strong>Desligado = Trilha sequencial:</strong> o próximo ponto só libera depois do anterior e o turista não pode reorganizar.
                 </p>
               </div>
               <Switch
@@ -1254,7 +1263,8 @@ const PassportRouteManager: React.FC = () => {
               <div>
                 <Label htmlFor="new_free_order">Permitir concluir em qualquer ordem</Label>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Ativo (recomendado): o visitante carimba os pontos na ordem que quiser. Desligado: só libera o próximo ponto depois do anterior.
+                  <strong>Ligado (recomendado) = Roteiro livre:</strong> o turista carimba na ordem que quiser e pode arrastar os pontos para montar o próprio roteiro.<br />
+                  <strong>Desligado = Trilha sequencial:</strong> o próximo ponto só libera depois do anterior.
                 </p>
               </div>
               <Switch
