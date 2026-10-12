@@ -57,6 +57,9 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
   const [mapExpandedOpen, setMapExpandedOpen] = useState(false);
   const mapsEmbedUrl = normalizeGoogleMapsEmbedUrl(route.google_maps_embed_url);
   const { toast } = useToast();
+  const isSequential = route.checkpoint_order_mode === 'sequential';
+  const [planning, setPlanning] = useState(false);
+  const customOrder = useCustomCheckpointOrder(route.id, (route.checkpoints || []) as any[], !isSequential);
   
   // Determine animal theme from configuration or default
   const theme = (route.configuration?.stamp_theme || 'onca') as 'onca' | 'tuiuiu' | 'jacare' | 'arara' | 'capivara';
@@ -243,24 +246,43 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
           {/* Checkpoints List */}
           {route.checkpoints && route.checkpoints.length > 0 && (
             <>
-              <div className="rounded-lg border bg-card p-4 text-sm shadow-sm">
-                {route.checkpoint_order_mode === 'sequential' ? (
+              <div className="rounded-lg border bg-card p-4 text-sm shadow-sm space-y-3">
+                {isSequential ? (
                   <p>
                     <strong>Roteiro em sequência:</strong> carimbe os pontos na ordem da lista. O próximo ponto libera depois que o anterior for carimbado.
                   </p>
                 ) : (
-                  <p>
-                    <strong>Ordem livre:</strong> você pode carimbar os pontos na ordem que preferir. A lista abaixo é só uma sugestão de percurso.
-                  </p>
+                  <>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p>
+                        <strong>Ordem livre:</strong> você pode carimbar os pontos na ordem que preferir.
+                        {customOrder.isCustom ? ' Esta é a ordem que você montou.' : ' A lista abaixo é só uma sugestão de percurso.'}
+                      </p>
+                      <Button variant="outline" size="sm" onClick={() => setPlanning((v) => !v)}>
+                        <GripVertical className="h-4 w-4 mr-1" />
+                        {planning ? 'Concluir' : 'Organizar meu roteiro'}
+                      </Button>
+                    </div>
+                    {planning && (
+                      <MyRouteOrderPlanner
+                        items={customOrder.ordered.map((c) => ({ id: c.id, name: c.name }))}
+                        onChange={customOrder.save}
+                        onReset={customOrder.reset}
+                        isCustom={customOrder.isCustom}
+                      />
+                    )}
+                  </>
                 )}
               </div>
-              <CheckpointList
-                checkpoints={route.checkpoints}
-                routeId={route.id}
-                progress={progress}
-                requireSequential={route.checkpoint_order_mode === 'sequential'}
-                onCheckinSuccess={handleProgressUpdate}
-              />
+              {!planning && (
+                <CheckpointList
+                  checkpoints={customOrder.ordered}
+                  routeId={route.id}
+                  progress={progress}
+                  requireSequential={isSequential}
+                  onCheckinSuccess={handleProgressUpdate}
+                />
+              )}
             </>
           )}
         </div>
