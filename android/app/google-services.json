@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "641971712495",
+    "project_id": "descubra-mato-grosso-do-b491e",
+    "storage_bucket": "descubra-mato-grosso-do-b491e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:641971712495:android:77b907947f178fdbbdc61a",
+        "android_client_info": {
+          "package_name": "com.descubrams.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCchcU-qoA0_X5DyDN8Qf_576RHF_9UXis"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

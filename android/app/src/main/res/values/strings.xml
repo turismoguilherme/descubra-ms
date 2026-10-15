@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Descubra MS</string>
+    <string name="title_activity_main">Descubra MS</string>
+    <string name="package_name">com.descubrams.app</string>
+    <string name="custom_url_scheme">com.descubrams.app</string>
+</resources>
