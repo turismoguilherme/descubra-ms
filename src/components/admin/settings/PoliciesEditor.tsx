@@ -142,6 +142,35 @@ function isPdfFile(file: File) {
   return false;
 }
 
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => reject(reader.error ?? new Error('Falha ao ler o PDF'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadPolicyPdfViaEdge(policyKey: string, file: File): Promise<{ publicUrl: string; objectPath: string }> {
+  const pdfBase64 = await readFileAsDataUrl(file);
+  const { data, error } = await supabase.functions.invoke('admin-policy-pdf-upload', {
+    body: {
+      policyKey,
+      pdfBase64,
+      contentType: file.type || 'application/pdf',
+    },
+  });
+  const remote =
+    data && typeof data === 'object' && 'error' in data ? String((data as { error: unknown }).error) : null;
+  if (error || remote) {
+    throw new Error(remote || error?.message || 'Falha ao enviar o PDF.');
+  }
+  const publicUrl = data?.publicUrl as string | undefined;
+  const objectPath = data?.objectPath as string | undefined;
+  if (!publicUrl) throw new Error('Resposta do servidor sem URL pública do PDF.');
+  return { publicUrl, objectPath: objectPath ?? '' };
+}
+
 export default function PoliciesEditor() {
   const { toast } = useToast();
   const [policies, setPolicies] = useState<PolicyDocument[]>([]);
@@ -204,12 +233,11 @@ export default function PoliciesEditor() {
 
     setUploadingPdf(true);
     try {
-      const fileName = `policy-pdfs/${activePolicy}-${Date.now()}.pdf`;
       const row = policies[policyIndex];
 
       const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
       console.groupCollapsed(`${POLICY_PDF_LOG} upload — início`);
-      console.info(`${POLICY_PDF_LOG} storage`, { bucket: 'documents', objectPath: fileName });
+      console.info(`${POLICY_PDF_LOG} via`, 'admin-policy-pdf-upload (service role no servidor)');
       console.info(`${POLICY_PDF_LOG} ficheiro`, { name: file.name, size: file.size, type: file.type });
       console.info(`${POLICY_PDF_LOG} política`, { activePolicy, key: row?.key, platform: row?.platform, policyId: row?.id });
       console.info(`${POLICY_PDF_LOG} sessão Supabase`, {
@@ -221,19 +249,8 @@ export default function PoliciesEditor() {
       });
       console.groupEnd();
 
-      const { error: upErr } = await supabase.storage.from('documents').upload(fileName, file, {
-        contentType: 'application/pdf',
-        upsert: true,
-      });
-      if (upErr) {
-        logStorageUploadFailure(upErr);
-        throw upErr;
-      }
-      console.info(`${POLICY_PDF_LOG} storage.upload OK`, { objectPath: fileName });
-
-      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(fileName);
-      const newUrl = urlData?.publicUrl || '';
-      if (!newUrl) throw new Error('URL pública do PDF vazia');
+      const { publicUrl: newUrl, objectPath } = await uploadPolicyPdfViaEdge(activePolicy, file);
+      console.info(`${POLICY_PDF_LOG} edge upload OK`, { objectPath });
 
       const newPolicies = [...policies];
       newPolicies[policyIndex] = {
@@ -267,6 +284,8 @@ export default function PoliciesEditor() {
       const rlsBlocked =
         /row-level security|rls policy|violates row-level security|new row violates/i.test(msg);
       const duplicateObject = /duplicate|already exists|resource already exists/i.test(msg);
+      const functionMissing =
+        /failed to send a request to the edge function|function not found|admin-policy-pdf-upload/i.test(msg);
 
       console.groupCollapsed(`${POLICY_PDF_LOG} upload — erro`);
       console.error(`${POLICY_PDF_LOG} exceção`, err);
@@ -288,13 +307,15 @@ export default function PoliciesEditor() {
 
       toast({
         title: 'Erro ao enviar PDF',
-        description: bucketMissing
-          ? 'O bucket Storage "documents" não existe neste projeto Supabase. Corra as migrations (ex.: supabase db push) ou crie o bucket "documents" em Storage no Dashboard.'
-          : rlsBlocked
-            ? 'Permissão negada no Storage (RLS). Abra o grupo [PoliciesEditor PDF] no consola e confirme hasSession: true; caso contrário faça login de novo (sessão Supabase real).'
-            : duplicateObject
-              ? 'O ficheiro já existe neste caminho no Storage. Tente outra vez ou renomeie o PDF.'
-              : msg || 'Não foi possível enviar o PDF.',
+        description: functionMissing
+          ? 'A função admin-policy-pdf-upload ainda não está publicada no Supabase. Execute: npx supabase functions deploy admin-policy-pdf-upload'
+          : bucketMissing
+            ? 'O bucket Storage "documents" não existe neste projeto Supabase. Corra as migrations (ex.: supabase db push) ou crie o bucket "documents" em Storage no Dashboard.'
+            : rlsBlocked
+              ? 'Permissão negada. Confirme que sua conta tem role admin/tech/master_admin ou equipe Guatá ativa; faça login de novo se necessário.'
+              : duplicateObject
+                ? 'O ficheiro já existe neste caminho no Storage. Tente outra vez ou renomeie o PDF.'
+                : msg || 'Não foi possível enviar o PDF.',
         variant: 'destructive',
       });
     } finally {

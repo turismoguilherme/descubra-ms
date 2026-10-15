@@ -19,11 +19,11 @@ const siteProfiles: Record<SiteBrand, {
   descubrams: {
     title: "Descubra Mato Grosso do Sul",
     description:
-      "Escolha destinos, combine experiências e descubra o melhor de Mato Grosso do Sul com roteiros feitos para você. Turismo, cultura e natureza no Brasil.",
+      "Plataforma oficial de turismo de Mato Grosso do Sul — destinos, eventos, roteiros e passaporte digital.",
     url: "https://descubrams.com/",
     favicon: "/branding/descubra-ms-mark.png",
-    image: "https://descubrams.com/branding/descubra-ms-mark.png",
-    imageAlt: "Descubra Mato Grosso do Sul",
+    image: "https://descubrams.com/branding/descubra-ms-share.jpg",
+    imageAlt: "Descubra Mato Grosso do Sul — plataforma oficial de turismo do MS",
     schema: {
       "@context": "https://schema.org",
       "@graph": [
@@ -41,6 +41,8 @@ const siteProfiles: Record<SiteBrand, {
           name: "Descubra Mato Grosso do Sul",
           url: "https://descubrams.com/",
           logo: "https://descubrams.com/branding/descubra-ms-mark.png",
+          description:
+            "Plataforma oficial de turismo de Mato Grosso do Sul — destinos, eventos, roteiros e passaporte digital.",
           areaServed: {
             "@type": "AdministrativeArea",
             name: "Mato Grosso do Sul",
@@ -100,7 +102,7 @@ function siteIdentityPlugin(brand: SiteBrand): Plugin {
   const siteName = brand === "guata-labs" ? "Guatá Labs" : "Descubra Mato Grosso do Sul";
   const faviconType = brand === "guata-labs" ? "image/svg+xml" : "image/png";
   const appleTouch =
-    brand === "guata-labs" ? "/branding/guata-labs-share.png" : "/apple-touch-icon.png";
+    brand === "guata-labs" ? "/branding/guata-labs-share.png" : "/branding/descubra-ms-share.jpg";
 
   return {
     name: "site-identity",
@@ -139,7 +141,11 @@ function siteIdentityPlugin(brand: SiteBrand): Plugin {
         { tag: "meta", attrs: { property: "og:url", content: profile.url }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:locale", content: "pt_BR" }, injectTo: "head" as const },
         { tag: "meta", attrs: { property: "og:image", content: profile.image }, injectTo: "head" as const },
-        { tag: "meta", attrs: { property: "og:image:type", content: brand === "guata-labs" ? "image/png" : "image/png" }, injectTo: "head" as const },
+        {
+          tag: "meta",
+          attrs: { property: "og:image:type", content: brand === "guata-labs" ? "image/png" : "image/jpeg" },
+          injectTo: "head" as const,
+        },
         { tag: "meta", attrs: { property: "og:image:alt", content: profile.imageAlt }, injectTo: "head" as const },
         { tag: "meta", attrs: { name: "twitter:card", content: "summary_large_image" }, injectTo: "head" as const },
         { tag: "meta", attrs: { name: "twitter:title", content: profile.title }, injectTo: "head" as const },
@@ -196,7 +202,7 @@ function siteIdentityPlugin(brand: SiteBrand): Plugin {
                 name: "Descubra MS",
                 short_name: "Descubra MS",
                 description:
-                  "Portal oficial de turismo de Mato Grosso do Sul — destinos, eventos, roteiros e o Guatá.",
+                  "Plataforma oficial de turismo de Mato Grosso do Sul — destinos, eventos, roteiros e passaporte digital.",
                 start_url: "/",
                 display: "standalone",
                 background_color: "#0B3D2E",
