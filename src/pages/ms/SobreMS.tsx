@@ -6,9 +6,12 @@ import UniversalLayout from '@/components/layout/UniversalLayout';
 import logoDescubra from '@/assets/images/logo-descubra-ms-v2.png';
 import { useBrand } from '@/context/BrandContext';
 import { platformContentService } from '@/services/admin/platformContentService';
+import { useFooterSettings } from '@/hooks/useFooterSettings';
 
 const SobreMS = () => {
   const [content, setContent] = useState<Record<string, string>>({});
+  const { settings: footerSettings } = useFooterSettings('ms');
+  const supportLogos = (footerSettings.partner_logos || []).sort((a, b) => a.order - b.order);
   // Tentar obter logo do BrandContext, com fallback
   let logoUrl = logoDescubra;
   try {
@@ -110,6 +113,40 @@ const SobreMS = () => {
               </div>
             </div>
           </div>
+
+          {supportLogos.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-lg p-8 md:p-10 mb-12">
+              <h2 className="text-3xl font-bold text-ms-primary-blue mb-2 text-center">
+                {getContent('ms_about_support_title', 'Apoio')}
+              </h2>
+              <p className="text-center text-gray-600 text-sm md:text-base mb-8 max-w-2xl mx-auto">
+                {getContent(
+                  'ms_about_support_subtitle',
+                  'Instituições e parceiros que apoiam o Descubra Mato Grosso do Sul.',
+                )}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 max-w-5xl mx-auto">
+                {supportLogos.map((logo) => (
+                  <div
+                    key={logo.id}
+                    className="flex items-center justify-center rounded-xl border border-gray-100 bg-gradient-to-b from-gray-50 to-white p-6 min-h-[120px] shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <img
+                      src={logo.logo_url}
+                      alt={logo.alt_text || logo.name}
+                      title={logo.name}
+                      className="max-h-16 md:max-h-20 w-full max-w-[200px] object-contain"
+                      loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Por que MS - Cards estilo Destinos */}
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">

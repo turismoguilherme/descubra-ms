@@ -5,6 +5,8 @@
  */
 
 import React, { useState, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { Button } from '@/components/ui/button';
 import { 
   Upload, 
@@ -22,8 +24,8 @@ interface EventImageUploadProps {
   placeholder?: string;
 }
 
-const SUPABASE_URL = "https://hvtrpkbjgbuypkskqcqm.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2dHJwa2JqZ2J1eXBrc2txY3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwMzIzODgsImV4cCI6MjA2NzYwODM4OH0.gHxmJIedckwQxz89DUHx4odzTbPefFeadW3T7cYcW2Q";
+/** Pasta permitida por RLS para formulário público (migration 20261017210300). */
+const PUBLIC_SUBMISSION_PREFIX = 'public-submissions';
 
 const EventImageUpload: React.FC<EventImageUploadProps> = ({
   label = "Imagem",
@@ -155,36 +157,29 @@ const EventImageUpload: React.FC<EventImageUploadProps> = ({
       const random = Math.random().toString(36).substring(2, 8);
       const extension = optimizedFile.name.split('.').pop();
       const filename = `${timestamp}_${random}.${extension}`;
+      const storagePath = `${PUBLIC_SUBMISSION_PREFIX}/${filename}`;
 
-      // Upload para Supabase Storage usando arquivo comprimido
-      const response = await fetch(
-        `${SUPABASE_URL}/storage/v1/object/${folder}/${filename}`,
-        {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': optimizedFile.type,
-            'x-upsert': 'true'
-          },
-          body: optimizedFile
-        }
-      );
+      const { error: uploadError } = await supabase.storage
+        .from(folder)
+        .upload(storagePath, optimizedFile, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: optimizedFile.type,
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao fazer upload');
+      if (uploadError) {
+        throw new Error(uploadError.message);
       }
 
-      // Gerar URL pública
-      const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${folder}/${filename}`;
+      const { data: urlData } = supabase.storage.from(folder).getPublicUrl(storagePath);
+      const publicUrl = urlData.publicUrl;
       
       onChange(publicUrl);
       setPreview(publicUrl);
 
     } catch (err: unknown) {
       console.error('Erro no upload:', err);
-      setError(err.message || 'Erro ao fazer upload da imagem');
+      setError(getErrorMessage(err, 'Erro ao fazer upload da imagem'));
       setPreview(null);
     } finally {
       setIsUploading(false);

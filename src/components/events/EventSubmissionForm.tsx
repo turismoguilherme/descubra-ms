@@ -177,6 +177,7 @@ export const EventSubmissionForm: React.FC = () => {
         contato_telefone: data.organizador_telefone,
         is_visible: false,
         is_sponsored: false,
+        sponsor_payment_status: null,
         approval_status: 'pending',
         start_time: data.horario_inicio,
         end_time: data.horario_fim,
