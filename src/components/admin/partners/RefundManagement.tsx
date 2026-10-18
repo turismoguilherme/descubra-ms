@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { getErrorMessage } from '@/utils/errorUtils';
-import { RefreshCw, CheckCircle, XCircle, Clock, Eye, DollarSign, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { RefreshCw, CheckCircle, XCircle, Clock, Eye, DollarSign, AlertCircle, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -260,6 +261,22 @@ export default function RefundManagement() {
 
   return (
     <div className="space-y-6">
+      <Alert className="border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-50">
+        <Info className="h-4 w-4 text-amber-700 dark:text-amber-300" />
+        <AlertTitle className="text-amber-950 dark:text-amber-50">Lembrete do dia a dia</AlertTitle>
+        <AlertDescription className="text-sm text-amber-900/90 dark:text-amber-100/90 mt-1 space-y-2">
+          <p>
+            Quando um turista <strong>cancela uma reserva paga</strong>, o sistema só <strong>enfileira</strong> o
+            reembolso aqui. O cliente <strong>só recebe de volta no cartão</strong> depois que você clicar em{' '}
+            <strong>Processar</strong> (Stripe).
+          </p>
+          <p className="text-xs">
+            Cancelamento da reserva ≠ reembolso automático. Confira valor e código da reserva antes de processar.
+            Mensalidade de parceiro (reprovar cadastro / cancelar assinatura) <strong>não</strong> usa esta fila.
+          </p>
+        </AlertDescription>
+      </Alert>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Reembolsos pendentes</h1>
