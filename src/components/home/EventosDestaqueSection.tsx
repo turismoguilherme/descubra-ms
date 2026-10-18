@@ -4,6 +4,7 @@ import { Calendar, MapPin, Clock, Star, ArrowRight, Loader2 } from "lucide-react
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { optimizeEventCardImage } from "@/utils/imageOptimization";
+import { resolveEventCardMedia } from "@/utils/eventDisplayMedia";
 import { isEventActiveForPublicListing } from "@/utils/eventPublicVisibility";
 import { resolveEventTimes, formatEventTimeRange } from "@/utils/eventTimeDisplay";
 
@@ -36,7 +37,7 @@ const EventosDestaqueSection = () => {
       const { data, error } = await supabase
         .from('events_public')
         .select(
-          'id, titulo, descricao, data_inicio, data_fim, start_time, end_time, local, imagem_principal, is_visible, is_sponsored'
+          'id, titulo, descricao, data_inicio, data_fim, start_time, end_time, local, imagem_principal, logo_evento, is_visible, is_sponsored'
         )
         .order('data_inicio', { ascending: true })
         .limit(80);
@@ -67,6 +68,7 @@ const EventosDestaqueSection = () => {
         end_time: et,
         location: event.local || '',
         image_url: event.imagem_principal || undefined,
+        logo_evento: event.logo_evento || undefined,
         is_sponsored: Boolean(event.is_sponsored),
       };
       });
@@ -147,19 +149,32 @@ const EventosDestaqueSection = () => {
 
                 <div className="h-72 overflow-hidden relative">
                   {(() => {
-                    const imageUrl = event.image_url;
-                    const optimizedUrl = imageUrl ? optimizeEventCardImage(imageUrl) : '';
-                    const finalUrl = optimizedUrl || imageUrl || "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800";
+                    const { url: mediaUrl, objectFit } = resolveEventCardMedia(event);
+                    const optimizedUrl = mediaUrl ? optimizeEventCardImage(mediaUrl) : '';
+                    const finalUrl =
+                      optimizedUrl ||
+                      mediaUrl ||
+                      'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800';
+                    const isPlaceholder =
+                      finalUrl === 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800';
 
                     return (
                       <img
                         src={finalUrl}
                         alt={event.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className={`w-full h-full transition-transform duration-700 group-hover:scale-110 ${
+                          objectFit === 'contain' && !isPlaceholder
+                            ? 'object-contain bg-gradient-to-br from-slate-50 to-slate-100 p-6'
+                            : 'object-cover'
+                        }`}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          if (target.src !== "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800") {
-                            target.src = "https://images.unsplash.com/photo-1511578314322-379afb476865?w=800";
+                          if (
+                            target.src !==
+                            'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800'
+                          ) {
+                            target.src =
+                              'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800';
                           }
                         }}
                       />

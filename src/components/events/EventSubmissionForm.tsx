@@ -172,6 +172,7 @@ export const EventSubmissionForm: React.FC = () => {
         site_oficial: data.site_oficial || null,
         video_promocional: data.video_promocional || null,
         imagem_principal: data.logo_evento || null,
+        logo_evento: data.logo_evento || null,
         organizador: data.organizador_nome,
         contato_email: data.organizador_email,
         contato_telefone: data.organizador_telefone,
@@ -188,10 +189,8 @@ export const EventSubmissionForm: React.FC = () => {
       }
 
       // Criar evento no banco
-      const { error: insertError } = await supabase
-        .from("events")
-        .insert(eventData as any)
-        .select("id");
+      // Sem .select(): RETURNING exige SELECT em linhas pendentes (is_visible=false) → 42501 para anon.
+      const { error: insertError } = await supabase.from("events").insert(eventData as any);
 
       if (insertError) {
         const statusLabel = (insertError as any)?.code ? ` [${(insertError as any).code}]` : "";

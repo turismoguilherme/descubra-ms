@@ -11,8 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Calendar,
-  MapPin,
-  Clock,
   User,
   Globe,
   Phone,
@@ -26,6 +24,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { resolveEventTimes, formatEventTimeRange } from '@/utils/eventTimeDisplay';
 import ShareEventModal from '@/components/events/ShareEventModal';
+import { EventWhenWhereCards } from '@/components/events/EventWhenWhereCards';
 // Removido optimizeModalImage - usando URLs originais diretamente (já otimizadas no upload)
 
 interface EventItem {
@@ -278,33 +277,13 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
 
           {/* Conteúdo */}
           <div className="p-6 space-y-6">
-            {/* Grid de informações principais */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Data e Horário */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100">
-                <div className="flex items-center gap-2 text-blue-700 mb-3">
-                  <Calendar className="w-5 h-5" />
-                  <span className="font-semibold">Data e Horário</span>
-                </div>
-                <p className="text-gray-800 font-medium">{formatDate(event.start_date)}</p>
-                {event.end_date && event.end_date !== event.start_date && (
-                  <p className="text-gray-600 text-sm mt-1">até {formatDate(event.end_date)}</p>
-                )}
-                <div className="flex items-center gap-2 mt-2 text-gray-600">
-                  <Clock className="w-4 h-4" />
-                  <span>{timeRangeLabel || 'Horário a definir'}</span>
-                </div>
-              </div>
-
-              {/* Localização */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-4 border border-green-100">
-                <div className="flex items-center gap-2 text-green-700 mb-3">
-                  <MapPin className="w-5 h-5" />
-                  <span className="font-semibold">Localização</span>
-                </div>
-                <p className="text-gray-800 font-medium">{getTranslatedLocation(event)}</p>
-              </div>
-            </div>
+            <EventWhenWhereCards
+              startDateLabel={formatDate(event.start_date)}
+              endDateLabel={event.end_date ? formatDate(event.end_date) : undefined}
+              sameDay={!event.end_date || event.end_date === event.start_date}
+              timeLabel={timeRangeLabel}
+              locationLabel={getTranslatedLocation(event)}
+            />
 
             {/* Logo / Imagem do evento em destaque */}
             {(event.logo_evento || event.image_url) && (
