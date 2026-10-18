@@ -149,6 +149,15 @@ export function getEventEndUtcMs(row: EventRowDates): number | null {
  */
 export function isEventActiveForPublicListing(row: EventRowDates): boolean {
   const endMs = getEventEndUtcMs(row);
-  if (endMs == null) return false;
+  if (endMs == null) {
+    const startOnly = toComparableYmd(row.data_inicio ?? row.start_date);
+    if (!startOnly) return false;
+    try {
+      const fallbackEnd = wallClockToUtcMs(startOnly, '23:59:59', MS_EVENTS_TIMEZONE);
+      return Date.now() < fallbackEnd;
+    } catch {
+      return false;
+    }
+  }
   return Date.now() < endMs;
 }

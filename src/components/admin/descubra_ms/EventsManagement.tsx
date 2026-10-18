@@ -442,6 +442,12 @@ export default function EventsManagement() {
         approved_at: nowIso,
       };
 
+      const startYmd = String(event.start_date || '').trim();
+      const endYmd = String(event.end_date || '').trim();
+      if (startYmd && !endYmd) {
+        updateData.data_fim = startYmd;
+      }
+
       // Não adicionar approved_by ou approved_at pois podem não existir na tabela
       console.log('Dados para atualização:', updateData);
 
