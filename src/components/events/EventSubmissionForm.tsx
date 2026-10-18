@@ -420,6 +420,10 @@ export const EventSubmissionForm: React.FC = () => {
               )}
             </div>
           </div>
+          <p className="text-xs text-gray-500">
+            E-mail e telefone serão exibidos na página pública do evento após aprovação pela equipe
+            Descubra MS.
+          </p>
         </CardContent>
       </Card>
 
@@ -437,10 +441,15 @@ export const EventSubmissionForm: React.FC = () => {
             <Input id="site_oficial" {...register("site_oficial")} placeholder="https://www.seuevento.com.br" />
           </div>
           <div>
-            <Label htmlFor="video_promocional">Vídeo Promocional (YouTube)</Label>
-            <Input id="video_promocional" {...register("video_promocional")} placeholder="https://www.youtube.com/watch?v=..." />
+            <Label htmlFor="video_promocional">Link do vídeo promocional</Label>
+            <Input
+              id="video_promocional"
+              {...register("video_promocional")}
+              placeholder="YouTube, Instagram, TikTok ou outro link"
+            />
             <p className="text-xs text-gray-500 mt-1">
-              💡 Vídeos do YouTube são exibidos automaticamente. Proporção ideal: 16:9
+              YouTube é reproduzido na página do evento. Outras redes abrem em nova aba pelo botão
+              &quot;Ver vídeo&quot;.
             </p>
             {errors.video_promocional && (
               <p className="text-red-500 text-sm mt-1">{errors.video_promocional.message}</p>

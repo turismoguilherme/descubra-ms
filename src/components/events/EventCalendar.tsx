@@ -232,10 +232,13 @@ const EventCalendar: React.FC<EventCalendarProps> = ({ autoLoad = true }) => {
           const eventEndDate = event.end_date || event.data_fim;
           const eventLocation = event.location || event.local || '';
           const eventImageUrl = event.image_url || event.imagem_url || event.imagem_principal;
-          const eventVideoUrl = event.video_url || event.video_promocional;
-          const organizerPhone = event.organizador_telefone || event.telefone_organizador;
-          const organizerEmail = event.organizador_email || event.email_organizador;
-          const organizerName = event.organizador_nome || event.organizador;
+          const row = event as Record<string, string | undefined>;
+          const eventVideoUrl = row.video_url || row.video_promocional;
+          const organizerPhone =
+            row.organizador_telefone || row.telefone_organizador || row.contato_telefone;
+          const organizerEmail =
+            row.organizador_email || row.email_organizador || row.contato_email;
+          const organizerName = row.organizador_nome || row.organizador;
 
           // Destaque é definido manualmente pelo admin
           const isSponsoredCalculated = Boolean(event.is_sponsored);

@@ -23,6 +23,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { resolveEventTimes, formatEventTimeRange } from '@/utils/eventTimeDisplay';
+import { getYouTubeEmbedUrl, getExternalPromoVideoUrl } from '@/utils/eventPromoVideo';
 import ShareEventModal from '@/components/events/ShareEventModal';
 import { EventWhenWhereCards } from '@/components/events/EventWhenWhereCards';
 // Removido optimizeModalImage - usando URLs originais diretamente (já otimizadas no upload)
@@ -159,23 +160,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
     }
   };
 
-  // Extrair ID do YouTube
-  const getYouTubeEmbedUrl = (url: string): string | null => {
-    if (!url) return null;
-    
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([^&\n?#]+)/,
-      /youtube\.com\/watch\?.*v=([^&\n?#]+)/,
-    ];
-
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match?.[1]) {
-        return `https://www.youtube.com/embed/${match[1]}`;
-      }
-    }
-    return null;
-  };
+  const externalVideoUrl = getExternalPromoVideoUrl(event.video_url);
 
   // Renderizar mídia do hero
   const renderHeroMedia = () => {
@@ -308,21 +293,29 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
             )}
 
             {/* Organizador */}
-            {event.organizador_nome && (
+            {(event.organizador_nome || event.organizador_email || event.organizador_telefone) && (
               <div className="bg-purple-50 rounded-xl p-5 border border-purple-100">
                 <div className="flex items-center gap-2 text-purple-700 mb-3">
                   <User className="w-5 h-5" />
                   <span className="font-semibold">Organização</span>
                 </div>
-                <p className="text-gray-800 font-medium">{event.organizador_nome}</p>
+                {event.organizador_nome && (
+                  <p className="text-gray-800 font-medium">{event.organizador_nome}</p>
+                )}
                 {event.organizador_email && (
-                  <a 
+                  <a
                     href={`mailto:${event.organizador_email}`}
                     className="flex items-center gap-2 text-gray-600 text-sm mt-2 hover:text-purple-600 transition-colors"
                   >
                     <Mail className="w-4 h-4" />
                     {event.organizador_email}
                   </a>
+                )}
+                {event.organizador_telefone && (
+                  <p className="flex items-center gap-2 text-gray-600 text-sm mt-2">
+                    <Phone className="w-4 h-4" />
+                    {event.organizador_telefone}
+                  </p>
                 )}
               </div>
             )}
@@ -344,6 +337,25 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                     <Globe className="w-4 h-4" />
                     Site Oficial
                     <ExternalLink className="w-4 h-4" />
+                  </a>
+                </Button>
+              )}
+
+              {externalVideoUrl && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  asChild
+                  className="rounded-xl border-2 border-red-500/80 text-red-600 hover:bg-red-50 flex-1 sm:flex-initial max-w-[220px]"
+                >
+                  <a
+                    href={externalVideoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Ver vídeo
                   </a>
                 </Button>
               )}
