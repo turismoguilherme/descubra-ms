@@ -737,7 +737,32 @@ export default function EventsManagement() {
     setEditingEvent(event);
     setEditStartDateTimeDraft(toDateTimeLocalValue(event.start_date));
     setEditEndDateTimeDraft(toDateTimeLocalValue(event.end_date));
+    setImageFile(null);
+    setLogoFile(null);
     setEditDialogOpen(true);
+  };
+
+  const uploadAdminEventImage = async (
+    file: File,
+    eventId: string,
+    kind: 'main' | 'logo',
+  ): Promise<string> => {
+    const safeName = file.name.replace(/[^\w.\-]+/g, '_');
+    const path = `admin-uploads/${eventId}/${kind}-${Date.now()}-${safeName}`;
+    const { data, error } = await supabase.storage.from('event-images').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type,
+    });
+    if (error) {
+      if (/bucket not found/i.test(error.message)) {
+        throw new Error(
+          'Bucket "event-images" não existe no Supabase. Execute a migration 20261017210400_ensure_event_images_bucket.sql no SQL Editor.',
+        );
+      }
+      throw error;
+    }
+    return supabase.storage.from('event-images').getPublicUrl(data.path).data.publicUrl;
   };
 
   const handleSaveEdit = async () => {
@@ -767,28 +792,12 @@ export default function EventsManagement() {
       let imageUrl = editingEvent.image_url;
       let logoUrl = editingEvent.logo_evento;
 
-      // Upload main image if a new file is selected
       if (imageFile) {
-        const { data, error } = await supabase.storage
-          .from('event-images')
-          .upload(`public/${Date.now()}-${imageFile.name}`, imageFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-        if (error) throw error;
-        imageUrl = `${supabase.storage.from('event-images').getPublicUrl(data.path).data.publicUrl}`;
+        imageUrl = await uploadAdminEventImage(imageFile, editingEvent.id, 'main');
       }
 
-      // Upload logo image if a new file is selected
       if (logoFile) {
-        const { data, error } = await supabase.storage
-          .from('event-logos')
-          .upload(`public/${Date.now()}-${logoFile.name}`, logoFile, {
-            cacheControl: '3600',
-            upsert: false,
-          });
-        if (error) throw error;
-        logoUrl = `${supabase.storage.from('event-logos').getPublicUrl(data.path).data.publicUrl}`;
+        logoUrl = await uploadAdminEventImage(logoFile, editingEvent.id, 'logo');
       }
 
       // Campos básicos que sempre existem (campos essenciais)
@@ -1351,7 +1360,16 @@ export default function EventsManagement() {
       </Tabs>
 
       {/* Modal de edição */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) {
+            setImageFile(null);
+            setLogoFile(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Evento</DialogTitle>
