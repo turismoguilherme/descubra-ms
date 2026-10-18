@@ -63,7 +63,7 @@ export async function createReservation(
   const [{ data: partner }, { data: pricing }, { data: userData }] = await Promise.all([
     ctx.supabaseAdmin
       .from("institutional_partners")
-      .select("id, name, status, is_active, subscription_status")
+      .select("id, name, status, is_active, subscription_status, billing_mode")
       .eq("id", input.partner_id)
       .maybeSingle(),
     ctx.supabaseAdmin
@@ -75,10 +75,11 @@ export async function createReservation(
     ctx.supabaseAdmin.auth.admin.getUserById(ctx.userId),
   ]);
 
+  const { isPartnerSubscriptionOk } = await import("../../_shared/partnerSubscription.ts");
   const partnerOk = partner &&
     partner.status === "approved" &&
     partner.is_active === true &&
-    partner.subscription_status === "active";
+    isPartnerSubscriptionOk(partner);
 
   if (!partnerOk) {
     const output = { error: "parceiro indisponível", hint: "Busque outro parceiro ativo." };

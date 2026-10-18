@@ -105,6 +105,7 @@ export async function createEventDraft(
     is_visible: false,
     created_by: ctx.userId,
     is_sponsored: false,
+    sponsor_payment_status: null,
   };
 
   const { data, error } = await ctx.supabaseAdmin

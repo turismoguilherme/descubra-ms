@@ -28,15 +28,16 @@ export async function checkAvailability(
 
   const { data: partner, error: pErr } = await ctx.supabaseAdmin
     .from("institutional_partners")
-    .select("id, name, address, partner_type, status, is_active, subscription_status")
+    .select("id, name, address, partner_type, status, is_active, subscription_status, billing_mode")
     .eq("id", input.partner_id)
     .maybeSingle();
 
+  const { isPartnerSubscriptionOk } = await import("../../_shared/partnerSubscription.ts");
   const partnerActive =
     partner &&
     partner.status === "approved" &&
     partner.is_active === true &&
-    partner.subscription_status === "active";
+    isPartnerSubscriptionOk(partner);
 
   if (pErr || !partnerActive) {
     const output = { error: "parceiro não encontrado ou indisponível para reservas" };

@@ -160,10 +160,15 @@ serve(async (req) => {
       );
     }
 
-    if (!partner.is_active || partner.subscription_status !== 'active') {
+    const { isPartnerSubscriptionOk } = await import('../_shared/partnerSubscription.ts');
+    const subscriptionOk = isPartnerSubscriptionOk(partner);
+
+    if (!partner.is_active || !subscriptionOk) {
       const reasons = [];
       if (!partner.is_active) reasons.push('parceiro não está marcado como ativo');
-      if (partner.subscription_status !== 'active') reasons.push(`assinatura está com status: ${partner.subscription_status || 'null'}`);
+      if (!subscriptionOk) {
+        reasons.push(`assinatura está com status: ${partner.subscription_status || 'null'}`);
+      }
       
       console.error('[reservation-checkout] Partner not active:', {
         is_active: partner.is_active,

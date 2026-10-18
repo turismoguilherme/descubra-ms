@@ -51,6 +51,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { partnerBillingModeLabel, type PartnerBillingMode } from '@/lib/partnerSubscription';
 
 // Tipo do termo mais recente associado ao parceiro
 interface PartnerTerm {
@@ -84,7 +85,26 @@ const HelpHint = ({ text }: { text: string }) => (
   </Popover>
 );
 
+/** Evita <button> dentro de <button> (HelpHint ao lado da ação). */
+const ActionWithHint = ({ text, children }: { text: string; children: React.ReactNode }) => (
+  <div className="inline-flex items-center gap-1">
+    {children}
+    <HelpHint text={text} />
+  </div>
+);
+
 // Texto explicativo de cada ação destrutiva/sensível
+function throwIfPartnerFinalRejectInvokeFailed(fnError: { message?: string } | null): void {
+  if (!fnError) return;
+  const msg = fnError.message || '';
+  if (/404|not found|Failed to send a request to the Edge Function/i.test(msg)) {
+    throw new Error(
+      'A função partner-final-reject não está publicada no Supabase. No projeto, execute: npx supabase functions deploy partner-final-reject --project-ref hvtrpkbjgbuypkskqcqm',
+    );
+  }
+  throw fnError;
+}
+
 const ACTION_HELP = {
   approve:
     'Marca o cadastro como aprovado para seguir o fluxo normal (pagamento / assinatura no Stripe). A vitrine pública segue as regras já configuradas no sistema (assinatura ativa, etc.).',
@@ -116,6 +136,7 @@ interface Partner {
   monthly_fee?: number;
   stripe_subscription_id?: string;
   is_active?: boolean;
+  billing_mode?: PartnerBillingMode | string;
   created_at: string;
 }
 
@@ -148,6 +169,57 @@ export default function PartnersManagement() {
     destructive?: boolean;
   }>(null);
   const { toast } = useToast();
+  const [billingModeDraft, setBillingModeDraft] = useState<PartnerBillingMode>('trial_monthly');
+  const [savingBillingMode, setSavingBillingMode] = useState(false);
+
+  useEffect(() => {
+    if (selectedPartner?.billing_mode === 'exempt') {
+      setBillingModeDraft('exempt');
+    } else {
+      setBillingModeDraft('trial_monthly');
+    }
+  }, [selectedPartner?.id, selectedPartner?.billing_mode]);
+
+  const saveBillingMode = async (partnerId: string, mode: PartnerBillingMode) => {
+    setSavingBillingMode(true);
+    try {
+      const updatePayload: Record<string, unknown> = {
+        billing_mode: mode,
+        updated_at: new Date().toISOString(),
+      };
+      if (mode === 'exempt') {
+        updatePayload.subscription_status = 'active';
+      }
+
+      const { error } = await supabase
+        .from('institutional_partners')
+        .update(updatePayload)
+        .eq('id', partnerId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Plano atualizado',
+        description:
+          mode === 'exempt'
+            ? 'Parceiro isento de mensalidade (sem etapa de pagamento no cadastro).'
+            : 'Parceiro no plano padrão: trial de 30 dias + mensalidade no Stripe.',
+      });
+      await loadPartners();
+      if (selectedPartner?.id === partnerId) {
+        setSelectedPartner((prev) => (prev ? { ...prev, billing_mode: mode } : prev));
+      }
+    } catch (err) {
+      console.error('Erro ao salvar billing_mode:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar o plano de mensalidade.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingBillingMode(false);
+    }
+  };
 
   const loadPartners = useCallback(async () => {
     setLoading(true);
@@ -217,7 +289,7 @@ export default function PartnersManagement() {
         const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-final-reject', {
           body: { partnerId },
         });
-        if (fnError) throw fnError;
+        throwIfPartnerFinalRejectInvokeFailed(fnError);
         const payload = fnData as { error?: string } | undefined;
         if (payload?.error) throw new Error(payload.error);
       }
@@ -285,7 +357,7 @@ export default function PartnersManagement() {
         const { data: fnData, error: fnError } = await supabase.functions.invoke('partner-final-reject', {
           body: { partnerId },
         });
-        if (fnError) throw fnError;
+        throwIfPartnerFinalRejectInvokeFailed(fnError);
         const payload = fnData as { error?: string; success?: boolean; stripeMessage?: string | null } | undefined;
         if (payload?.error) throw new Error(payload.error);
 
@@ -432,7 +504,11 @@ export default function PartnersManagement() {
   const overduePartners = partners.filter(p => 
     p.subscription_status === 'past_due' || 
     p.subscription_status === 'unpaid' ||
-    (p.status === 'approved' && !p.is_active && p.subscription_status !== 'active' && p.subscription_status !== 'trialing')
+    (p.status === 'approved' &&
+      !p.is_active &&
+      p.billing_mode !== 'exempt' &&
+      p.subscription_status !== 'active' &&
+      p.subscription_status !== 'trialing')
   );
 
   const PartnerCard = ({ partner }: { partner: Partner }) => (
@@ -563,53 +639,57 @@ export default function PartnersManagement() {
 
               {(partner.status === 'pending' || partner.status === 'revision_requested') && (
                 <>
-                  <Button
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => updatePartnerStatus(partner.id, 'approved')}
-                  >
-                    <Check className="w-4 h-4 mr-1" />
-                    Aprovar cadastro
-                    <HelpHint text={ACTION_HELP.approve} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => updatePartnerStatus(partner.id, 'revision_requested')}
-                  >
-                    Pedir ajustes
-                    <HelpHint text={ACTION_HELP.revision} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() =>
-                      setConfirmDialog({
-                        title: 'Reprovar e encerrar (Stripe)?',
-                        description:
-                          `Isso vai CANCELAR a assinatura do parceiro "${partner.name}" no Stripe, tentar REEMBOLSO INTEGRAL da última fatura paga e ENCERRAR o acesso. O cadastro permanece no histórico como reprovado. Não tem volta automática.`,
-                        confirmLabel: 'Sim, encerrar',
-                        destructive: true,
-                        onConfirm: () => updatePartnerStatus(partner.id, 'rejected'),
-                      })
-                    }
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Reprovar e encerrar (Stripe)
-                    <HelpHint text={ACTION_HELP.finalReject} />
-                  </Button>
+                  <ActionWithHint text={ACTION_HELP.approve}>
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => updatePartnerStatus(partner.id, 'approved')}
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Aprovar cadastro
+                    </Button>
+                  </ActionWithHint>
+                  <ActionWithHint text={ACTION_HELP.revision}>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => updatePartnerStatus(partner.id, 'revision_requested')}
+                    >
+                      Pedir ajustes
+                    </Button>
+                  </ActionWithHint>
+                  <ActionWithHint text={ACTION_HELP.finalReject}>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() =>
+                        setConfirmDialog({
+                          title: 'Reprovar e encerrar (Stripe)?',
+                          description:
+                            `Isso vai CANCELAR a assinatura do parceiro "${partner.name}" no Stripe, tentar REEMBOLSO INTEGRAL da última fatura paga e ENCERRAR o acesso. O cadastro permanece no histórico como reprovado. Não tem volta automática.`,
+                          confirmLabel: 'Sim, encerrar',
+                          destructive: true,
+                          onConfirm: () => updatePartnerStatus(partner.id, 'rejected'),
+                        })
+                      }
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Reprovar e encerrar (Stripe)
+                    </Button>
+                  </ActionWithHint>
                 </>
               )}
 
               {partner.status === 'approved' && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => updatePartnerStatus(partner.id, 'suspended')}
-                >
-                  Suspender
-                  <HelpHint text={ACTION_HELP.suspend} />
-                </Button>
+                <ActionWithHint text={ACTION_HELP.suspend}>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => updatePartnerStatus(partner.id, 'suspended')}
+                  >
+                    Suspender
+                  </Button>
+                </ActionWithHint>
               )}
 
               {(partner.status === 'rejected' ||
@@ -965,6 +1045,35 @@ export default function PartnersManagement() {
                 </div>
               )}
 
+              <div className="border-t pt-4 space-y-3">
+                <h4 className="font-semibold text-gray-900">Plano de mensalidade</h4>
+                <p className="text-sm text-muted-foreground">
+                  Atual: <strong>{partnerBillingModeLabel(selectedPartner.billing_mode)}</strong>
+                </p>
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+                  <div className="flex-1 space-y-1">
+                    <Label htmlFor="partner-billing-mode">Cobrança</Label>
+                    <select
+                      id="partner-billing-mode"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={billingModeDraft}
+                      onChange={(e) => setBillingModeDraft(e.target.value as PartnerBillingMode)}
+                    >
+                      <option value="trial_monthly">30 dias grátis + mensalidade (Stripe)</option>
+                      <option value="exempt">Isento de mensalidade</option>
+                    </select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={savingBillingMode}
+                    onClick={() => saveBillingMode(selectedPartner.id, billingModeDraft)}
+                  >
+                    {savingBillingMode ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salvar plano'}
+                  </Button>
+                </div>
+              </div>
+
               {/* SEÇÃO: Termo de Parceria */}
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
@@ -1113,79 +1222,84 @@ export default function PartnersManagement() {
               <div className="flex gap-2 pt-4 border-t flex-wrap">
                 {(selectedPartner.status === 'pending' || selectedPartner.status === 'revision_requested') && (
                   <>
-                    <Button
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => {
-                        updatePartnerStatus(selectedPartner.id, 'approved');
-                        setSelectedPartner(null);
-                      }}
-                    >
-                      <Check className="w-4 h-4 mr-2" />
-                      Aprovar cadastro
-                      <HelpHint text={ACTION_HELP.approve} />
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        updatePartnerStatus(selectedPartner.id, 'revision_requested');
-                        setSelectedPartner(null);
-                      }}
-                    >
-                      Pedir ajustes
-                      <HelpHint text={ACTION_HELP.revision} />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() =>
-                        setConfirmDialog({
-                          title: 'Reprovar e encerrar (Stripe)?',
-                          description: `Cancela assinatura no Stripe, tenta reembolso integral da última fatura e encerra o acesso do parceiro "${selectedPartner.name}". O cadastro não é apagado. Não tem volta automática.`,
-                          confirmLabel: 'Sim, encerrar',
-                          destructive: true,
-                          onConfirm: () => {
-                            updatePartnerStatus(selectedPartner.id, 'rejected');
-                            setSelectedPartner(null);
-                          },
-                        })
-                      }
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Reprovar e encerrar (Stripe)
-                      <HelpHint text={ACTION_HELP.finalReject} />
-                    </Button>
+                    <ActionWithHint text={ACTION_HELP.approve}>
+                      <Button
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={() => {
+                          updatePartnerStatus(selectedPartner.id, 'approved');
+                          setSelectedPartner(null);
+                        }}
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Aprovar cadastro
+                      </Button>
+                    </ActionWithHint>
+                    <ActionWithHint text={ACTION_HELP.revision}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          updatePartnerStatus(selectedPartner.id, 'revision_requested');
+                          setSelectedPartner(null);
+                        }}
+                      >
+                        Pedir ajustes
+                      </Button>
+                    </ActionWithHint>
+                    <ActionWithHint text={ACTION_HELP.finalReject}>
+                      <Button
+                        variant="destructive"
+                        onClick={() =>
+                          setConfirmDialog({
+                            title: 'Reprovar e encerrar (Stripe)?',
+                            description: `Cancela assinatura no Stripe, tenta reembolso integral da última fatura e encerra o acesso do parceiro "${selectedPartner.name}". O cadastro não é apagado. Não tem volta automática.`,
+                            confirmLabel: 'Sim, encerrar',
+                            destructive: true,
+                            onConfirm: () => {
+                              updatePartnerStatus(selectedPartner.id, 'rejected');
+                              setSelectedPartner(null);
+                            },
+                          })
+                        }
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Reprovar e encerrar (Stripe)
+                      </Button>
+                    </ActionWithHint>
                   </>
                 )}
                 {selectedPartner.status === 'approved' && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      updatePartnerStatus(selectedPartner.id, 'suspended');
-                      setSelectedPartner(null);
-                    }}
-                  >
-                    Suspender
-                    <HelpHint text={ACTION_HELP.suspend} />
-                  </Button>
-                )}
-                <Button
-                  variant="destructive"
-                  onClick={() =>
-                    setConfirmDialog({
-                      title: 'Apagar parceiro do banco de dados?',
-                      description: `Remove o parceiro "${selectedPartner.name}" e a conta de login dele. NÃO tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.`,
-                      confirmLabel: 'Sim, apagar permanentemente',
-                      destructive: true,
-                      onConfirm: () => {
-                        deletePartner(selectedPartner.id);
+                  <ActionWithHint text={ACTION_HELP.suspend}>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        updatePartnerStatus(selectedPartner.id, 'suspended');
                         setSelectedPartner(null);
-                      },
-                    })
-                  }
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Apagar do banco (irreversível)
-                  <HelpHint text={ACTION_HELP.delete} />
-                </Button>
+                      }}
+                    >
+                      Suspender
+                    </Button>
+                  </ActionWithHint>
+                )}
+                <ActionWithHint text={ACTION_HELP.delete}>
+                  <Button
+                    variant="destructive"
+                    onClick={() =>
+                      setConfirmDialog({
+                        title: 'Apagar parceiro do banco de dados?',
+                        description: `Remove o parceiro "${selectedPartner.name}" e a conta de login dele. NÃO tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.`,
+                        confirmLabel: 'Sim, apagar permanentemente',
+                        destructive: true,
+                        onConfirm: () => {
+                          deletePartner(selectedPartner.id);
+                          setSelectedPartner(null);
+                        },
+                      })
+                    }
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Apagar do banco (irreversível)
+                  </Button>
+                </ActionWithHint>
               </div>
             </div>
           )}

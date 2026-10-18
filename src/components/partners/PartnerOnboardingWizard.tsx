@@ -87,7 +87,7 @@ export default function PartnerOnboardingWizard() {
     try {
       const { data: partner, error } = await supabase
         .from('institutional_partners')
-        .select('id, name, contact_email')
+        .select('id, name, contact_email, billing_mode')
         .eq('id', partnerId)
         .single();
 
@@ -100,10 +100,13 @@ export default function PartnerOnboardingWizard() {
           partnerName: partner.name,
           partnerEmail: partner.contact_email,
         });
-        setCurrentStep(targetStep);
-        
+        const billingMode = (partner as { billing_mode?: string }).billing_mode;
+        const skipPayment = billingMode === 'exempt';
+        const resolvedStep = skipPayment && targetStep === 3 ? 4 : targetStep;
+        setCurrentStep(resolvedStep);
+
         // Verificar status do Stripe Connect se estiver no step 4
-        if (targetStep === 4) {
+        if (resolvedStep === 4) {
           checkStripeStatus(partnerId);
         }
       }
@@ -161,7 +164,7 @@ export default function PartnerOnboardingWizard() {
     setCurrentStep(2);
   };
 
-  const handleStep2Complete = (data: {
+  const handleStep2Complete = async (data: {
     termsAccepted: boolean;
     termsVersion: number;
   }) => {
@@ -169,6 +172,19 @@ export default function PartnerOnboardingWizard() {
       ...onboardingData,
       ...data,
     });
+
+    const partnerId = onboardingData.partnerId;
+    if (partnerId) {
+      const { data: row } = await supabase
+        .from('institutional_partners')
+        .select('billing_mode')
+        .eq('id', partnerId)
+        .maybeSingle();
+      if (row?.billing_mode === 'exempt') {
+        setCurrentStep(4);
+        return;
+      }
+    }
     setCurrentStep(3);
   };
 

@@ -129,7 +129,7 @@ export default function PartnerPaymentStep({
             Assinatura Mensal
           </CardTitle>
           <CardDescription>
-            Complete o pagamento para ativar sua conta de parceiro
+            Primeiros 30 dias sem cobrança (configure o trial no Payment Link do Stripe). Depois, a mensalidade é cobrada automaticamente.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -145,7 +145,7 @@ export default function PartnerPaymentStep({
               <DollarSign className="w-12 h-12 text-white/20" />
             </div>
             <p className="text-white/90 text-sm">
-              Assinatura recorrente mensal. Você pode cancelar a qualquer momento.
+              Inclui 30 dias gratuitos; em seguida, assinatura recorrente mensal (cancele quando quiser).
             </p>
           </div>
 

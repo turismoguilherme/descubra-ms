@@ -80,8 +80,24 @@ serve(async (req) => {
           // Pagamento de acesso aos Roteiros IA
           await handleIARoutePaymentCompleted(session, supabase);
         } else if (session.mode === 'subscription' && session.client_reference_id) {
-          // Payment Link de assinatura Guatá Labs (client_reference_id = user_id)
-          await handlePaymentLinkSubscriptionCompleted(session, supabase);
+          const ref = session.client_reference_id;
+          const isPartnerRef =
+            typeof ref === 'string' &&
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ref);
+          if (isPartnerRef) {
+            const { data: partnerRow } = await supabase
+              .from('institutional_partners')
+              .select('id')
+              .eq('id', ref)
+              .maybeSingle();
+            if (partnerRow?.id) {
+              await handlePartnerPaymentLinkSubscriptionCompleted(session, supabase);
+            } else {
+              await handlePaymentLinkSubscriptionCompleted(session, supabase);
+            }
+          } else {
+            await handlePaymentLinkSubscriptionCompleted(session, supabase);
+          }
         } else if (session.client_reference_id && !session.metadata?.type) {
           // Payment Link de evento (client_reference_id = event_id)
           await handlePaymentLinkEventCompleted(session, supabase);
@@ -132,6 +148,86 @@ serve(async (req) => {
 });
 
 // Funções de manipulação de eventos
+
+function partnerSubscriptionStatusFromStripe(status: string): string {
+  if (status === 'trialing') return 'trialing';
+  if (status === 'active') return 'active';
+  if (status === 'past_due') return 'past_due';
+  if (status === 'unpaid') return 'unpaid';
+  if (status === 'canceled') return 'canceled';
+  return status;
+}
+
+/** Payment Link Descubra MS parceiro (client_reference_id = UUID institutional_partners.id) */
+async function handlePartnerPaymentLinkSubscriptionCompleted(
+  session: Stripe.Checkout.Session,
+  supabase: any,
+) {
+  console.log('Assinatura de parceiro via Payment Link:', session.id);
+
+  try {
+    const partnerId = session.client_reference_id as string;
+    const customerEmail = session.customer_email || session.customer_details?.email;
+    const customerId = session.customer as string;
+    const subscriptionId = session.subscription as string;
+
+    if (!partnerId) {
+      console.error('partnerId (client_reference_id) ausente');
+      return;
+    }
+
+    let monthlyAmount = 0;
+    let subscriptionStatus = 'pending';
+    let periodStart: number | undefined;
+    let periodEnd: number | undefined;
+
+    if (subscriptionId) {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const priceItem = subscription.items.data[0];
+      monthlyAmount = priceItem?.price.unit_amount ? priceItem.price.unit_amount / 100 : 0;
+      subscriptionStatus = partnerSubscriptionStatusFromStripe(subscription.status);
+      periodStart = subscription.current_period_start;
+      periodEnd = subscription.current_period_end;
+    }
+
+    const subOk = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+
+    const { data: existingPartner } = await supabase
+      .from('institutional_partners')
+      .select('id, status')
+      .eq('id', partnerId)
+      .maybeSingle();
+
+    const partnerRejected = existingPartner?.status === 'rejected';
+
+    const updatePayload: Record<string, unknown> = {
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscriptionId,
+      subscription_status: subscriptionStatus,
+      monthly_fee: monthlyAmount,
+      subscription_start_date: periodStart
+        ? new Date(periodStart * 1000).toISOString()
+        : new Date().toISOString(),
+      subscription_end_date: periodEnd
+        ? new Date(periodEnd * 1000).toISOString()
+        : null,
+      is_active: !partnerRejected && subOk,
+    };
+
+    const { error: partnerError } = await supabase
+      .from('institutional_partners')
+      .update(updatePayload)
+      .eq('id', partnerId);
+
+    if (partnerError) {
+      console.error('Erro ao atualizar parceiro (payment link):', partnerError);
+    } else {
+      console.log('Parceiro atualizado após payment link:', partnerId, customerEmail);
+    }
+  } catch (error) {
+    console.error('Erro ao processar payment link de parceiro:', error);
+  }
+}
 
 // Handler para Payment Link de assinaturas Guatá Labs (usa client_reference_id = user_id)
 async function handlePaymentLinkSubscriptionCompleted(session: Stripe.Checkout.Session, supabase: any) {

@@ -23,7 +23,7 @@ export async function searchPartners(
     .select("id, name, address, partner_type, description, contact_phone, website_url")
     .eq("status", "approved")
     .eq("is_active", true)
-    .eq("subscription_status", "active")
+    .in("subscription_status", ["active", "trialing"])
     .limit(5);
 
   const like = `%${q}%`;

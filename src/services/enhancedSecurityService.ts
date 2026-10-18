@@ -1,6 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { sanitizeText, sanitizeEmail, validateInput } from "@/utils/sanitization";
+import {
+  CLIENT_SECURITY_RPC_ENABLED,
+  isSecurityRpcAccessDenied,
+} from "@/lib/clientSecurityLogging";
 
 export interface SecurityEvent {
   user_id?: string;
@@ -27,6 +31,9 @@ class EnhancedSecurityService {
    * Enhanced security event logging with automatic sanitization
    */
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
+    if (!CLIENT_SECURITY_RPC_ENABLED) {
+      return;
+    }
     try {
       const sanitizedEvent = {
         ...event,
@@ -42,7 +49,7 @@ class EnhancedSecurityService {
         event_error_message: sanitizedEvent.error_message || null
       });
 
-      if (error) {
+      if (error && !isSecurityRpcAccessDenied(error)) {
         console.error('Security logging failed:', error);
       }
     } catch (error: unknown) {

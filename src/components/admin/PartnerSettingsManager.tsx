@@ -500,7 +500,8 @@ export default function PartnerSettingsManager() {
             )}
           </div>
           <p className="text-xs text-gray-500">
-            Link de pagamento mensal criado no Stripe Dashboard (Payment Link)
+            Link de pagamento mensal criado no Stripe Dashboard (Payment Link). Configure trial de
+            30 dias no produto/preço do link para o período gratuito inicial.
           </p>
         </div>
 

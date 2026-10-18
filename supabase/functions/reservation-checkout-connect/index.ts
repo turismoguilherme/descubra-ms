@@ -168,7 +168,7 @@ serve(async (req) => {
     // Buscar dados do parceiro
     const { data: partner, error: partnerError } = await supabase
       .from('institutional_partners')
-      .select('stripe_account_id, stripe_connect_status, name, status, is_active, subscription_status')
+      .select('stripe_account_id, stripe_connect_status, name, status, is_active, subscription_status, billing_mode')
       .eq('id', partnerId)
       .single();
 
@@ -180,7 +180,8 @@ serve(async (req) => {
       throw new Error('Parceiro ainda não está aprovado para receber reservas no Descubra MS');
     }
 
-    if (!partner.is_active || partner.subscription_status !== 'active') {
+    const { isPartnerSubscriptionOk } = await import('../_shared/partnerSubscription.ts');
+    if (!partner.is_active || !isPartnerSubscriptionOk(partner)) {
       throw new Error('Parceiro indisponível para reservas (assinatura ou cadastro inativo)');
     }
 

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getErrorMessage } from '@/utils/errorUtils';
 import { RefreshCw, CheckCircle, XCircle, Clock, Eye, DollarSign, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -72,8 +73,8 @@ export default function RefundManagement() {
           partner_reservations!pending_refunds_reservation_id_fkey (
             id,
             reservation_code,
-            customer_name,
-            customer_email
+            guest_name,
+            guest_email
           )
         `)
         .order('created_at', { ascending: false });
@@ -87,19 +88,31 @@ export default function RefundManagement() {
       if (error) throw error;
 
       // Processar dados para incluir informações relacionadas
-      const processedRefunds = (data || []).map((refund: Record<string, unknown>) => ({
-        ...refund,
-        partner: refund.institutional_partners,
-        reservation: refund.partner_reservations,
-      }));
+      const processedRefunds = (data || []).map((refund: Record<string, unknown>) => {
+        const rawReservation = refund.partner_reservations as
+          | { id: string; reservation_code?: string; guest_name?: string; guest_email?: string }
+          | null
+          | undefined;
+        return {
+          ...refund,
+          partner: refund.institutional_partners,
+          reservation: rawReservation
+            ? {
+                id: rawReservation.id,
+                reservation_code: rawReservation.reservation_code,
+                customer_name: rawReservation.guest_name,
+                customer_email: rawReservation.guest_email,
+              }
+            : undefined,
+        };
+      });
 
       setRefunds(processedRefunds);
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Erro ao carregar reembolsos:', err);
+      console.error('Erro ao carregar reembolsos:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao carregar reembolsos pendentes',
+        description: getErrorMessage(error, 'Erro ao carregar reembolsos pendentes'),
         variant: 'destructive',
       });
     } finally {

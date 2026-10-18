@@ -1,14 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import {
+  CLIENT_SECURITY_RPC_ENABLED,
+  isSecurityRpcAccessDenied,
+} from "@/lib/clientSecurityLogging";
 
-// Estas funções de segurança são SECURITY DEFINER e tiveram o EXECUTE revogado
-// do papel `authenticated` no endurecimento de segurança do banco. O log sério
-// acontece no servidor (edge functions com service_role). No cliente, tratamos
-// o "permission denied" (42501) como esperado e evitamos poluir o console.
 function isPermissionDenied(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const e = error as { code?: string; message?: string };
-  return e.code === "42501" || /permission denied/i.test(e.message ?? "");
+  return isSecurityRpcAccessDenied(error);
 }
 
 export interface SecurityEvent {
@@ -26,7 +24,10 @@ export interface SecurityEvent {
 export const securityService = {
   // Enhanced security event logging with metadata support
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
-    
+    if (!CLIENT_SECURITY_RPC_ENABLED) {
+      return;
+    }
+
     try {
       const metadata = {
         ip_address: event.ip_address,

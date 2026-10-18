@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { installClientSecurityRpcGuard } from '@/lib/clientSecurityLogging';
 import { getErrorMessage } from '@/utils/errorUtils';
 
 /**
@@ -167,6 +168,8 @@ function setupPeriodicTokenRefresh() {
  * Deve ser chamado no início da aplicação
  */
 export function initSupabaseInterceptor() {
+  installClientSecurityRpcGuard(supabase);
+
   // Listener para eventos de autenticação
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'TOKEN_REFRESHED') {

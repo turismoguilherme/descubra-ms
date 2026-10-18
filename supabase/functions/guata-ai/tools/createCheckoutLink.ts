@@ -34,7 +34,7 @@ export async function createCheckoutLink(
     .select(`
       id, user_id, partner_id, service_name, total_amount, status,
       reservation_code, guest_email, guest_name, stripe_checkout_session_id,
-      institutional_partners ( id, name, status, is_active, subscription_status )
+      institutional_partners ( id, name, status, is_active, subscription_status, billing_mode )
     `)
     .eq("id", input.reservation_id)
     .maybeSingle();
@@ -66,13 +66,15 @@ export async function createCheckoutLink(
     status: string;
     is_active: boolean | null;
     subscription_status: string | null;
+    billing_mode?: string | null;
   } | null;
 
+  const { isPartnerSubscriptionOk } = await import("../../_shared/partnerSubscription.ts");
   if (
     !partner ||
     partner.status !== "approved" ||
     partner.is_active !== true ||
-    partner.subscription_status !== "active"
+    !isPartnerSubscriptionOk(partner)
   ) {
     const output = { error: "parceiro indisponível para pagamento" };
     await logAction(ctx, "create_checkout_link", input, output, "error", "partner inactive");

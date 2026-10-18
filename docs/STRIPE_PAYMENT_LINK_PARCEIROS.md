@@ -4,6 +4,16 @@
 
 O fluxo "Seja um Parceiro" usa um **Payment Link** do Stripe para a assinatura mensal.
 
+**Trial de 30 dias:** no Stripe Dashboard, edite o preço/assinatura do Payment Link e ative
+**free trial** de 30 dias. Assim o parceiro não paga no primeiro mês e a cobrança mensal
+começa automaticamente depois (não use cupom como solução principal).
+
+**Parceiro isento:** no admin Descubra MS → Parceiros → detalhes → **Plano de mensalidade**
+→ "Isento de mensalidade". O cadastro pula a etapa de pagamento.
+
+**IA autônoma (autoaprovação de eventos):** o job `pg_cron` deve chamar a Edge Function com
+a **service role** no Vault (`autonomous_agent_service_role_key`), não a anon key.
+
 Importante: um Payment Link **ignora** parâmetros de redirecionamento na querystring
 (`after_completion[redirect][url]` não funciona). Os únicos parâmetros úteis aceitos são
 `client_reference_id`, `prefilled_email` e `locale`.

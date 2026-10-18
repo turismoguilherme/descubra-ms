@@ -288,12 +288,22 @@ class ServerSideSecurityService {
    * Log security events to database
    */
   private async logSecurityEvent(action: string, metadata: Record<string, any>): Promise<void> {
+    const { CLIENT_SECURITY_RPC_ENABLED } = await import('@/lib/clientSecurityLogging');
+    if (!CLIENT_SECURITY_RPC_ENABLED) {
+      return;
+    }
     try {
-      await supabase.rpc('log_enhanced_security_event', {
+      const { error } = await supabase.rpc('log_enhanced_security_event', {
         event_action: action,
         event_success: true,
         event_metadata: metadata
       });
+      if (error) {
+        const { isSecurityRpcAccessDenied } = await import('@/lib/clientSecurityLogging');
+        if (!isSecurityRpcAccessDenied(error)) {
+          console.error('Failed to log security event:', error);
+        }
+      }
     } catch (error) {
       console.error('Failed to log security event:', error);
     }
