@@ -147,37 +147,51 @@ const EventosDestaqueSection = () => {
                   </div>
                 )}
 
-                <div className="h-72 overflow-hidden relative">
+                <div className="h-72 overflow-hidden relative bg-gradient-to-br from-slate-100 to-slate-200">
                   {(() => {
-                    const { url: mediaUrl, objectFit } = resolveEventCardMedia(event);
-                    const optimizedUrl = mediaUrl ? optimizeEventCardImage(mediaUrl) : '';
+                    const media = resolveEventCardMedia(event, 'featured-home');
+                    const optimizedUrl = media.url ? optimizeEventCardImage(media.url) : '';
                     const finalUrl =
                       optimizedUrl ||
-                      mediaUrl ||
+                      media.url ||
                       'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800';
                     const isPlaceholder =
                       finalUrl === 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800';
+                    const backdropUrl =
+                      media.backdropUrl && !isPlaceholder
+                        ? optimizeEventCardImage(media.backdropUrl) || media.backdropUrl
+                        : null;
 
                     return (
-                      <img
-                        src={finalUrl}
-                        alt={event.name}
-                        className={`w-full h-full transition-transform duration-700 group-hover:scale-110 ${
-                          objectFit === 'contain' && !isPlaceholder
-                            ? 'object-contain bg-gradient-to-br from-slate-50 to-slate-100 p-6'
-                            : 'object-cover'
-                        }`}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          if (
-                            target.src !==
-                            'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800'
-                          ) {
-                            target.src =
-                              'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800';
-                          }
-                        }}
-                      />
+                      <>
+                        {backdropUrl && (
+                          <img
+                            src={backdropUrl}
+                            alt=""
+                            aria-hidden
+                            className="absolute inset-0 h-full w-full scale-110 object-cover blur-lg opacity-50"
+                          />
+                        )}
+                        <img
+                          src={finalUrl}
+                          alt={event.name}
+                          className={`relative z-[1] mx-auto h-full w-full transition-transform duration-700 group-hover:scale-105 ${
+                            media.objectFit === 'contain' && !isPlaceholder
+                              ? 'object-contain p-3'
+                              : 'object-cover group-hover:scale-110'
+                          }`}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            if (
+                              target.src !==
+                              'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800'
+                            ) {
+                              target.src =
+                                'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800';
+                            }
+                          }}
+                        />
+                      </>
                     );
                   })()}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

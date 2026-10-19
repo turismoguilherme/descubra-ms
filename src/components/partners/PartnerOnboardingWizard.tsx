@@ -38,6 +38,7 @@ export default function PartnerOnboardingWizard() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [loadingPartnerData, setLoadingPartnerData] = useState(false);
   const [stripeConnected, setStripeConnected] = useState(false);
+  const [isBillingExempt, setIsBillingExempt] = useState(false);
   const [acceptingNewApplications, setAcceptingNewApplications] = useState<boolean | null>(null);
 
   const progress = (currentStep / steps.length) * 100;
@@ -102,6 +103,7 @@ export default function PartnerOnboardingWizard() {
         });
         const billingMode = (partner as { billing_mode?: string }).billing_mode;
         const skipPayment = billingMode === 'exempt';
+        setIsBillingExempt(skipPayment);
         const resolvedStep = skipPayment && targetStep === 3 ? 4 : targetStep;
         setCurrentStep(resolvedStep);
 
@@ -181,12 +183,42 @@ export default function PartnerOnboardingWizard() {
         .eq('id', partnerId)
         .maybeSingle();
       if (row?.billing_mode === 'exempt') {
+        setIsBillingExempt(true);
         setCurrentStep(4);
         return;
       }
+      setIsBillingExempt(false);
     }
     setCurrentStep(3);
   };
+
+  // Se o admin marcou isento enquanto o parceiro está na tela de pagamento, pular para Connect.
+  useEffect(() => {
+    const partnerId = onboardingData.partnerId;
+    if (currentStep !== 3 || !partnerId) return;
+
+    let cancelled = false;
+    (async () => {
+      const { data: row } = await supabase
+        .from('institutional_partners')
+        .select('billing_mode')
+        .eq('id', partnerId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (row?.billing_mode === 'exempt') {
+        setIsBillingExempt(true);
+        setCurrentStep(4);
+        toast({
+          title: 'Mensalidade isenta',
+          description: 'Seu cadastro foi liberado sem pagamento. Continue com a conexão Stripe (se for receber reservas).',
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentStep, onboardingData.partnerId, toast]);
 
   const handleStep3Complete = () => {
     // Avançar para a etapa do Stripe Connect
@@ -379,7 +411,7 @@ export default function PartnerOnboardingWizard() {
                 partnerName={onboardingData.partnerName || ''}
                 partnerEmail={onboardingData.partnerEmail || ''}
                 onComplete={handleStep4Complete}
-                onBack={() => setCurrentStep(3)}
+                onBack={() => setCurrentStep(isBillingExempt ? 2 : 3)}
                 onSkip={handleSkipStripeConnect}
               />
             )}

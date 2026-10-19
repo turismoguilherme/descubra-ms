@@ -133,6 +133,25 @@ serve(async (req) => {
         return json({ error: 'Você não pode excluir a sua própria conta.' }, 400, cors);
       }
 
+      const { data: authUser } = await admin.auth.admin.getUserById(userId);
+      const email = authUser?.user?.email?.trim().toLowerCase() ?? '';
+      const [{ data: partnerByOwner }, { data: partnerByEmail }] = await Promise.all([
+        admin.from('institutional_partners').select('id').eq('created_by', userId).limit(1),
+        email
+          ? admin.from('institutional_partners').select('id').ilike('contact_email', email).limit(1)
+          : Promise.resolve({ data: [] as { id: string }[] }),
+      ]);
+      if (partnerByOwner?.length || partnerByEmail?.length) {
+        return json(
+          {
+            error:
+              'Este usuário é parceiro institucional. Exclua em Admin → Parceiros → Excluir parceiro e conta.',
+          },
+          400,
+          cors,
+        );
+      }
+
       const { data: targetRoles } = await admin
         .from('user_roles')
         .select('role')

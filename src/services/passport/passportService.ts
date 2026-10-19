@@ -746,6 +746,14 @@ class PassportService {
           p_route_id: routeId,
         });
         rewardsUnlocked = (rewards || []) as UnlockedReward[];
+
+        const { error: avatarUnlockError } = await supabase.rpc('unlock_route_avatars', {
+          p_user_id: userId,
+          p_route_id: routeId,
+        });
+        if (avatarUnlockError) {
+          console.warn('unlock_route_avatars:', avatarUnlockError.message);
+        }
       }
 
       return {

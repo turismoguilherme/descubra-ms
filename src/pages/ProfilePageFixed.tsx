@@ -34,6 +34,13 @@ import {
   formatBrazilPhoneDisplay,
   normalizeBrazilPhoneDigits,
 } from '@/utils/normalizeBrazilPhone';
+import {
+  getProviderPictureUrl,
+  resolveAvatarDisplayMode,
+  resolvePublicAvatarUrl,
+  type AvatarDisplayMode,
+} from '@/lib/avatarDisplay';
+import { uploadProfilePhoto } from '@/utils/uploadProfilePhoto';
 
 export interface UserProfile {
   id: string;
@@ -42,6 +49,7 @@ export interface UserProfile {
   phone?: string;
   avatar_url?: string;
   selected_avatar?: string;
+  avatar_display_mode?: AvatarDisplayMode;
   avatar_custom_name?: string;
   achievements: unknown[];
   pantanal_animals: PantanalAnimal[];
@@ -62,6 +70,8 @@ const ProfilePageFixed: React.FC = () => {
   const [avatarCustomName, setAvatarCustomName] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
 
   // Estados removidos - Roteiros Personalizados agora está em página dedicada
 
@@ -188,44 +198,52 @@ const ProfilePageFixed: React.FC = () => {
     }
   ];
 
-  const loadAvatars = async (): Promise<PantanalAnimal[]> => {
+  const loadAvatars = async (userId: string): Promise<PantanalAnimal[]> => {
     try {
-      
+      const { data: unlockedRows } = await supabase
+        .from('user_avatars')
+        .select('avatar_id')
+        .eq('user_id', userId);
+
+      const unlockedIds = new Set((unlockedRows || []).map((r) => r.avatar_id));
+
       const { data, error } = await supabase
         .from('pantanal_avatars')
         .select('*')
-        .eq('is_active', true) // Apenas avatares ativos
+        .eq('is_active', true)
         .order('display_order', { ascending: true })
         .order('name', { ascending: true });
 
       if (error) {
         console.error('Erro ao carregar avatares:', error);
-        
-        // Retornar dados mockados como fallback
         return pantanalAnimals;
       }
 
-      // Converter dados do banco para o formato esperado
-      const avatares: PantanalAnimal[] = (data || []).map((avatar: any) => ({
-        id: avatar.id,
-        name: avatar.name,
-        scientific_name: avatar.scientific_name || '',
-        image: avatar.image_url || '', // Usar image_url do banco
-        description: avatar.description || '',
-        habitat: avatar.habitat || '',
-        diet: avatar.diet || '',
-        curiosities: avatar.curiosities || [],
-        is_unlocked: avatar.is_unlocked ?? true,
-        rarity: (avatar.rarity || 'common') as 'common' | 'epic' | 'legendary' | 'rare',
-        unlock_requirement: avatar.unlock_requirement || undefined
-      }));
+      const avatares: PantanalAnimal[] = (data || []).map((avatar: any) => {
+        const catalogFree = avatar.is_unlocked ?? true;
+        const earned = unlockedIds.has(avatar.id);
+        return {
+          id: avatar.id,
+          name: avatar.name,
+          scientific_name: avatar.scientific_name || '',
+          image: avatar.image_url || '',
+          description: avatar.description || '',
+          habitat: avatar.habitat || '',
+          diet: avatar.diet || '',
+          curiosities: avatar.curiosities || [],
+          is_unlocked: catalogFree || earned,
+          rarity: (avatar.rarity || 'common') as 'common' | 'epic' | 'legendary' | 'rare',
+          unlock_requirement:
+            catalogFree || earned
+              ? undefined
+              : avatar.unlock_requirement || 'Complete um roteiro do Passaporte que conceda este avatar',
+        };
+      });
 
-      console.log('✅ Avatares carregados do banco:', avatares.length);
-      return avatares.length > 0 ? avatares : pantanalAnimals; // Fallback para mockados se não houver dados
+      return avatares.length > 0 ? avatares : pantanalAnimals;
     } catch (error: unknown) {
       console.error('Erro ao carregar avatares:', error);
-      
-      return pantanalAnimals; // Fallback para mockados
+      return pantanalAnimals;
     }
   };
 
@@ -236,29 +254,55 @@ const ProfilePageFixed: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Buscar perfil do banco de dados
-      const { data: dbProfile, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-      
-      // Carregar avatares do banco
-      const avatares = await loadAvatars();
-      
+      const providerPicture = getProviderPictureUrl(user);
+      let dbProfile = (
+        await supabase.from('user_profiles').select('*').eq('user_id', user?.id).maybeSingle()
+      ).data;
+
+      if (user?.id && providerPicture && !dbProfile?.avatar_url) {
+        const { data: synced } = await supabase
+          .from('user_profiles')
+          .update({ avatar_url: providerPicture })
+          .eq('user_id', user.id)
+          .select('*')
+          .maybeSingle();
+        if (synced) dbProfile = synced;
+      }
+
+      const avatares = user?.id ? await loadAvatars(user.id) : await loadAvatars('');
+
+      const profilePhoto = dbProfile?.avatar_url || providerPicture || undefined;
+      const displayMode = resolveAvatarDisplayMode(
+        dbProfile?.avatar_display_mode,
+        Boolean(profilePhoto),
+        Boolean(dbProfile?.selected_avatar)
+      );
+
+      if (user?.id && !dbProfile?.avatar_display_mode) {
+        const { data: withMode } = await supabase
+          .from('user_profiles')
+          .update({ avatar_display_mode: displayMode })
+          .eq('user_id', user.id)
+          .select('*')
+          .maybeSingle();
+        if (withMode) dbProfile = withMode;
+      }
+
       const mockProfile: UserProfile = {
         id: user?.id || '1',
         full_name: dbProfile?.full_name || user?.user_metadata?.full_name || 'Usuário',
         email: user?.email || 'usuario@exemplo.com',
         phone: dbProfile?.phone || undefined,
-        avatar_url: dbProfile?.avatar_url || user?.user_metadata?.avatar_url,
-        selected_avatar: dbProfile?.selected_avatar || 'jaguar',
+        avatar_url: profilePhoto,
+        selected_avatar: dbProfile?.selected_avatar || undefined,
+        avatar_display_mode: (dbProfile?.avatar_display_mode as AvatarDisplayMode) || displayMode,
         avatar_custom_name: dbProfile?.avatar_custom_name || null,
         achievements: mockAchievements,
-        pantanal_animals: avatares, // Usar avatares do banco
+        pantanal_animals: avatares,
         created_at: dbProfile?.created_at || new Date().toISOString(),
-        updated_at: dbProfile?.updated_at || new Date().toISOString()
+        updated_at: dbProfile?.updated_at || new Date().toISOString(),
       };
-      
+
       setProfile(mockProfile);
       setAvatarCustomName(mockProfile.avatar_custom_name || '');
       setPhoneInput(
@@ -289,11 +333,23 @@ const ProfilePageFixed: React.FC = () => {
       return;
     }
 
+    const animal = profile.pantanal_animals.find((a) => a.id === animalId);
+    if (animal && !animal.is_unlocked) {
+      toast({
+        title: 'Avatar bloqueado',
+        description: animal.unlock_requirement || 'Conquiste este avatar no Passaporte Digital.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
-      // Atualizar no banco de dados
       const { error } = await supabase
         .from('user_profiles')
-        .update({ selected_avatar: animalId })
+        .update({
+          selected_avatar: animalId,
+          avatar_display_mode: 'pantanal',
+        })
         .eq('user_id', user.id);
 
       if (error) {
@@ -310,7 +366,8 @@ const ProfilePageFixed: React.FC = () => {
       // Atualizar estado local imediatamente para feedback visual
       const updatedProfile = {
         ...profile,
-        selected_avatar: animalId
+        selected_avatar: animalId,
+        avatar_display_mode: 'pantanal' as AvatarDisplayMode,
       };
       setProfile(updatedProfile);
       
@@ -343,6 +400,62 @@ const ProfilePageFixed: React.FC = () => {
       // Sempre fechar o modal
       setShowAvatarSelector(false);
     }
+  };
+
+  const setAvatarDisplayMode = async (mode: AvatarDisplayMode) => {
+    if (!user || !profile) return;
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ avatar_display_mode: mode })
+      .eq('user_id', user.id);
+    if (error) {
+      toast({ title: 'Erro', description: 'Não foi possível salvar sua preferência.', variant: 'destructive' });
+      return;
+    }
+    setProfile({ ...profile, avatar_display_mode: mode });
+    toast({
+      title: mode === 'photo' ? 'Usando sua foto' : 'Usando avatar do Pantanal',
+      description: 'Sua imagem pública foi atualizada.',
+    });
+  };
+
+  const handleUseGoogleOrSavedPhoto = async () => {
+    if (!user || !profile) return;
+    const pic = profile.avatar_url || getProviderPictureUrl(user);
+    if (!pic) {
+      toast({
+        title: 'Nenhuma foto disponível',
+        description: 'Envie uma foto ou entre com o Google para usar sua imagem.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!profile.avatar_url) {
+      await supabase.from('user_profiles').update({ avatar_url: pic }).eq('user_id', user.id);
+      setProfile({ ...profile, avatar_url: pic });
+    }
+    await setAvatarDisplayMode('photo');
+  };
+
+  const handleProfilePhotoFile = async (file: File) => {
+    if (!user || !profile) return;
+    setUploadingPhoto(true);
+    const { url, error } = await uploadProfilePhoto(file);
+    setUploadingPhoto(false);
+    if (error || !url) {
+      toast({ title: 'Upload falhou', description: error || 'Tente outra imagem.', variant: 'destructive' });
+      return;
+    }
+    const { error: dbError } = await supabase
+      .from('user_profiles')
+      .update({ avatar_url: url, avatar_display_mode: 'photo' })
+      .eq('user_id', user.id);
+    if (dbError) {
+      toast({ title: 'Erro', description: 'Foto enviada, mas não foi salva no perfil.', variant: 'destructive' });
+      return;
+    }
+    setProfile({ ...profile, avatar_url: url, avatar_display_mode: 'photo' });
+    toast({ title: 'Foto atualizada', description: 'Você está usando sua foto no perfil e no ranking.' });
   };
 
   const handleSaveAvatarName = async () => {
@@ -444,6 +557,16 @@ const ProfilePageFixed: React.FC = () => {
     return animals.find(animal => animal.id === profile.selected_avatar);
   }, [profile?.selected_avatar, profile?.pantanal_animals]);
 
+  const headerAvatarUrl = useMemo(() => {
+    if (!profile) return null;
+    return resolvePublicAvatarUrl({
+      mode: profile.avatar_display_mode || 'pantanal',
+      profilePhotoUrl: profile.avatar_url,
+      pantanalImageUrl: selectedAnimal?.image,
+      providerPictureUrl: getProviderPictureUrl(user),
+    });
+  }, [profile, selectedAnimal?.image, user]);
+
   if (loading) {
     return (
       <UniversalLayout>
@@ -480,14 +603,19 @@ const ProfilePageFixed: React.FC = () => {
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage src={selectedAnimal?.image} alt={profile.full_name} />
+                    <AvatarImage src={headerAvatarUrl || undefined} alt={profile.full_name} />
                     <AvatarFallback className="text-2xl">
                       {profile.full_name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                  {selectedAnimal && (
-                    <Badge className="absolute -bottom-2 -right-2 bg-green-600 text-white">
+                  {profile.avatar_display_mode === 'pantanal' && selectedAnimal && (
+                    <Badge className="absolute -bottom-2 -right-2 bg-green-600 text-white max-w-[8rem] truncate">
                       {profile.avatar_custom_name || selectedAnimal.name}
+                    </Badge>
+                  )}
+                  {profile.avatar_display_mode === 'photo' && (
+                    <Badge className="absolute -bottom-2 -right-2 bg-ms-primary-blue text-white">
+                      Minha foto
                     </Badge>
                   )}
                 </div>
@@ -498,13 +626,51 @@ const ProfilePageFixed: React.FC = () => {
                   </h1>
                   <p className="text-gray-600 mb-4">{profile.email}</p>
                   
+                  <p className="text-sm text-gray-500 mb-3">
+                    {profile.avatar_display_mode === 'photo'
+                      ? 'Você aparece com sua foto no site e no ranking.'
+                      : 'Você aparece com seu avatar do Pantanal no site e no ranking.'}
+                  </p>
                   <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleProfilePhotoFile(file);
+                        e.target.value = '';
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant={profile.avatar_display_mode === 'photo' ? 'default' : 'outline'}
+                      onClick={handleUseGoogleOrSavedPhoto}
+                    >
+                      Minha foto
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={uploadingPhoto}
+                      onClick={() => photoInputRef.current?.click()}
+                    >
+                      {uploadingPhoto ? 'Enviando…' : 'Enviar foto'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={profile.avatar_display_mode === 'pantanal' ? 'default' : 'outline'}
+                      onClick={() => setAvatarDisplayMode('pantanal')}
+                    >
+                      Avatar Pantanal
+                    </Button>
                     <Button
                       onClick={() => setShowAvatarSelector(true)}
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <Edit3 className="h-4 w-4 mr-2" />
-                      Editar Avatar
+                      Escolher animal
                     </Button>
                     <Button variant="outline" onClick={() => setShowShare(true)}>
                       <Share2 className="h-4 w-4 mr-2" />

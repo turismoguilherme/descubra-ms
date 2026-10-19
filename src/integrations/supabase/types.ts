@@ -6417,6 +6417,7 @@ export type Database = {
         Row: {
           accessibility_preference: string | null
           avatar_custom_name: string | null
+          avatar_display_mode: string | null
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
@@ -6455,6 +6456,7 @@ export type Database = {
         Insert: {
           accessibility_preference?: string | null
           avatar_custom_name?: string | null
+          avatar_display_mode?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
@@ -6493,6 +6495,7 @@ export type Database = {
         Update: {
           accessibility_preference?: string | null
           avatar_custom_name?: string | null
+          avatar_display_mode?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null

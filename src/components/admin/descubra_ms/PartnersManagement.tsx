@@ -198,13 +198,30 @@ export default function PartnersManagement() {
 
       if (error) throw error;
 
+      const resumeUrl =
+        mode === 'exempt'
+          ? `${window.location.origin}/descubrams/seja-um-parceiro?partner_id=${partnerId}&step=2`
+          : null;
+
       toast({
         title: 'Plano atualizado',
         description:
           mode === 'exempt'
-            ? 'Parceiro isento de mensalidade (sem etapa de pagamento no cadastro).'
+            ? 'Parceiro isento de mensalidade. Envie o link de continuação após o passo 1 (termo → Connect, sem pagamento).'
             : 'Parceiro no plano padrão: trial de 30 dias + mensalidade no Stripe.',
       });
+
+      if (resumeUrl) {
+        try {
+          await navigator.clipboard.writeText(resumeUrl);
+          toast({
+            title: 'Link copiado',
+            description: 'URL para o parceiro continuar o cadastro (cole no e-mail ou WhatsApp).',
+          });
+        } catch {
+          /* clipboard opcional */
+        }
+      }
       await loadPartners();
       if (selectedPartner?.id === partnerId) {
         setSelectedPartner((prev) => (prev ? { ...prev, billing_mode: mode } : prev));
@@ -1285,9 +1302,9 @@ export default function PartnersManagement() {
                     variant="destructive"
                     onClick={() =>
                       setConfirmDialog({
-                        title: 'Apagar parceiro do banco de dados?',
-                        description: `Remove o parceiro "${selectedPartner.name}" e a conta de login dele. NÃO tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.`,
-                        confirmLabel: 'Sim, apagar permanentemente',
+                        title: 'Excluir parceiro e conta de acesso?',
+                        description: `Remove o cadastro de "${selectedPartner.name}" e o login vinculado. Não tem como desfazer. O e-mail fica liberado para um novo cadastro futuro.`,
+                        confirmLabel: 'Sim, excluir permanentemente',
                         destructive: true,
                         onConfirm: () => {
                           deletePartner(selectedPartner.id);
@@ -1297,7 +1314,7 @@ export default function PartnersManagement() {
                     }
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Apagar do banco (irreversível)
+                    Excluir parceiro e conta
                   </Button>
                 </ActionWithHint>
               </div>

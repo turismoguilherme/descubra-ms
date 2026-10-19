@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  getProviderPictureUrl,
+  resolveAvatarDisplayMode,
+  resolvePublicAvatarUrl,
+  type AvatarDisplayMode,
+} from '@/lib/avatarDisplay';
 
 /**
- * Hook para buscar e gerenciar o avatar do usuário
- * Busca o avatar selecionado do banco e retorna a URL da imagem
+ * Foto pública do usuário (menu, ranking compartilhado, etc.)
  */
 export function useUserAvatar() {
   const { user } = useAuth();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayMode, setDisplayMode] = useState<AvatarDisplayMode>('pantanal');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,55 +28,49 @@ export function useUserAvatar() {
       try {
         setLoading(true);
 
-        // 1. Buscar selected_avatar do user_profiles
         const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
-          .select('selected_avatar')
+          .select('selected_avatar, avatar_url, avatar_display_mode')
           .eq('user_id', user.id)
           .maybeSingle();
 
+        const providerPicture = getProviderPictureUrl(user);
+
         if (profileError) {
-          console.error('Erro ao buscar perfil:', profileError);
-          
-          // Tentar usar avatar_url do user_metadata como fallback
-          setAvatarUrl(user.user_metadata?.avatar_url || null);
+          setAvatarUrl(providerPicture);
           setLoading(false);
           return;
         }
 
-        // 2. Se não há selected_avatar, usar avatar_url do user_metadata
-        if (!profile?.selected_avatar) {
-          
-          setAvatarUrl(user.user_metadata?.avatar_url || null);
-          setLoading(false);
-          return;
+        let pantanalImage: string | null = null;
+        if (profile?.selected_avatar) {
+          const { data: avatar } = await supabase
+            .from('pantanal_avatars')
+            .select('image_url')
+            .eq('id', profile.selected_avatar)
+            .eq('is_active', true)
+            .maybeSingle();
+          pantanalImage = avatar?.image_url ?? null;
         }
 
-        // 3. Buscar image_url do avatar selecionado no pantanal_avatars
-        const { data: avatar, error: avatarError } = await supabase
-          .from('pantanal_avatars')
-          .select('image_url')
-          .eq('id', profile.selected_avatar)
-          .eq('is_active', true)
-          .maybeSingle();
+        const profilePhoto = profile?.avatar_url || null;
+        const mode = resolveAvatarDisplayMode(
+          profile?.avatar_display_mode,
+          Boolean((profilePhoto || '').trim() || providerPicture),
+          Boolean(profile?.selected_avatar)
+        );
 
-        if (avatarError) {
-          console.error('Erro ao buscar avatar:', avatarError);
-          
-          // Fallback para user_metadata
-          setAvatarUrl(user.user_metadata?.avatar_url || null);
-          setLoading(false);
-          return;
-        }
-
-        // 4. Usar image_url do avatar ou fallback
-        const finalAvatarUrl = avatar?.image_url || user.user_metadata?.avatar_url || null;
-        
-        setAvatarUrl(finalAvatarUrl);
-      } catch (error: unknown) {
-        console.error('Erro geral ao carregar avatar:', error);
-        
-        setAvatarUrl(user.user_metadata?.avatar_url || null);
+        setDisplayMode(mode);
+        setAvatarUrl(
+          resolvePublicAvatarUrl({
+            mode,
+            profilePhotoUrl: profilePhoto,
+            pantanalImageUrl: pantanalImage,
+            providerPictureUrl: providerPicture,
+          })
+        );
+      } catch {
+        setAvatarUrl(getProviderPictureUrl(user));
       } finally {
         setLoading(false);
       }
@@ -78,9 +78,8 @@ export function useUserAvatar() {
 
     loadAvatar();
 
-    // Escutar mudanças no perfil do usuário
     const channel = supabase
-      .channel('user_profile_changes')
+      .channel(`user_profile_avatar_${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -100,6 +99,5 @@ export function useUserAvatar() {
     };
   }, [user]);
 
-  return { avatarUrl, loading };
+  return { avatarUrl, displayMode, loading };
 }
-

@@ -81,7 +81,7 @@ export default function UsersManagement() {
       <AdminPageHeader
         title="Usuários"
         description="Usuários de cada plataforma: adicione, exclua ou gere uma nova senha de acesso."
-        helpText="Contas de administrador principal e a sua própria conta não podem ser excluídas."
+        helpText="Parceiros institucionais devem ser excluídos em Parceiros (remove cadastro e login). Turistas e equipe podem ser excluídos aqui. Contas de administrador principal e a sua própria conta não podem ser excluídas."
       />
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as UserPlatform)}>

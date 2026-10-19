@@ -38,7 +38,9 @@ export function UsersTable({ users, currentUserId, onResetEmail, onTempPassword,
           </TableRow>
         ) : (
           users.map((u) => {
-            const canDelete = !u.protectedAccount && u.user_id !== currentUserId;
+            const isPartnerAccount = u.kind === 'partner';
+            const canDelete =
+              !isPartnerAccount && !u.protectedAccount && u.user_id !== currentUserId;
             return (
               <TableRow key={u.user_id}>
                 <TableCell className="font-medium">
@@ -69,13 +71,19 @@ export function UsersTable({ users, currentUserId, onResetEmail, onTempPassword,
                         <KeyRound className="mr-2 h-4 w-4" /> Gerar senha temporária
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        disabled={!canDelete}
-                        className="text-destructive focus:text-destructive"
-                        onClick={() => onDelete(u)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" /> Excluir usuário
-                      </DropdownMenuItem>
+                      {isPartnerAccount ? (
+                        <DropdownMenuItem disabled className="text-muted-foreground text-xs">
+                          Parceiros são removidos em Admin → Parceiros → Excluir parceiro e conta.
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          disabled={!canDelete}
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => onDelete(u)}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" /> Excluir usuário
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

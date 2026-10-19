@@ -10,6 +10,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserAvatar } from '@/hooks/useUserAvatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -29,6 +30,7 @@ type RankTab = 'month' | 'all' | 'region';
 
 export default function PassportRankingPanel() {
   const { user } = useAuth();
+  const { avatarUrl: profileAvatarUrl } = useUserAvatar();
   const { toast } = useToast();
   const [tab, setTab] = useState<RankTab>('month');
   const [region, setRegion] = useState<string>('all');
@@ -65,7 +67,7 @@ export default function PassportRankingPanel() {
           leaderboardService.getOptOut(),
           supabase
             .from('user_profiles')
-            .select('full_name, display_name, avatar_url')
+            .select('full_name, display_name')
             .eq('user_id', user.id)
             .maybeSingle(),
         ]);
@@ -75,7 +77,7 @@ export default function PassportRankingPanel() {
         setDisplayName(
           (p?.display_name || p?.full_name || user.user_metadata?.full_name || 'Viajante') as string
         );
-        setAvatarUrl((p?.avatar_url as string) || null);
+        setAvatarUrl(profileAvatarUrl);
       } catch {
         /* ignore */
       }
@@ -83,7 +85,7 @@ export default function PassportRankingPanel() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, profileAvatarUrl]);
 
   useEffect(() => {
     let cancelled = false;
@@ -191,7 +193,7 @@ export default function PassportRankingPanel() {
           <p className="text-sm text-muted-foreground">{periodLabel}</p>
           <RankingShareCard
             displayName={displayName}
-            avatarUrl={avatarUrl}
+            avatarUrl={profileAvatarUrl || avatarUrl}
             position={myPosition}
             periodLabel={periodLabel}
           />
