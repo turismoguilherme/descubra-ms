@@ -13,7 +13,6 @@ import {
   ArrowRight,
   Stamp,
   BookOpen,
-  Bot,
   Activity,
 } from 'lucide-react';
 import { lazy, Suspense } from 'react';
@@ -33,7 +32,6 @@ const GuataVideosManager = lazy(() => import('@/components/admin/GuataVideosMana
 const GuataCartilhasManager = lazy(() => import('@/components/admin/GuataCartilhasManager'));
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const TouristRegionsManager = lazy(() => import('@/components/admin/descubra_ms/TouristRegionsManager'));
-const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
 const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
 const PoliciesEditor = lazy(() => import('@/components/admin/settings/PoliciesEditor'));
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
@@ -185,18 +183,7 @@ export default function ViaJARAdminPanel() {
             <PlatformMetricsEditor />
           </Suspense>
         } />
-
-
-        {/* IA */}
-        <Route path="ai/chat" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <AIAdminChat />
-          </Suspense>
-        } />
-        <Route
-          path="ai/knowledge-base"
-          element={<Navigate to="/viajar/admin/ai/chat" replace />}
-        />
+        <Route path="ai/*" element={<Navigate to="/viajar/admin" replace />} />
 
         <Route path="*" element={<Navigate to="/viajar/admin" replace />} />
       </Routes>
@@ -307,7 +294,6 @@ function DashboardOverview() {
   const shortcuts = [
     { label: 'Passaporte Digital', to: '/viajar/admin/descubra-ms/passport', icon: Stamp },
     { label: 'Cartilhas Guatá Capacita', to: '/viajar/admin/descubra-ms/guata-cartilhas', icon: BookOpen },
-    { label: 'Chat IA (admin)', to: '/viajar/admin/ai/chat', icon: Bot },
   ];
 
   return (
