@@ -105,6 +105,7 @@ ${chatHistory}`
 export function generateGuataToolsGuidance(userAuthenticated: boolean): string {
   return `
 FERRAMENTAS DISPONÍVEIS (function calling):
+- search_events(query?, city?, from_date?, to_date?, limit?): eventos aprovados no site Descubra MS (dados ao vivo)
 - search_partners(query, city?, business_type?): busca parceiros ativos em MS
 - check_availability(partner_id, date, people?): checa disponibilidade e preço
 - create_event_draft(..., entry_type?, logo_url?, promo_video_url?): cadastra evento (gratuito, com moderação)
@@ -112,6 +113,7 @@ FERRAMENTAS DISPONÍVEIS (function calling):
 - create_checkout_link(reservation_id): gera link Stripe para pagar reserva
 
 REGRAS DE USO:
+0. Para perguntas sobre agenda, festivais, shows ou "tem evento em [cidade]?", chame search_events ANTES de responder. Se count=0, diga honestamente e sugira https://descubrams.com/descubrams/eventos — nunca invente datas ou nomes.
 1. Use search_partners SEMPRE antes de check_availability — nunca invente partner_id.
 2. Fluxo de reserva OBRIGATÓRIO (etapa por etapa, uma tool por turno quando possível):
    a) search_partners → mostrar opções

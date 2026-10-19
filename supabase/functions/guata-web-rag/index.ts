@@ -8,6 +8,7 @@ import {
   guataResponseDepthMaxTokens,
   guataResponseDepthFormatBlock,
 } from "../_shared/guataResponseDepth.ts"
+import { fetchChannelKnowledge } from "../_shared/fetchChannelKnowledge.ts"
 
 // Limites (plano gratuito) - mais restritivos para segurança
 const RATE_LIMIT_PER_MIN = parseInt(Deno.env.get('RATE_LIMIT_PER_MIN') ?? '12')
@@ -232,6 +233,11 @@ serve(async (req) => {
       )
     }
     
+    const channelSource = isInternalBotRequest(req) ? "whatsapp" : "descubra-ms-web"
+    console.log('\n📡 === BUSCA GUATÁ CHANNEL (knowledge) ===')
+    const channelResults = await fetchChannelKnowledge(question, { source: channelSource, limit: 8 })
+    console.log(`📡 Channel knowledge results: ${channelResults.length}`)
+
     // 1. FTS Search (base de conhecimento local)
     console.log('\n📚 === INICIANDO BUSCA FTS ===')
     const ftsResults = await performFTSSearch(question, state_code)
@@ -254,7 +260,7 @@ serve(async (req) => {
     
     // 5. Combine and rank results
     console.log('\n🎯 === COMBINANDO E RANQUEANDO RESULTADOS ===')
-    const allResults = [...ftsResults, ...embeddingResults, ...pseResults, ...apiResults]
+    const allResults = [...channelResults, ...ftsResults, ...embeddingResults, ...pseResults, ...apiResults]
     console.log(`🎯 Total resultados antes do ranking: ${allResults.length}`)
     const rankedResults = rankResults(allResults, question)
     console.log(`🎯 Top 5 resultados após ranking:`)

@@ -3,6 +3,22 @@
 
 export const guataToolDeclarations = [
   {
+    name: "search_events",
+    description:
+      "Lista eventos públicos aprovados no calendário Descubra MS. Use quando o usuário perguntar sobre agenda, festivais, shows, feiras ou 'o que tem para fazer' em uma cidade. Nunca invente eventos sem chamar esta ferramenta.",
+    parameters: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Palavra-chave opcional (título, categoria, local)." },
+        city: { type: "string", description: "Cidade em MS (ex.: Campo Grande, Bonito)." },
+        from_date: { type: "string", description: "Início da janela YYYY-MM-DD (opcional)." },
+        to_date: { type: "string", description: "Fim da janela YYYY-MM-DD (opcional)." },
+        limit: { type: "integer", description: "Máximo de eventos (1–10).", minimum: 1, maximum: 10 },
+      },
+      required: [],
+    },
+  },
+  {
     name: "search_partners",
     description:
       "Busca parceiros comerciais ativos de Mato Grosso do Sul (pousadas, restaurantes, agências, atrativos). Use quando o usuário quiser reservar, comprar ou saber de um serviço específico. Retorna até 5 resultados.",

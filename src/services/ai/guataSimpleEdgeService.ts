@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TrueApiQuery, TrueApiResponse } from "./guataTrueApiService";
 import { MSKnowledgeBase } from "./search/msKnowledgeBase";
 import { isGenericGuataFallback } from "./search/msKnowledgeTopics";
-import { isGuataTransactionalIntent } from "@/utils/guataTransactionalIntent";
+import { isGuataToolsFirstIntent } from "@/utils/guataTransactionalIntent";
 import { formatGuataChatHistory } from "@/utils/formatGuataChatHistory";
 
 interface WebRagResult {
@@ -32,7 +32,7 @@ class GuataSimpleEdgeService {
     const question = String(query.question || "").trim();
     const rewritten = this.rewriteQuery(question, query.conversationHistory);
 
-    if (isGuataTransactionalIntent(rewritten)) {
+    if (isGuataToolsFirstIntent(rewritten)) {
       const toolAnswer = await this.callGuataAi(rewritten, { sources: [] }, query, true);
       if (
         toolAnswer?.trim() &&

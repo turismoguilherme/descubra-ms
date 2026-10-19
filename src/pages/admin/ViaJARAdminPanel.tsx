@@ -34,7 +34,6 @@ const GuataCartilhasManager = lazy(() => import('@/components/admin/GuataCartilh
 const FooterSettingsManager = lazy(() => import('@/components/admin/FooterSettingsManager'));
 const TouristRegionsManager = lazy(() => import('@/components/admin/descubra_ms/TouristRegionsManager'));
 const AIAdminChat = lazy(() => import('@/components/admin/ai/AIAdminChat'));
-const KnowledgeBaseAdmin = lazy(() => import('@/components/admin/ai/KnowledgeBaseAdmin'));
 const PassportAdmin = lazy(() => import('@/pages/admin/PassportAdmin'));
 const PoliciesEditor = lazy(() => import('@/components/admin/settings/PoliciesEditor'));
 const PlatformMetricsEditor = lazy(() => import('@/components/admin/settings/PlatformMetricsEditor'));
@@ -194,11 +193,10 @@ export default function ViaJARAdminPanel() {
             <AIAdminChat />
           </Suspense>
         } />
-        <Route path="ai/knowledge-base" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <KnowledgeBaseAdmin />
-          </Suspense>
-        } />
+        <Route
+          path="ai/knowledge-base"
+          element={<Navigate to="/viajar/admin/ai/chat" replace />}
+        />
 
         <Route path="*" element={<Navigate to="/viajar/admin" replace />} />
       </Routes>
@@ -309,7 +307,7 @@ function DashboardOverview() {
   const shortcuts = [
     { label: 'Passaporte Digital', to: '/viajar/admin/descubra-ms/passport', icon: Stamp },
     { label: 'Cartilhas Guatá Capacita', to: '/viajar/admin/descubra-ms/guata-cartilhas', icon: BookOpen },
-    { label: 'Base de Conhecimento da IA', to: '/viajar/admin/ai/knowledge-base', icon: Bot },
+    { label: 'Chat IA (admin)', to: '/viajar/admin/ai/chat', icon: Bot },
   ];
 
   return (

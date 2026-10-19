@@ -19,6 +19,7 @@ import {
   resolveUserIdByPhone,
 } from "../_shared/guataAuth.ts";
 import { guataToolDeclarations } from "./toolSchemas.ts";
+import { searchEvents } from "./tools/searchEvents.ts";
 import { searchPartners } from "./tools/searchPartners.ts";
 import { checkAvailability } from "./tools/checkAvailability.ts";
 import { createEventDraft } from "./tools/createEventDraft.ts";
@@ -67,7 +68,8 @@ const ACTION_LABELS: Record<string, string> = {
   create_checkout_link: "pagar",
 };
 
-function detectRequestedAction(prompt: string): string | null {
+/** Ações que exigem login (não inclui consulta de agenda). */
+function detectAuthRequiredAction(prompt: string): string | null {
   const p = prompt.toLowerCase();
   if (/(cadastrar|criar|registrar).{0,20}evento/.test(p)) return "cadastrar_evento";
   if (/(reservar|reserva|booking)/.test(p)) return "reservar";
@@ -127,7 +129,9 @@ async function runToolCallingConversation(params: {
 
       let result: Record<string, unknown> = { error: "tool_unknown" };
       try {
-        if (fc.name === "search_partners") {
+        if (fc.name === "search_events") {
+          result = (await searchEvents(ctx, fc.args as never)) as Record<string, unknown>;
+        } else if (fc.name === "search_partners") {
           result = (await searchPartners(ctx, fc.args as never)) as Record<string, unknown>;
         } else if (fc.name === "check_availability") {
           result = (await checkAvailability(ctx, fc.args as never)) as Record<string, unknown>;
@@ -261,9 +265,9 @@ serve(async (req) => {
       }
 
       const isAuthed = !!userId;
-      const requestedAction = detectRequestedAction(prompt);
+      const requestedAction = detectAuthRequiredAction(prompt);
 
-      // Short-circuit: se pediu ação e não está logado, evita gastar tool-call
+      // Short-circuit: ação de escrita sem login (consulta de eventos não entra aqui)
       if (!isAuthed && requestedAction) {
         const acao = requestedAction;
         if (fromWhatsApp) {

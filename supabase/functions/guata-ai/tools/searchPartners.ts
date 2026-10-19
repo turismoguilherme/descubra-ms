@@ -1,5 +1,6 @@
 import type { GuataAuthContext } from "../../_shared/guataAuth.ts";
 import { logAction } from "../../_shared/guataAuth.ts";
+import { isPartnerSubscriptionOk } from "../../_shared/partnerSubscription.ts";
 
 export interface SearchPartnersInput {
   query: string;
@@ -20,11 +21,10 @@ export async function searchPartners(
 
   let builder = ctx.supabaseAdmin
     .from("institutional_partners")
-    .select("id, name, address, partner_type, description, contact_phone, website_url")
+    .select("id, name, address, partner_type, description, contact_phone, website_url, subscription_status, billing_mode")
     .eq("status", "approved")
     .eq("is_active", true)
-    .in("subscription_status", ["active", "trialing"])
-    .limit(5);
+    .limit(15);
 
   const like = `%${q}%`;
   builder = builder.or(`name.ilike.${like},description.ilike.${like},address.ilike.${like}`);
@@ -38,7 +38,9 @@ export async function searchPartners(
     return output;
   }
 
-  const results = (data ?? []).map((p) => ({
+  const eligible = (data ?? []).filter((p) => isPartnerSubscriptionOk(p)).slice(0, 5);
+
+  const results = eligible.map((p) => ({
     id: p.id,
     name: p.name,
     city: extractCityFromAddress(p.address),

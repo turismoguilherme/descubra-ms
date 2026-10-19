@@ -1,3 +1,5 @@
+import { detectGuataCatalogAction } from "@/utils/guataCatalogIntent";
+
 /** Detecta intenção transacional (espelha heurística do edge guata-ai). */
 export type GuataTransactionalAction = "cadastrar_evento" | "reservar" | "pagar";
 
@@ -11,4 +13,9 @@ export function detectGuataTransactionalAction(prompt: string): GuataTransaction
 
 export function isGuataTransactionalIntent(prompt: string): boolean {
   return detectGuataTransactionalAction(prompt) !== null;
+}
+
+/** Tools primeiro: reservas/pagamentos/cadastro ou consulta de eventos ao vivo. */
+export function isGuataToolsFirstIntent(prompt: string): boolean {
+  return isGuataTransactionalIntent(prompt) || detectGuataCatalogAction(prompt) !== null;
 }
