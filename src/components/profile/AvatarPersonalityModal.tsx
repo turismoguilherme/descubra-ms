@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -157,6 +157,9 @@ const AvatarPersonalityModal: React.FC<AvatarPersonalityModalProps> = ({
           <DialogTitle className="text-2xl font-bold text-center text-gray-900">
             Personalidade do {animal.name}
           </DialogTitle>
+          <DialogDescription className="text-center text-gray-600">
+            Traços de personalidade e curiosidades sobre este animal do Pantanal
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 pb-4">

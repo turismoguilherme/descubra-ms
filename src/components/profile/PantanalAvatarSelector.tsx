@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -69,9 +69,9 @@ const PantanalAvatarSelector: React.FC<PantanalAvatarSelectorProps> = ({
             <DialogTitle className="text-2xl font-bold text-center text-gray-900">
               Escolha seu Avatar do Pantanal
             </DialogTitle>
-            <p className="text-center text-gray-600 mt-2">
+            <DialogDescription className="text-center text-gray-600 mt-2">
               Conecte-se com a biodiversidade do Pantanal através do seu avatar
-            </p>
+            </DialogDescription>
           </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">

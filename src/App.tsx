@@ -420,7 +420,7 @@ function AppRoutes() {
 
                                 {/* Compatibilidade: /descubramatogrossodosul → /descubrams */}
                                 <Route path="/descubramatogrossodosul" element={<Navigate to={MS_PREFIX} replace />} />
-                                <Route path="/descubramatogrossodosul/:path*" element={<RedirectOldMSRoute />} />
+                                <Route path="/descubramatogrossodosul/*" element={<RedirectOldMSRoute />} />
 
                                 {/* Legado /ms (callback OAuth precisa processar antes de redirecionar) */}
                                 <Route path="/ms/login" element={<AuthPage />} />

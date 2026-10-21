@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -129,6 +129,9 @@ const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
               ✕
             </Button>
           </DialogTitle>
+          <DialogDescription>
+            Compartilhe seu perfil do Descubra MS com link ou QR code
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

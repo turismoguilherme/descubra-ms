@@ -139,11 +139,16 @@ export async function withAutoRefresh<T>(
   }
 }
 
+let periodicTokenRefreshIntervalId: ReturnType<typeof setInterval> | null = null;
+
 /**
- * Verifica e renova token periodicamente se necessário
+ * Verifica e renova token periodicamente se necessário (uma única vez por aba)
  */
 function setupPeriodicTokenRefresh() {
-  setInterval(async () => {
+  if (periodicTokenRefreshIntervalId !== null) {
+    return;
+  }
+  periodicTokenRefreshIntervalId = setInterval(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -176,17 +181,13 @@ export function initSupabaseInterceptor() {
       console.log('[SupabaseInterceptor] ✅ Token renovado automaticamente pelo Supabase');
     } else if (event === 'SIGNED_OUT') {
       console.log('[SupabaseInterceptor] Usuário deslogado');
-    } else if (event === 'SIGNED_IN' && session) {
-      console.log('[SupabaseInterceptor] Usuário autenticado, iniciando verificação periódica de token');
-      // Iniciar verificação periódica quando usuário faz login
+    } else if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
       setupPeriodicTokenRefresh();
     }
   });
 
-  // Verificar se já há uma sessão ativa
   supabase.auth.getSession().then(({ data: { session } }) => {
     if (session) {
-      console.log('[SupabaseInterceptor] Sessão encontrada, iniciando verificação periódica');
       setupPeriodicTokenRefresh();
     }
   });

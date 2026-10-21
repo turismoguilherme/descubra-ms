@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { sendPasswordResetEmail } from "@/lib/passwordReset";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const lastProfileFetchUserIdRef = useRef<string | null>(null);
+
+  const shouldFetchRolesForAuthEvent = (event: string) =>
+    event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED';
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -113,13 +117,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (isViajarTestLoginEnabled()) {
             clearSimulatedTestSessionMarkers();
           }
-          setSession(session);
-          setUser(session.user);
+          setSession((prev) =>
+            prev?.access_token === session.access_token && prev?.user?.id === session.user.id
+              ? prev
+              : session
+          );
+          setUser((prev) => (prev?.id === session.user.id ? prev : session.user));
 
-          console.log("🔄 AuthProvider: Usuário logado, buscando perfil...");
-          fetchUserProfile(session.user.id).catch((error) => {
-            console.error("❌ [AuthProvider] Erro ao buscar perfil (onAuthStateChange):", error);
-          });
+          if (
+            shouldFetchRolesForAuthEvent(event) &&
+            lastProfileFetchUserIdRef.current !== session.user.id
+          ) {
+            lastProfileFetchUserIdRef.current = session.user.id;
+            fetchUserProfile(session.user.id).catch((error) => {
+              console.error("❌ [AuthProvider] Erro ao buscar perfil (onAuthStateChange):", error);
+            });
+          }
           
           if (event === 'SIGNED_IN' && window.location.hash.includes('access_token')) {
             console.log('🔄 [AuthProvider] ========== OAUTH REDIRECT DETECTADO ==========');
@@ -171,10 +184,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (!appliedTest) {
             setUser(null);
             setUserProfile(null);
+            lastProfileFetchUserIdRef.current = null;
           }
         }
 
-        console.log("⏱️ [AuthProvider] Finalizando onAuthStateChange, setLoading(false)");
         setLoading(false);
       }
     );
@@ -183,9 +196,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) {
         setSession(session);
         setUser(session.user);
-        fetchUserProfile(session.user.id).catch((error) => {
-          console.error("❌ [AuthProvider] Erro ao buscar perfil (getSession):", error);
-        });
+        if (lastProfileFetchUserIdRef.current !== session.user.id) {
+          lastProfileFetchUserIdRef.current = session.user.id;
+          fetchUserProfile(session.user.id).catch((error) => {
+            console.error("❌ [AuthProvider] Erro ao buscar perfil (getSession):", error);
+          });
+        }
       } else if (isViajarTestLoginEnabled()) {
         const tu = getCurrentTestUser();
         if (tu) {
