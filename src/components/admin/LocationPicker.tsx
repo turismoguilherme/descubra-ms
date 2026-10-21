@@ -49,7 +49,14 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [geofenceRadius, setGeofenceRadius] = useState(initialLocation?.geofenceRadius || 100);
   const [observations, setObservations] = useState(initialLocation?.observations || '');
   const [searchWarning, setSearchWarning] = useState<string | null>(null);
+  const [mapMountKey, setMapMountKey] = useState(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (isOpen) {
+      setMapMountKey((k) => k + 1);
+    }
+  }, [isOpen]);
 
   // Atualizar localização quando initialLocation mudar
   useEffect(() => {
@@ -194,25 +201,27 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
           setSearchWarning(null);
         }
       } else {
-        // Fallback para resultado mockado se API falhar
-        setSearchResults([{
-          name: searchQuery,
-          address: `${searchQuery}, MS`,
-          latitude: -20.4428,
-          longitude: -54.6464,
-          type: 'busca'
-        }]);
+        setSearchResults([]);
+        setSearchWarning(
+          'Não foi possível buscar o endereço agora. Use "Minha localização", um local popular ou confira a conexão — não usamos coordenadas automáticas para não errar o check-in.'
+        );
+        toast({
+          title: 'Busca indisponível',
+          description: 'Tente de novo ou use o GPS / mapa para marcar o ponto exato.',
+          variant: 'destructive',
+        });
       }
     } catch (error: unknown) {
       console.error('Erro ao buscar endereço:', error);
-      // Fallback para resultado mockado em caso de erro
-      setSearchResults([{
-        name: searchQuery,
-        address: `${searchQuery}, MS`,
-        latitude: -20.4428,
-        longitude: -54.6464,
-        type: 'busca'
-      }]);
+      setSearchResults([]);
+      setSearchWarning(
+        'Erro na busca. Arraste o marcador no mapa após usar "Minha localização" ou um local popular — evite salvar sem conferir as coordenadas.'
+      );
+      toast({
+        title: 'Erro na busca',
+        description: 'Marque o local no mapa antes de confirmar.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSearching(false);
     }
@@ -426,6 +435,8 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
               <CardContent>
                 {selectedLocation ? (
                   <InteractiveMapPicker
+                    remountKey={mapMountKey}
+                    layoutActive={isOpen}
                     latitude={selectedLocation.latitude}
                     longitude={selectedLocation.longitude}
                     radius={geofenceRadius}

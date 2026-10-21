@@ -106,12 +106,18 @@ export default function PassportRankingPanel() {
         }
       } catch (err) {
         if (!cancelled) {
+          const postgrest = err as { code?: string; message?: string };
+          const raw =
+            postgrest.message || (err instanceof Error ? err.message : '');
+          const rpcMissing =
+            postgrest.code === 'PGRST202' ||
+            raw.includes('get_passport_leaderboard') ||
+            raw.includes('Could not find the function');
           toast({
             title: 'Erro ao carregar ranking',
-            description:
-              err instanceof Error
-                ? err.message
-                : 'Verifique se a migração do ranking foi aplicada.',
+            description: rpcMissing
+              ? 'As funções de ranking ainda não estão no banco. No Supabase, aplique as migrações de ranking/avatar (ex.: 20261019152000 e 20261019160000).'
+              : raw || 'Tente novamente em instantes. É preciso ter feito pelo menos um carimbo para aparecer na lista.',
             variant: 'destructive',
           });
           setEntries([]);

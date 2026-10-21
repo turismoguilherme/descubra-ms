@@ -19,16 +19,35 @@ interface InteractiveMapPickerProps {
   onLocationChange: (lat: number, lng: number) => void;
   onRadiusChange?: (radius: number) => void;
   height?: string;
+  /** Remonta o mapa (ex.: ao abrir o dialog) */
+  remountKey?: string | number;
+  /** Dispara invalidateSize quando o container ficar visível */
+  layoutActive?: boolean;
 }
 
 // Componente para atualizar o centro do mapa quando a posição muda
 function MapUpdater({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
-  
+
   useEffect(() => {
     map.setView([lat, lng], map.getZoom());
   }, [lat, lng, map]);
-  
+
+  return null;
+}
+
+/** Corrige mapa cinza ao abrir dentro de modal (Leaflet com tamanho 0). */
+function MapInvalidateSize({ active }: { active: boolean }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!active) return;
+    const run = () => map.invalidateSize({ animate: false });
+    run();
+    const id = window.setTimeout(run, 350);
+    return () => window.clearTimeout(id);
+  }, [active, map]);
+
   return null;
 }
 
@@ -39,6 +58,8 @@ const InteractiveMapPicker: React.FC<InteractiveMapPickerProps> = ({
   onLocationChange,
   onRadiusChange,
   height = '400px',
+  remountKey = 'default',
+  layoutActive = true,
 }) => {
   const [position, setPosition] = useState<[number, number]>([latitude, longitude]);
   const [currentRadius, setCurrentRadius] = useState(radius);
@@ -67,16 +88,20 @@ const InteractiveMapPicker: React.FC<InteractiveMapPickerProps> = ({
   return (
     <div className="relative w-full rounded-lg overflow-hidden border-2 border-gray-200 shadow-lg" style={{ height }}>
       <MapContainer
+        key={remountKey}
         center={position}
         zoom={17}
         style={{ height: '100%', width: '100%', zIndex: 0 }}
         scrollWheelZoom={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
+          maxZoom={20}
         />
-        
+
+        <MapInvalidateSize active={layoutActive} />
         <MapUpdater lat={position[0]} lng={position[1]} />
         
         {/* Marcador arrastável */}

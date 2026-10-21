@@ -386,8 +386,9 @@ const ProfilePageFixed: React.FC = () => {
       }
       
       toast({
-        title: "Avatar Atualizado!",
-        description: "Seu avatar foi alterado com sucesso.",
+        title: 'Avatar atualizado',
+        description:
+          'Você aparece com este animal no perfil e no ranking (modo Pantanal). Faça um carimbo para subir no placar.',
       });
     } catch (error) {
       console.error('Erro ao atualizar avatar:', error);
