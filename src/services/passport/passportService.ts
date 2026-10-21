@@ -500,66 +500,81 @@ class PassportService {
       }
 
       const routeId = checkpoint.routes.id;
+      const routeMeta = checkpoint.routes as { checkpoint_order_mode?: string | null };
+      const orderMode =
+        routeMeta.checkpoint_order_mode === 'free' ? 'free' : 'sequential';
 
-      // Validar ordem sequencial se necessário
-      try {
-        const configResult = await supabase
-          .from('passport_configurations')
-          .select('require_sequential')
-          .eq('route_id', routeId)
-          .eq('is_active', true)
-          .single();
+      const checkpointRow = checkpoint as {
+        name: string;
+        day_number?: number | null;
+        order_sequence?: number | null;
+      };
+      const currentDay = checkpointRow.day_number ?? 1;
+      const currentOrder = checkpointRow.order_sequence ?? 0;
 
-        const config = configResult.data as { require_sequential?: boolean } | null;
-
-        if (config?.require_sequential) {
+      // Ordem sequencial: mesma regra da RPC validate_and_stamp_checkpoint (aba Rotas)
+      if (orderMode !== 'free') {
+        try {
           const { data: allCheckpoints } = await supabase
             .from('route_checkpoints')
-            .select('id, order_sequence')
-            .eq('route_id', routeId)
-            .order('order_sequence', { ascending: true });
+            .select('id, name, day_number, order_sequence')
+            .eq('route_id', routeId);
 
           if (allCheckpoints && allCheckpoints.length > 0) {
-            const currentCheckpointIndex = allCheckpoints.findIndex(cp => cp.id === checkpointId);
+            const routeCheckpointIds = allCheckpoints.map(cp => cp.id);
+            const { data: completedStamps } = await supabase
+              .from('passport_stamps')
+              .select('checkpoint_id')
+              .eq('user_id', userId)
+              .in('checkpoint_id', routeCheckpointIds);
 
-            if (currentCheckpointIndex > 0) {
-              const previousCheckpoints = allCheckpoints.slice(0, currentCheckpointIndex);
-              const previousCheckpointIds = previousCheckpoints.map(cp => cp.id);
+            const stamped = new Set(completedStamps?.map(s => s.checkpoint_id) || []);
 
-              const { data: completedStamps } = await supabase
-                .from('passport_stamps')
-                .select('checkpoint_id')
-                .eq('user_id', userId)
-                .in('checkpoint_id', previousCheckpointIds);
+            const missingPriorDay = allCheckpoints
+              .filter(cp => (cp.day_number ?? 1) < currentDay && !stamped.has(cp.id))
+              .sort((a, b) => (a.day_number ?? 1) - (b.day_number ?? 1));
 
-              const completedCheckpointIds = new Set(completedStamps?.map(s => s.checkpoint_id) || []);
-              const missingCheckpoints = previousCheckpoints.filter(cp => !completedCheckpointIds.has(cp.id));
+            if (missingPriorDay.length > 0) {
+              return {
+                success: false,
+                checkpoint_id: checkpointId,
+                route_id: routeId,
+                stamp_earned: false,
+                points_earned: 0,
+                route_completed: false,
+                error: `Conclua todos os pontos do(s) dia(s) anterior(es) antes de iniciar o Dia ${currentDay}.`,
+              };
+            }
 
-              if (missingCheckpoints.length > 0) {
-                const nextRequired = missingCheckpoints[0];
-                const nextRequiredOrder = allCheckpoints.find(cp => cp.id === nextRequired.id)?.order_sequence || 0;
+            const missingPriorInDay = allCheckpoints
+              .filter(
+                cp =>
+                  (cp.day_number ?? 1) === currentDay &&
+                  (cp.order_sequence ?? 0) < currentOrder &&
+                  !stamped.has(cp.id)
+              )
+              .sort((a, b) => (a.order_sequence ?? 0) - (b.order_sequence ?? 0));
 
-                const { data: nextCheckpoint } = await supabase
-                  .from('route_checkpoints')
-                  .select('name')
-                  .eq('id', nextRequired.id)
-                  .single();
-
-                return {
-                  success: false,
-                  checkpoint_id: checkpointId,
-                  route_id: routeId,
-                  stamp_earned: false,
-                  points_earned: 0,
-                  route_completed: false,
-                  error: `Complete o checkpoint ${nextRequiredOrder} (${nextCheckpoint?.name || 'anterior'}) antes deste.`,
-                };
-              }
+            if (missingPriorInDay.length > 0) {
+              const nextStep = missingPriorInDay[0];
+              const orderHint =
+                nextStep.order_sequence != null
+                  ? ` (${nextStep.order_sequence}º ponto sugerido)`
+                  : '';
+              return {
+                success: false,
+                checkpoint_id: checkpointId,
+                route_id: routeId,
+                stamp_earned: false,
+                points_earned: 0,
+                route_completed: false,
+                error: `Antes de carimbar "${checkpointRow.name}", visite "${nextStep.name}" — próximo passo da trilha${orderHint}.`,
+              };
             }
           }
+        } catch (error: unknown) {
+          console.warn('Erro ao validar ordem sequencial:', error);
         }
-      } catch (error: unknown) {
-        console.warn('Erro ao validar ordem sequencial:', error);
       }
 
       // Validar de acordo com o modo de validação
@@ -584,7 +599,7 @@ class PassportService {
               stamp_earned: false,
               points_earned: 0,
               route_completed: false,
-              error: 'Você está muito longe do checkpoint',
+              error: 'Você está longe deste ponto. Aproxime-se do local para carimbar.',
             };
           }
         }

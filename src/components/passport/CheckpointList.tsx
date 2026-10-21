@@ -304,6 +304,7 @@ const CheckpointList: React.FC<CheckpointListProps> = ({
           </DialogHeader>
           {selectedCheckpoint && (
             <CheckpointCheckin
+              key={selectedCheckpoint.id}
               checkpoint={selectedCheckpoint}
               routeId={routeId}
               onCheckinSuccess={handleCheckinSuccess}

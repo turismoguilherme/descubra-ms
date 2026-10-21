@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,7 @@ import { usePassport } from '@/hooks/usePassport';
 import { geolocationService } from '@/services/passport/geolocationService';
 import { passportService } from '@/services/passport/passportService';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MapPin, Camera, CheckCircle2, AlertCircle, Loader2, HelpCircle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { RouteCheckpointExtended, GeofenceValidation } from '@/types/passportDigital';
@@ -31,6 +32,25 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [partnerCode, setPartnerCode] = useState('');
+  const [checkinAlert, setCheckinAlert] = useState<{
+    title: string;
+    description: string;
+    variant: 'destructive' | 'default';
+  } | null>(null);
+
+  const showCheckinAlert = (
+    title: string,
+    description: string,
+    variant: 'destructive' | 'default' = 'destructive'
+  ) => {
+    setCheckinAlert({ title, description, variant });
+  };
+
+  const activeCheckpointIdRef = useRef(checkpoint.id);
+  activeCheckpointIdRef.current = checkpoint.id;
+
+  const isStaleCheckpointRequest = (requestCheckpointId: string) =>
+    requestCheckpointId !== activeCheckpointIdRef.current;
 
   // Log do estado do botão sempre que mudar
   useEffect(() => {
@@ -50,18 +70,26 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
    * Obter localização atual
    */
   const getCurrentLocation = async () => {
+    const checkpointIdForRequest = checkpoint.id;
     try {
       console.log('🔵 [CheckpointCheckin] getCurrentLocation chamado');
       setValidating(true);
+      setCheckinAlert(null);
       const loc = await geolocationService.getCurrentLocation();
+      if (isStaleCheckpointRequest(checkpointIdForRequest)) {
+        return;
+      }
       console.log('🔵 [CheckpointCheckin] Localização obtida', {
         latitude: loc.latitude,
         longitude: loc.longitude,
         accuracy: loc.accuracy,
         accuracyInMeters: Math.round(loc.accuracy || 0),
       });
-      setLocation({ 
-        lat: loc.latitude, 
+      if (isStaleCheckpointRequest(checkpointIdForRequest)) {
+        return;
+      }
+      setLocation({
+        lat: loc.latitude,
         lon: loc.longitude,
         accuracy: loc.accuracy,
       });
@@ -81,8 +109,10 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
           loc.longitude
         );
         console.log('🔵 [CheckpointCheckin] Validação de proximidade', validation);
-        setValidation(validation);
-      } else {
+        if (!isStaleCheckpointRequest(checkpointIdForRequest)) {
+          setValidation(validation);
+        }
+      } else if (!isStaleCheckpointRequest(checkpointIdForRequest)) {
         // Se checkpoint não tem coordenadas, permitir check-in
         setValidation({
           valid: true,
@@ -94,14 +124,15 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
         });
       }
     } catch (error: unknown) {
+      if (isStaleCheckpointRequest(checkpointIdForRequest)) {
+        return;
+      }
       const err = error instanceof Error ? error : new Error(String(error));
-      toast({
-        title: 'Erro ao obter localização',
-        description: err.message,
-        variant: 'destructive',
-      });
+      showCheckinAlert('Erro ao obter localização', err.message);
     } finally {
-      setValidating(false);
+      if (!isStaleCheckpointRequest(checkpointIdForRequest)) {
+        setValidating(false);
+      }
     }
   };
 
@@ -132,34 +163,30 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
       hasPartnerCode: !!partnerCode,
     });
 
+    setCheckinAlert(null);
+
     if (!location) {
-      
-      toast({
-        title: 'Localização necessária',
-        description: 'Por favor, obtenha sua localização primeiro.',
-        variant: 'destructive',
-      });
+      showCheckinAlert(
+        'Localização necessária',
+        'Ative o GPS e toque em "Obter Localização" antes de carimbar.'
+      );
       return;
     }
 
     if (validation && !validation.valid && (checkpoint.validation_mode === 'geofence' || checkpoint.validation_mode === 'mixed')) {
-      
-      toast({
-        title: 'Fora do alcance',
-        description: `Você está a ${validation.distance}m do checkpoint. Aproxime-se mais.`,
-        variant: 'destructive',
-      });
+      showCheckinAlert(
+        'Você está longe deste ponto',
+        `Aproxime-se do local (faltam cerca de ${validation.distance} m; raio permitido: ${validation.required_radius} m).`
+      );
       return;
     }
 
     // Se este checkpoint exige código (code ou mixed), garantir que o usuário digitou algo
     if ((checkpoint.validation_mode === 'code' || checkpoint.validation_mode === 'mixed') && !partnerCode.trim()) {
-      
-      toast({
-        title: 'Código do parceiro necessário',
-        description: 'Peça o código no balcão/recepção do parceiro e digite para concluir o check-in.',
-        variant: 'destructive',
-      });
+      showCheckinAlert(
+        'Código do parceiro necessário',
+        'Peça o código no balcão ou recepção do parceiro e digite no campo abaixo.'
+      );
       return;
     }
 
@@ -237,32 +264,24 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
         // Se o erro for "check-in já realizado", mostrar mensagem informativa e atualizar progresso
         if (result.error?.includes('já realizado') || result.error?.includes('Check-in já realizado')) {
           console.log('🔵 [CheckpointCheckin] Check-in já realizado, atualizando progresso');
-          toast({
-            title: 'Check-in já realizado',
-            description: 'Você já fez check-in neste checkpoint anteriormente. Atualizando progresso...',
-            variant: 'default',
-          });
-          // Sempre atualizar progresso quando check-in já existe
+          showCheckinAlert(
+            'Você já carimbou este ponto',
+            'Seu progresso será atualizado.',
+            'default'
+          );
           if (onCheckinSuccess) {
-            
             onCheckinSuccess();
           }
         } else {
-          // Outros erros: mostrar mensagem de erro
-          toast({
-            title: 'Erro no check-in',
-            description: result.error || 'Não foi possível fazer o check-in.',
-            variant: 'destructive',
-          });
+          showCheckinAlert(
+            'Não foi possível carimbar',
+            result.error || 'Tente novamente em instantes.'
+          );
         }
       }
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      toast({
-        title: 'Erro',
-        description: err.message,
-        variant: 'destructive',
-      });
+      showCheckinAlert('Erro inesperado', err.message);
     } finally {
       setCheckingIn(false);
     }
@@ -270,6 +289,10 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
 
   // Obter localização automaticamente ao montar
   useEffect(() => {
+    setLocation(null);
+    setValidation(null);
+    setCheckinAlert(null);
+    setPartnerCode('');
     getCurrentLocation();
   }, [checkpoint.id]);
 
@@ -282,6 +305,14 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {checkinAlert && (
+          <Alert variant={checkinAlert.variant}>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>{checkinAlert.title}</AlertTitle>
+            <AlertDescription>{checkinAlert.description}</AlertDescription>
+          </Alert>
+        )}
+
         {checkpoint.description && (
           <p className="text-muted-foreground">{checkpoint.description}</p>
         )}
