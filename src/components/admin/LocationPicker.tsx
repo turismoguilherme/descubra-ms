@@ -16,6 +16,12 @@ interface NominatimResult {
   lon: string;
 }
 
+const MS_MAP_DEFAULT = {
+  latitude: -20.4697,
+  longitude: -54.6201,
+  address: 'Mato Grosso do Sul — arraste o marcador para o ponto exato',
+};
+
 interface LocationPickerProps {
   onLocationSelect: (location: {
     latitude: number;
@@ -53,10 +59,21 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen) {
-      setMapMountKey((k) => k + 1);
+    if (!isOpen) return;
+    setMapMountKey((k) => k + 1);
+    if (initialLocation?.latitude != null && initialLocation?.longitude != null) {
+      setSelectedLocation(initialLocation);
+      setGeofenceRadius(initialLocation.geofenceRadius || 100);
+      setObservations(initialLocation.observations || '');
+      return;
     }
-  }, [isOpen]);
+    if (!selectedLocation) {
+      setSelectedLocation(MS_MAP_DEFAULT);
+      setSearchWarning(
+        'Mapa aberto no centro de MS. Use busca, GPS ou arraste o marcador antes de confirmar.'
+      );
+    }
+  }, [isOpen, initialLocation]);
 
   // Atualizar localização quando initialLocation mudar
   useEffect(() => {
@@ -291,7 +308,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -433,7 +450,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
                 <CardTitle className="text-lg">Mapa Interativo</CardTitle>
               </CardHeader>
               <CardContent>
-                {selectedLocation ? (
+                {isOpen && selectedLocation ? (
                   <InteractiveMapPicker
                     remountKey={mapMountKey}
                     layoutActive={isOpen}

@@ -44,8 +44,12 @@ function MapInvalidateSize({ active }: { active: boolean }) {
     if (!active) return;
     const run = () => map.invalidateSize({ animate: false });
     run();
-    const id = window.setTimeout(run, 350);
-    return () => window.clearTimeout(id);
+    const t1 = window.setTimeout(run, 350);
+    const t2 = window.setTimeout(run, 900);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
   }, [active, map]);
 
   return null;
