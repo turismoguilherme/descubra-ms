@@ -5,6 +5,21 @@ class GeolocationService {
   /**
    * Obter localização atual do usuário
    */
+  private readonly positionOptions: PositionOptions = {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 0,
+  };
+
+  private positionToData(position: GeolocationPosition): GeolocationData {
+    return {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      timestamp: position.timestamp,
+    };
+  }
+
   async getCurrentLocation(): Promise<GeolocationData> {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -12,26 +27,69 @@ class GeolocationService {
         return;
       }
 
-      const options: PositionOptions = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      };
-
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-            timestamp: position.timestamp,
-          });
-        },
+        (position) => resolve(this.positionToData(position)),
         (error) => {
           reject(new Error(`Erro ao obter localização: ${error.message}`));
         },
-        options
+        this.positionOptions
       );
+    });
+  }
+
+  /**
+   * Coleta leituras por alguns segundos e retorna a de melhor precisão (útil no admin).
+   */
+  async getBestCurrentLocation(maxWaitMs = 12000): Promise<GeolocationData> {
+    if (!navigator.geolocation) {
+      throw new Error('Geolocalização não suportada pelo navegador');
+    }
+
+    return new Promise((resolve, reject) => {
+      let best: GeolocationData | null = null;
+      let settled = false;
+
+      const consider = (position: GeolocationPosition) => {
+        const data = this.positionToData(position);
+        if (!best || data.accuracy < best.accuracy) {
+          best = data;
+        }
+      };
+
+      const done = (error?: GeolocationPositionError) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timer);
+        if (watchId !== null) {
+          navigator.geolocation.clearWatch(watchId);
+        }
+        if (best) {
+          resolve(best);
+        } else {
+          reject(
+            new Error(
+              error
+                ? `Erro ao obter localização: ${error.message}`
+                : 'Não foi possível obter localização a tempo'
+            )
+          );
+        }
+      };
+
+      let watchId: number | null = null;
+      watchId = navigator.geolocation.watchPosition(
+        (position) => consider(position),
+        () => {},
+        this.positionOptions
+      );
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => consider(position),
+        () => {},
+        this.positionOptions
+      );
+
+      const timer = window.setTimeout(() => done(), maxWaitMs);
     });
   }
 

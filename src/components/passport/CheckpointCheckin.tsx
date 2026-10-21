@@ -75,7 +75,7 @@ const CheckpointCheckin: React.FC<CheckpointCheckinProps> = ({
       console.log('🔵 [CheckpointCheckin] getCurrentLocation chamado');
       setValidating(true);
       setCheckinAlert(null);
-      const loc = await geolocationService.getCurrentLocation();
+      const loc = await geolocationService.getBestCurrentLocation();
       if (isStaleCheckpointRequest(checkpointIdForRequest)) {
         return;
       }
