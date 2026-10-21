@@ -94,9 +94,16 @@ const RouteCompletionModal: React.FC<RouteCompletionModalProps> = ({
   }
 
   return (
-    <Dialog open={isOpen && !hasClosed} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green border-white/20">
-        <DialogHeader>
+    <Dialog
+      open={isOpen && !hasClosed}
+      onOpenChange={(open) => {
+        if (!open) handleClose();
+      }}
+    >
+      <DialogContent
+        className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-gradient-to-br from-ms-primary-blue via-ms-discovery-teal to-ms-pantanal-green border-white/20"
+      >
+        <DialogHeader className="shrink-0">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-center text-white text-3xl flex-1">
               🎉 Parabéns!
@@ -117,8 +124,8 @@ const RouteCompletionModal: React.FC<RouteCompletionModalProps> = ({
         }`}>
           {/* Stamp Animation */}
           <div className="relative">
-            <div className="w-40 h-40 mx-auto bg-white/20 rounded-full flex items-center justify-center border-4 border-white/30 animate-pulse">
-              <div className="text-8xl">{icon}</div>
+            <div className="w-28 h-28 sm:w-40 sm:h-40 mx-auto bg-white/20 rounded-full flex items-center justify-center border-4 border-white/30 animate-pulse">
+              <div className="text-5xl sm:text-8xl">{icon}</div>
             </div>
             <div className="absolute -top-2 -right-2">
               <Sparkles className="w-10 h-10 text-yellow-400 animate-bounce" />
@@ -213,7 +220,8 @@ const RouteCompletionModal: React.FC<RouteCompletionModalProps> = ({
                           </div>
                           
                           <p className="text-xs text-white/70 text-center">
-                            Apresente este código ou escaneie o QR code no estabelecimento para usar sua recompensa
+                            Apresente este código ou escaneie o QR no estabelecimento. Você pode ver de novo na seção
+                            Recompensas desta rota.
                           </p>
                         </div>
                       )}

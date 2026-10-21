@@ -12,6 +12,7 @@ import { Plus, Trash2, HelpCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
+import PassportCodesGuide from '@/components/admin/passport/PassportCodesGuide';
 
 interface Route {
   id: string;
@@ -337,6 +338,7 @@ const PassportRewardsManager: React.FC = () => {
         description="Gerencie recompensas oferecidas aos usuários que completam rotas do passaporte digital."
         helpText="Gerencie recompensas oferecidas aos usuários que completam rotas do passaporte digital."
       />
+      <PassportCodesGuide variant="voucher" />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">

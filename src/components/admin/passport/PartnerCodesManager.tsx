@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, Key, RefreshCw, Eye, EyeOff, Copy, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { partnerCodeService } from '@/services/passport/partnerCodeService';
+import PassportCodesGuide from '@/components/admin/passport/PassportCodesGuide';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PartnerCode {
@@ -109,6 +110,7 @@ const PartnerCodesManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <PassportCodesGuide variant="partner-codes" />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -116,7 +118,8 @@ const PartnerCodesManager: React.FC = () => {
             Gerenciamento de Códigos de Parceiros
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Gerencie códigos para validação de checkpoints. Cada parceiro pode usar o mesmo código em múltiplos roteiros ou códigos diferentes para cada checkpoint.
+            Códigos de <strong>check-in</strong> por checkpoint (turista digita ao carimbar). Não é o voucher/QR
+            da recompensa ao completar a rota.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">

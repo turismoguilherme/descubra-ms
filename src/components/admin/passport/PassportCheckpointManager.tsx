@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2, MapPin, Save, X, HelpCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LocationPicker from '@/components/admin/LocationPicker';
+import PassportCodesGuide from '@/components/admin/passport/PassportCodesGuide';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const PassportCheckpointManager: React.FC = () => {
@@ -497,6 +498,7 @@ const PassportCheckpointManager: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <PassportCodesGuide variant="checkpoint" />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -799,7 +801,7 @@ const PassportCheckpointManager: React.FC = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-2">
-                            <Label htmlFor="new_partner_code">Código do Parceiro *</Label>
+                            <Label htmlFor="new_partner_code">Código do check-in (turista digita ao carimbar) *</Label>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
@@ -1105,7 +1107,7 @@ const PassportCheckpointManager: React.FC = () => {
                             {(editCheckpointForm.validation_mode === 'code' ||
                               editCheckpointForm.validation_mode === 'mixed') && (
                               <div>
-                                <Label>Código do Parceiro</Label>
+                                <Label>Código do check-in (turista digita ao carimbar)</Label>
                                 <Input
                                   value={editCheckpointForm.partner_code}
                                   onChange={(e) =>

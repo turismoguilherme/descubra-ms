@@ -8,6 +8,7 @@ import AnimalStampGrid from './AnimalStampGrid';
 import RewardsOverview from './RewardsOverview';
 import GoogleMyMapsEmbed from './GoogleMyMapsEmbed';
 import { normalizeGoogleMapsEmbedUrl } from '@/utils/googleMapsEmbed';
+import { formatSupabaseError } from '@/utils/formatSupabaseError';
 import CheckpointList from './CheckpointList';
 import RouteCompletionModal from './RouteCompletionModal';
 import {
@@ -121,11 +122,10 @@ const PassportRouteView: React.FC<PassportRouteViewProps> = ({ route, progress, 
       setShowResetDialog(false);
       handleProgressUpdate(); // Atualizar progresso na tela
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      console.error('Erro ao resetar progresso:', err);
+      console.error('Erro ao resetar progresso:', error);
       toast({
         title: '❌ Erro',
-        description: err.message || 'Não foi possível resetar o progresso. Tente novamente.',
+        description: formatSupabaseError(error),
         variant: 'destructive',
       });
     } finally {

@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Gift, Lock, CheckCircle2, MapPin, Phone, Mail } from 'lucide-react';
+import { Gift, Lock, CheckCircle2, MapPin, Phone, Mail, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { PassportReward, UserReward } from '@/types/passportDigital';
+import VoucherQRCode from './VoucherQRCode';
+import { rewardsService } from '@/services/passport/rewardsService';
 
 interface RewardsOverviewProps {
   routeId: string;
@@ -67,8 +69,17 @@ const RewardsOverview: React.FC<RewardsOverviewProps> = ({ routeId, completionPe
     return completionPercentage >= 100;
   };
 
-  const hasClaimedReward = (rewardId: string) => {
-    return userRewards.some(ur => ur.reward_id === rewardId);
+  const getUserRewardFor = (rewardId: string): UserReward | undefined => {
+    return userRewards.find((ur) => ur.reward_id === rewardId);
+  };
+
+  const handleCopyVoucher = async (code: string) => {
+    const ok = await rewardsService.copyVoucherCode(code);
+    toast({
+      title: ok ? 'Código copiado' : 'Erro ao copiar',
+      description: ok ? code : 'Tente copiar manualmente.',
+      variant: ok ? 'default' : 'destructive',
+    });
   };
 
   const getRewardIcon = (type: string) => {
@@ -131,7 +142,9 @@ const RewardsOverview: React.FC<RewardsOverviewProps> = ({ routeId, completionPe
         <div className="space-y-4">
           {rewards.map((reward) => {
             const unlocked = isRewardUnlocked(reward);
-            const claimed = hasClaimedReward(reward.id);
+            const userReward = getUserRewardFor(reward.id);
+            const hasVoucher = Boolean(userReward?.voucher_code);
+            const voucherUsed = Boolean(userReward?.is_used);
             
             return (
               <Card 
@@ -173,7 +186,7 @@ const RewardsOverview: React.FC<RewardsOverviewProps> = ({ routeId, completionPe
                             {reward.reward_type === 'experiencia' && 'Experiência'}
                           </Badge>
                         </div>
-                        {claimed && (
+                        {hasVoucher && !voucherUsed && (
                           <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
                         )}
                       </div>
@@ -223,11 +236,42 @@ const RewardsOverview: React.FC<RewardsOverviewProps> = ({ routeId, completionPe
                         </p>
                       )}
 
-                      {/* Claim Status */}
-                      {unlocked && claimed && (
+                      {unlocked && hasVoucher && !voucherUsed && userReward?.voucher_code && (
+                        <div className="mt-4 pt-4 border-t border-green-200 space-y-3">
+                          <p className="text-xs font-medium text-gray-700">
+                            Seu voucher — apresente no estabelecimento
+                          </p>
+                          <div className="flex items-center gap-2 bg-white rounded-lg border p-2">
+                            <code className="flex-1 text-sm font-bold break-all">
+                              {userReward.voucher_code}
+                            </code>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="shrink-0"
+                              onClick={() => handleCopyVoucher(userReward.voucher_code!)}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-center">
+                            <VoucherQRCode voucherCode={userReward.voucher_code} size={140} />
+                          </div>
+                        </div>
+                      )}
+
+                      {unlocked && voucherUsed && (
                         <Badge variant="secondary" className="mt-2">
-                          ✓ Recompensa Resgatada
+                          Voucher já utilizado no estabelecimento
                         </Badge>
+                      )}
+
+                      {unlocked && !hasVoucher && (
+                        <p className="text-xs text-amber-700 mt-2">
+                          Roteiro completo, mas nenhum voucher foi emitido (estoque esgotado ou recompensa sem
+                          código configurado).
+                        </p>
                       )}
                     </div>
                   </div>

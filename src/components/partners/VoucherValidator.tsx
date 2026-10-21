@@ -14,6 +14,7 @@ import {
   Camera,
   X
 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { rewardsService } from '@/services/passport/rewardsService';
 import { Html5Qrcode } from 'html5-qrcode';
 
@@ -224,6 +225,13 @@ const VoucherValidator: React.FC<VoucherValidatorProps> = ({
 
   return (
     <div className="space-y-6">
+      <Alert>
+        <AlertTitle>Recompensa após completar a rota</AlertTitle>
+        <AlertDescription>
+          Escaneie o QR ou digite o <strong>voucher</strong> que o turista ganhou ao fechar 100% do passaporte.
+          Isso não é o código MS-XXXX usado para <strong>carimbar um checkpoint</strong> no app.
+        </AlertDescription>
+      </Alert>
       <Card>
         <CardHeader>
           <CardTitle>Validar Voucher</CardTitle>
