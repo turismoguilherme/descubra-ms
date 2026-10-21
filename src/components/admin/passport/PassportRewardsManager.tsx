@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { passportAdminService } from '@/services/admin/passportAdminService';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, HelpCircle, Loader2 } from 'lucide-react';
+import { Plus, Trash2, HelpCircle, Loader2, Pencil, Ticket } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
@@ -44,6 +44,8 @@ const PassportRewardsManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingRewardId, setEditingRewardId] = useState<string | null>(null);
+  const [issuingRewardId, setIssuingRewardId] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     route_id: '',
@@ -63,6 +65,31 @@ const PassportRewardsManager: React.FC = () => {
     expires_at: '',
   });
   const { toast } = useToast();
+
+  const emptyForm = () => ({
+    route_id: '',
+    partner_name: '',
+    reward_type: 'desconto' as 'desconto' | 'brinde' | 'experiencia' | 'avatar' | 'outros',
+    reward_description: '',
+    reward_code_prefix: '',
+    discount_percentage: 0,
+    partner_address: '',
+    partner_phone: '',
+    partner_email: '',
+    avatar_id: '',
+    max_avatars_per_route: 3,
+    max_vouchers: null as number | null,
+    max_per_user: 1,
+    is_fallback: false,
+    expires_at: '',
+  });
+
+  const resetForm = () => {
+    setFormData(emptyForm());
+    setFormErrors({});
+    setEditingRewardId(null);
+    setShowForm(false);
+  };
 
   useEffect(() => {
     console.log('🔵 [PassportRewardsManager] Componente montado, carregando dados...');
@@ -166,7 +193,7 @@ const PassportRewardsManager: React.FC = () => {
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
-    if (!formData.route_id) {
+    if (!editingRewardId && !formData.route_id) {
       errors.route_id = 'Selecione uma rota';
     }
 
@@ -214,16 +241,17 @@ const PassportRewardsManager: React.FC = () => {
       return;
     }
     
-    console.log('✅ [PassportRewardsManager] Validações passadas, criando recompensa...');
+    console.log(
+      editingRewardId
+        ? '✅ [PassportRewardsManager] Validações passadas, atualizando...'
+        : '✅ [PassportRewardsManager] Validações passadas, criando recompensa...'
+    );
 
     setSaving(true);
-    setFormErrors({}); // Limpar erros anteriores
+    setFormErrors({});
 
     try {
-      // Filtrar apenas campos que existem na tabela passport_rewards
-      
       const rewardData = {
-        route_id: formData.route_id,
         partner_name: formData.partner_name,
         reward_type: formData.reward_type,
         reward_description: formData.reward_description,
@@ -232,63 +260,122 @@ const PassportRewardsManager: React.FC = () => {
         partner_address: formData.partner_address || null,
         partner_phone: formData.partner_phone || null,
         partner_email: formData.partner_email || null,
-        max_vouchers: formData.max_vouchers || null,
+        max_vouchers: formData.max_vouchers ?? null,
         max_per_user: formData.max_per_user || null,
         is_fallback: formData.is_fallback || false,
-        expires_at: formData.expires_at || null,
-        is_active: true,
-        // Adicionar campos de avatar apenas se suportados
+        expires_at: formData.expires_at ? new Date(formData.expires_at).toISOString() : null,
         ...(formData.reward_type === 'avatar' && {
           avatar_id: formData.avatar_id,
           max_avatars_per_route: formData.max_avatars_per_route,
         }),
       };
-      console.log('🔵 [PassportRewardsManager] Dados para criação:', JSON.stringify(rewardData, null, 2));
 
-      await passportAdminService.createReward(rewardData);
+      if (editingRewardId) {
+        await passportAdminService.updateReward(editingRewardId, rewardData);
+        toast({
+          title: 'Recompensa atualizada',
+          description:
+            'Texto e regras novas valem na vitrine. Vouchers/QR já emitidos para turistas não mudam.',
+        });
+      } else {
+        await passportAdminService.createReward({
+          ...rewardData,
+          route_id: formData.route_id,
+          is_active: true,
+        });
+        toast({
+          title: 'Recompensa criada com sucesso! ✅',
+          description: 'A recompensa foi adicionada ao sistema.',
+        });
+      }
 
-      console.log('✅ [PassportRewardsManager] Recompensa criada com sucesso');
-      toast({
-        title: 'Recompensa criada com sucesso! ✅',
-        description: 'A recompensa foi adicionada ao sistema.',
-      });
-      setShowForm(false);
-      setFormData({
-        route_id: '',
-        partner_name: '',
-        reward_type: 'desconto',
-        reward_description: '',
-        reward_code_prefix: '',
-        discount_percentage: 0,
-        partner_address: '',
-        partner_phone: '',
-        partner_email: '',
-        avatar_id: '',
-        max_avatars_per_route: 3,
-        max_vouchers: null,
-        max_per_user: 1,
-        is_fallback: false,
-        expires_at: '',
-      });
-      setFormErrors({}); // Limpar erros
-      console.log('🔵 [PassportRewardsManager] Formulário resetado, recarregando dados...');
+      resetForm();
       await loadData();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
-      console.error('❌ [PassportRewardsManager] Erro completo ao salvar recompensa:', {
-        message: err.message,
-        code: (err as { code?: string }).code,
-        details: (error as { details?: string }).details,
-        hint: (error as { hint?: string }).hint,
-        stack: err.stack,
-      });
       toast({
-        title: 'Erro ao criar recompensa',
+        title: editingRewardId ? 'Erro ao atualizar recompensa' : 'Erro ao criar recompensa',
         description: err.message,
         variant: 'destructive',
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEdit = async (rewardId: string) => {
+    try {
+      const reward = await passportAdminService.getReward(rewardId);
+      if (!reward) {
+        toast({ title: 'Recompensa não encontrada', variant: 'destructive' });
+        return;
+      }
+      setEditingRewardId(rewardId);
+      setFormData({
+        route_id: reward.route_id,
+        partner_name: reward.partner_name,
+        reward_type: reward.reward_type,
+        reward_description: reward.reward_description,
+        reward_code_prefix: reward.reward_code_prefix || '',
+        discount_percentage: reward.discount_percentage ?? 0,
+        partner_address: reward.partner_address || '',
+        partner_phone: reward.partner_phone || '',
+        partner_email: reward.partner_email || '',
+        avatar_id: reward.avatar_id || '',
+        max_avatars_per_route: reward.max_avatars_per_route ?? 3,
+        max_vouchers: reward.max_vouchers ?? null,
+        max_per_user: reward.max_per_user ?? 1,
+        is_fallback: Boolean(reward.is_fallback),
+        expires_at: reward.expires_at
+          ? new Date(reward.expires_at).toISOString().slice(0, 10)
+          : '',
+      });
+      setShowForm(true);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      toast({ title: 'Erro ao carregar recompensa', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleIssuePendingVouchers = async (reward: Reward) => {
+    const emitted = emittedByRewardId[reward.id] || 0;
+    const msg =
+      `Emitir vouchers para turistas que já completaram 100% da rota vinculada a esta recompensa ` +
+      `e ainda não receberam cupom para "${reward.partner_name}".\n\n` +
+      `Vouchers já existentes não serão alterados. Continuar?`;
+
+    if (!confirm(msg)) return;
+
+    setIssuingRewardId(reward.id);
+    try {
+      const { usersChecked, vouchersCreated } =
+        await passportAdminService.issuePendingVouchersForReward(reward.id);
+      toast({
+        title: vouchersCreated > 0 ? 'Vouchers emitidos' : 'Nenhum voucher novo',
+        description:
+          vouchersCreated > 0
+            ? `${vouchersCreated} cupom(ns) gerado(s) para ${usersChecked} turista(s) elegível(eis).`
+            : usersChecked > 0
+              ? 'Nenhum cupom novo (estoque esgotado ou recompensa inativa).'
+              : 'Não há turistas com rota completa sem voucher para esta recompensa.',
+      });
+      if (reward.max_vouchers != null && emitted >= reward.max_vouchers) {
+        toast({
+          title: 'Estoque',
+          description: 'Verifique o limite max_vouchers desta recompensa.',
+          variant: 'destructive',
+        });
+      }
+      await loadData();
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      toast({
+        title: 'Erro ao emitir vouchers',
+        description: err.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIssuingRewardId(null);
     }
   };
 
@@ -346,8 +433,13 @@ const PassportRewardsManager: React.FC = () => {
             <Button 
               type="button"
               onClick={() => {
-                console.log('🔵 [PassportRewardsManager] Botão "Nova Recompensa" clicado. showForm atual:', showForm);
-                setShowForm(!showForm);
+                if (showForm && !editingRewardId) {
+                  resetForm();
+                  return;
+                }
+                setEditingRewardId(null);
+                setFormData(emptyForm());
+                setShowForm(true);
               }}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -358,15 +450,21 @@ const PassportRewardsManager: React.FC = () => {
         <CardContent>
           {showForm && (
             <div className="mb-6 p-4 border rounded-lg space-y-4">
-              <h3 className="font-semibold">Nova Recompensa</h3>
+              <h3 className="font-semibold">{editingRewardId ? 'Editar recompensa' : 'Nova recompensa'}</h3>
+              {editingRewardId && (
+                <p className="text-sm text-muted-foreground">
+                  A rota não pode ser alterada após a criação. Cupons já emitidos mantêm o texto/código gerado na emissão.
+                </p>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className={formErrors.route_id ? 'text-red-500' : ''}>Rota *</Label>
                   <Select
                     value={formData.route_id}
+                    disabled={Boolean(editingRewardId)}
                     onValueChange={(v) => setFormData({ ...formData, route_id: v })}
                   >
-                    <SelectTrigger className={formErrors.route_id ? 'border-red-500' : ''}>
+                    <SelectTrigger className={formErrors.route_id ? 'border-red-500' : ''} disabled={Boolean(editingRewardId)}>
                       <SelectValue placeholder="Selecione uma rota" />
                     </SelectTrigger>
                     <SelectContent>
@@ -534,7 +632,7 @@ const PassportRewardsManager: React.FC = () => {
                 <div>
                   <Label>Validade (opcional)</Label>
                   <Input
-                    type="datetime-local"
+                    type="date"
                     value={formData.expires_at}
                     onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
                   />
@@ -608,14 +706,7 @@ const PassportRewardsManager: React.FC = () => {
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   {saving ? 'Salvando...' : 'Salvar'}
                 </Button>
-                <Button 
-                  type="button"
-                  variant="outline" 
-                  onClick={() => {
-                    console.log('🔵 [PassportRewardsManager] Botão "Cancelar" clicado');
-                    setShowForm(false);
-                  }}
-                >
+                <Button type="button" variant="outline" onClick={resetForm}>
                   Cancelar
                 </Button>
               </div>
@@ -649,19 +740,43 @@ const PassportRewardsManager: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('🔵 [PassportRewardsManager] Botão "Excluir" clicado para recompensa:', reward.id);
-                        handleDelete(reward.id);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-1 shrink-0">
+                      {reward.reward_type !== 'avatar' && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={issuingRewardId === reward.id}
+                          onClick={() => handleIssuePendingVouchers(reward)}
+                          title="Emitir cupons para quem já completou 100% da rota e ainda não tem voucher desta recompensa"
+                        >
+                          {issuingRewardId === reward.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Ticket className="h-4 w-4 mr-1" />
+                          )}
+                          Emitir pendentes
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(reward.id)}
+                        title="Editar recompensa"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(reward.id)}
+                        title="Excluir recompensa"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

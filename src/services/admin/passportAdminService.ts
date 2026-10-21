@@ -292,6 +292,92 @@ class PassportAdminService {
     return data;
   }
 
+  /**
+   * Gera vouchers (unlock_rewards) para usuários que já completaram a rota
+   * mas ainda não têm user_rewards para esta recompensa.
+   */
+  async issuePendingVouchersForReward(rewardId: string): Promise<{
+    usersChecked: number;
+    vouchersCreated: number;
+  }> {
+    const reward = await this.getReward(rewardId);
+    if (!reward) {
+      throw new Error('Recompensa não encontrada');
+    }
+    if (!reward.is_active) {
+      throw new Error('Ative a recompensa antes de emitir vouchers');
+    }
+    if (reward.reward_type === 'avatar') {
+      throw new Error('Recompensas de avatar não usam voucher; use o fluxo de desbloqueio de avatar.');
+    }
+
+    const routeId = reward.route_id;
+
+    const { data: checkpoints, error: cpError } = await supabase
+      .from('route_checkpoints')
+      .select('id')
+      .eq('route_id', routeId);
+
+    if (cpError) throw cpError;
+    const checkpointIds = (checkpoints || []).map((c) => c.id);
+    if (checkpointIds.length === 0) {
+      throw new Error('Esta rota não tem checkpoints cadastrados');
+    }
+
+    const { data: stamps, error: stampsError } = await supabase
+      .from('passport_stamps')
+      .select('user_id, checkpoint_id')
+      .eq('route_id', routeId);
+
+    if (stampsError) throw stampsError;
+
+    const stampedByUser = new Map<string, Set<string>>();
+    for (const row of stamps || []) {
+      if (!checkpointIds.includes(row.checkpoint_id)) continue;
+      const set = stampedByUser.get(row.user_id) || new Set<string>();
+      set.add(row.checkpoint_id);
+      stampedByUser.set(row.user_id, set);
+    }
+
+    const completedUserIds: string[] = [];
+    for (const [userId, stamped] of stampedByUser) {
+      const complete = checkpointIds.every((id) => stamped.has(id));
+      if (complete) completedUserIds.push(userId);
+    }
+
+    const { data: existing, error: existingError } = await supabase
+      .from('user_rewards')
+      .select('user_id')
+      .eq('reward_id', rewardId);
+
+    if (existingError) throw existingError;
+    const alreadyHas = new Set((existing || []).map((r) => r.user_id));
+
+    let vouchersCreated = 0;
+    let usersChecked = 0;
+
+    for (const userId of completedUserIds) {
+      if (alreadyHas.has(userId)) continue;
+      usersChecked += 1;
+
+      const { data: unlocked, error: unlockError } = await supabase.rpc('unlock_rewards', {
+        p_user_id: userId,
+        p_route_id: routeId,
+      });
+
+      if (unlockError) throw unlockError;
+
+      const rows = (unlocked || []) as { reward_id?: string }[];
+      const forThis = rows.filter((r) => r.reward_id === rewardId);
+      vouchersCreated += forThis.length;
+      if (forThis.length > 0) {
+        alreadyHas.add(userId);
+      }
+    }
+
+    return { usersChecked, vouchersCreated };
+  }
+
   async deleteReward(rewardId: string): Promise<void> {
     console.log('🔵 [PassportAdminService] ========== deleteReward ==========');
     console.log('🔵 [PassportAdminService] Reward ID:', rewardId);
