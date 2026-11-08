@@ -1,6 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Copy, Download, Link2, Share2 } from 'lucide-react';
+import { ChevronDown, Copy, Download, Link2, Share2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import type { MyLeaderboardPosition } from '@/services/passport/leaderboardService';
 import {
@@ -314,41 +320,44 @@ export default function RankingShareCard({
     }
   };
 
+  const hasNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button
-        type="button"
-        onClick={handleNativeShare}
-        disabled={busy || !position}
-        className="bg-ms-primary-blue hover:bg-ms-primary-blue/90"
-      >
-        <Share2 className="mr-2 h-4 w-4" />
-        {busy ? 'Gerando…' : 'Compartilhar'}
-      </Button>
-      <Button
-        type="button"
-        onClick={handleWhatsApp}
-        disabled={!position}
-        className="bg-[#25D366] hover:bg-[#1ebe57] text-white"
-      >
-        <WhatsAppIcon className="mr-2 h-4 w-4" />
-        WhatsApp
-      </Button>
-      <Button type="button" variant="outline" onClick={handleCopyLink} disabled={!position}>
-        <Copy className="mr-2 h-4 w-4" />
-        Copiar link
-      </Button>
-      <Button type="button" variant="outline" onClick={handleDownload} disabled={busy || !position}>
-        <Download className="mr-2 h-4 w-4" />
-        Story
-      </Button>
-      {shareUrl && (
-        <Button type="button" variant="ghost" size="icon" asChild title="Abrir página pública">
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">
-            <Link2 className="h-4 w-4" />
-          </a>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          disabled={busy || !position}
+          className="bg-ms-primary-blue hover:bg-ms-primary-blue/90"
+        >
+          <Share2 className="mr-2 h-4 w-4" />
+          {busy ? 'Gerando…' : 'Compartilhar'}
+          <ChevronDown className="ml-2 h-4 w-4" />
         </Button>
-      )}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {hasNativeShare && (
+          <DropdownMenuItem onClick={handleNativeShare}>
+            <Share2 className="mr-2 h-4 w-4" /> Compartilhar pelo celular
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={handleWhatsApp}>
+          <WhatsAppIcon className="mr-2 h-4 w-4" /> WhatsApp
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleCopyLink}>
+          <Copy className="mr-2 h-4 w-4" /> Copiar link
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDownload}>
+          <Download className="mr-2 h-4 w-4" /> Baixar imagem para Story
+        </DropdownMenuItem>
+        {shareUrl && (
+          <DropdownMenuItem asChild>
+            <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+              <Link2 className="mr-2 h-4 w-4" /> Ver página pública
+            </a>
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
