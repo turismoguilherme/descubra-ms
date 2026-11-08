@@ -2431,6 +2431,7 @@ export type Database = {
           address: string | null
           approved_at: string | null
           approved_by: string | null
+          billing_mode: string
           cnpj: string | null
           contact_email: string | null
           contact_phone: string | null
@@ -2461,6 +2462,7 @@ export type Database = {
           address?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          billing_mode?: string
           cnpj?: string | null
           contact_email?: string | null
           contact_phone?: string | null
@@ -2491,6 +2493,7 @@ export type Database = {
           address?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          billing_mode?: string
           cnpj?: string | null
           contact_email?: string | null
           contact_phone?: string | null
@@ -6956,6 +6959,8 @@ export type Database = {
           categoria: string | null
           cidade: string | null
           confiabilidade: number | null
+          contato_email: string | null
+          contato_telefone: string | null
           created_at: string | null
           data_fim: string | null
           data_inicio: string | null
@@ -6992,6 +6997,8 @@ export type Database = {
           categoria?: string | null
           cidade?: string | null
           confiabilidade?: number | null
+          contato_email?: string | null
+          contato_telefone?: string | null
           created_at?: string | null
           data_fim?: string | null
           data_inicio?: string | null
@@ -7028,6 +7035,8 @@ export type Database = {
           categoria?: string | null
           cidade?: string | null
           confiabilidade?: number | null
+          contato_email?: string | null
+          contato_telefone?: string | null
           created_at?: string | null
           data_fim?: string | null
           data_inicio?: string | null
