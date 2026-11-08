@@ -12,8 +12,10 @@ import {
   Star,
   ArrowRight,
   Compass,
-  Trophy
+  Trophy,
+  Gift
 } from 'lucide-react';
+import PassportAllRewardsView from '@/components/passport/PassportAllRewardsView';
 import { useToast } from '@/hooks/use-toast';
 import PassportRankingPanel from '@/components/passport/ranking/PassportRankingPanel';
 // Removido useRouteManagement - usando query direta
@@ -233,7 +235,7 @@ const PassaporteLista = () => {
           </div>
 
           <Tabs defaultValue="routes" className="mb-6">
-            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+            <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-8">
               <TabsTrigger value="routes" className="gap-2">
                 <Compass className="h-4 w-4" />
                 Roteiros
@@ -242,7 +244,15 @@ const PassaporteLista = () => {
                 <Trophy className="h-4 w-4" />
                 Ranking
               </TabsTrigger>
+              <TabsTrigger value="rewards" className="gap-2">
+                <Gift className="h-4 w-4" />
+                Recompensas
+              </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="rewards" className="mt-0">
+              <PassportAllRewardsView />
+            </TabsContent>
 
             <TabsContent value="ranking" className="mt-0">
               <PassportRankingPanel />
