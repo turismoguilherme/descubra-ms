@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.reset_user_route_progress(uuid, uuid) TO authenticated;
