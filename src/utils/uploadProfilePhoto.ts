@@ -26,7 +26,7 @@ export async function uploadProfilePhoto(file: File): Promise<{ url?: string; er
   const path = `${FOLDER}/${auth.user.id}/avatar.${ext}`;
 
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
-    cacheControl: '3600',
+    cacheControl: '60',
     upsert: true,
     contentType: file.type,
   });
@@ -36,5 +36,6 @@ export async function uploadProfilePhoto(file: File): Promise<{ url?: string; er
   }
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-  return data?.publicUrl ? { url: data.publicUrl } : { error: 'Não foi possível obter a URL da foto.' };
+  // Versão na URL para o navegador não mostrar a foto antiga guardada.
+  return data?.publicUrl ? { url: `${data.publicUrl}?t=${Date.now()}` } : { error: 'Não foi possível obter a URL da foto.' };
 }
