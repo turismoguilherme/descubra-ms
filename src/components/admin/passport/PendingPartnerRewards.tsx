@@ -28,6 +28,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { generateSmartPrefix } from '@/components/admin/passport/rewards/rewardPrefix';
+import { readError } from '@/lib/readError';
 
 interface PartnerReward {
   id: string;
@@ -89,7 +91,7 @@ export default function PendingPartnerRewards() {
       if (routesError) throw routesError;
       setRoutes(routesData || []);
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       console.error('Erro ao carregar dados:', err);
       toast({
         title: 'Erro',
@@ -128,13 +130,33 @@ export default function PendingPartnerRewards() {
 
       if (error) throw error;
 
+      // Publica no Passaporte: vira recompensa ativa da rota (gera QR Code ao turista que concluir)
+      const pr = rewards.find((r) => r.id === rewardId);
+      if (pr) {
+        const routeName = routes.find((r) => r.id === selectedRouteId)?.name || '';
+        const { error: pubError } = await supabase.from('passport_rewards').insert({
+          route_id: selectedRouteId,
+          partner_name: pr.partner_name,
+          reward_type: pr.reward_type,
+          reward_description: pr.reward_description,
+          discount_percentage: pr.discount_percentage ?? 0,
+          max_vouchers: pr.max_uses ?? null,
+          max_per_user: 1,
+          expires_at: pr.valid_until ? new Date(pr.valid_until).toISOString() : null,
+          reward_code_prefix: generateSmartPrefix(routeName, pr.partner_name || ''),
+          is_active: true,
+          is_fallback: false,
+        });
+        if (pubError) throw pubError;
+      }
+
       toast({
         title: 'Recompensa aprovada! ✅',
         description: 'A recompensa agora aparecerá no Passaporte Digital',
       });
       loadData();
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       console.error('Erro ao aprovar:', err);
       toast({
         title: 'Erro ao aprovar',
@@ -176,7 +198,7 @@ export default function PendingPartnerRewards() {
       });
       loadData();
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       console.error('Erro ao rejeitar:', err);
       toast({
         title: 'Erro ao rejeitar',
