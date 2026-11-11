@@ -234,7 +234,7 @@ const PassaporteLista = () => {
             </p>
           </div>
 
-          <Tabs defaultValue="routes" className="mb-6">
+          <Tabs defaultValue={new URLSearchParams(window.location.search).get('tab') || 'routes'} className="mb-6">
             <TabsList className="grid w-full max-w-lg mx-auto grid-cols-3 mb-8">
               <TabsTrigger value="routes" className="gap-2">
                 <Compass className="h-4 w-4" />
