@@ -249,6 +249,17 @@ const RouteCompletionModal: React.FC<RouteCompletionModalProps> = ({
             de Mato Grosso do Sul. Continue explorando para desbloquear mais recompensas!
           </p>
 
+          {rewardsUnlocked.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => { handleClose(); navigate('/descubrams/passaporte?tab=rewards'); }}
+              className="w-full bg-transparent border-white/40 text-white hover:bg-white/10"
+            >
+              <Gift className="w-5 h-5 mr-2" />
+              Ver Meus Vouchers com QR Code
+            </Button>
+          )}
+
           {/* Action Button */}
           <Button 
             onClick={handleContinue}

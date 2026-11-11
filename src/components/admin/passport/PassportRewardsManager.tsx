@@ -13,6 +13,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AdminPageHeader } from '@/components/admin/ui/AdminPageHeader';
 import PassportCodesGuide from '@/components/admin/passport/PassportCodesGuide';
+import PartnerSelectField from '@/components/admin/passport/rewards/PartnerSelectField';
+import VoucherPrefixField from '@/components/admin/passport/rewards/VoucherPrefixField';
+import { generateSmartPrefix } from '@/components/admin/passport/rewards/rewardPrefix';
+import { readError } from '@/lib/readError';
 
 interface Route {
   id: string;
@@ -171,7 +175,7 @@ const PassportRewardsManager: React.FC = () => {
         setEmittedByRewardId({});
       }
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       console.error('❌ [PassportRewardsManager] Erro completo ao carregar dados:', {
         message: err.message,
         code: (err as { code?: string }).code,
@@ -255,7 +259,9 @@ const PassportRewardsManager: React.FC = () => {
         partner_name: formData.partner_name,
         reward_type: formData.reward_type,
         reward_description: formData.reward_description,
-        reward_code_prefix: formData.reward_code_prefix || null,
+        reward_code_prefix:
+          formData.reward_code_prefix ||
+          generateSmartPrefix(routes.find((r) => r.id === formData.route_id)?.name || '', formData.partner_name),
         discount_percentage: formData.discount_percentage,
         partner_address: formData.partner_address || null,
         partner_phone: formData.partner_phone || null,
@@ -292,7 +298,7 @@ const PassportRewardsManager: React.FC = () => {
       resetForm();
       await loadData();
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       toast({
         title: editingRewardId ? 'Erro ao atualizar recompensa' : 'Erro ao criar recompensa',
         description: err.message,
@@ -332,7 +338,7 @@ const PassportRewardsManager: React.FC = () => {
       });
       setShowForm(true);
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       toast({ title: 'Erro ao carregar recompensa', description: err.message, variant: 'destructive' });
     }
   };
@@ -368,7 +374,7 @@ const PassportRewardsManager: React.FC = () => {
       }
       await loadData();
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       toast({
         title: 'Erro ao emitir vouchers',
         description: err.message,
@@ -397,7 +403,7 @@ const PassportRewardsManager: React.FC = () => {
       });
       loadData();
     } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
+      const err = new Error(readError(error));
       console.error('❌ [PassportRewardsManager] Erro completo ao excluir recompensa:', {
         message: err.message,
         code: (err as { code?: string }).code,
@@ -462,7 +468,16 @@ const PassportRewardsManager: React.FC = () => {
                   <Select
                     value={formData.route_id}
                     disabled={Boolean(editingRewardId)}
-                    onValueChange={(v) => setFormData({ ...formData, route_id: v })}
+                    onValueChange={(v) => {
+                      const routeName = routes.find((r) => r.id === v)?.name || '';
+                      setFormData({
+                        ...formData,
+                        route_id: v,
+                        reward_code_prefix: formData.partner_name
+                          ? generateSmartPrefix(routeName, formData.partner_name)
+                          : formData.reward_code_prefix,
+                      });
+                    }}
                   >
                     <SelectTrigger className={formErrors.route_id ? 'border-red-500' : ''} disabled={Boolean(editingRewardId)}>
                       <SelectValue placeholder="Selecione uma rota" />
@@ -497,17 +512,24 @@ const PassportRewardsManager: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label className={formErrors.partner_name ? 'text-red-500' : ''}>Nome do Parceiro *</Label>
-                  <Input
-                    value={formData.partner_name}
-                    onChange={(e) => setFormData({ ...formData, partner_name: e.target.value })}
-                    className={formErrors.partner_name ? 'border-red-500' : ''}
-                  />
-                  {formErrors.partner_name && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.partner_name}</p>
-                  )}
-                </div>
+                <PartnerSelectField
+                  value={formData.partner_name}
+                  error={formErrors.partner_name}
+                  onChange={(name, partner) => {
+                    const routeName = routes.find((r) => r.id === formData.route_id)?.name || '';
+                    setFormData({
+                      ...formData,
+                      partner_name: name,
+                      partner_address: partner?.address || formData.partner_address,
+                      partner_phone: partner?.phone || formData.partner_phone,
+                      partner_email: partner?.email || formData.partner_email,
+                      reward_code_prefix:
+                        formData.reward_code_prefix && editingRewardId
+                          ? formData.reward_code_prefix
+                          : generateSmartPrefix(routeName, name),
+                    });
+                  }}
+                />
                 {formData.reward_type === 'desconto' && (
                   <div>
                     <Label className={formErrors.discount_percentage ? 'text-red-500' : ''}>Percentual de Desconto *</Label>
@@ -604,31 +626,10 @@ const PassportRewardsManager: React.FC = () => {
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Label>Prefixo do Voucher (opcional)</Label>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-sm">
-                          <p><strong>⚠️ IMPORTANTE: Este é diferente do "Código do Parceiro" usado nos checkpoints!</strong></p>
-                          <p className="mt-2">O prefixo do voucher é usado para gerar códigos únicos quando o turista <strong>ganha a recompensa</strong> (após completar a rota).</p>
-                          <p className="mt-2 text-xs">Exemplo: Se o prefixo for "CG10", cada turista receberá um código único como:</p>
-                          <p className="text-xs font-mono">• CG10-A1B2C3D4</p>
-                          <p className="text-xs font-mono">• CG10-X9Y8Z7W6</p>
-                          <p className="mt-2 text-xs">O turista apresenta este código ao parceiro para resgatar a recompensa.</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                  <Input
-                    value={formData.reward_code_prefix}
-                    onChange={(e) => setFormData({ ...formData, reward_code_prefix: e.target.value })}
-                    placeholder="Ex: CG10, MSFURNAS"
-                  />
-                </div>
+                <VoucherPrefixField
+                  value={formData.reward_code_prefix}
+                  onChange={(v) => setFormData({ ...formData, reward_code_prefix: v })}
+                />
                 <div>
                   <Label>Validade (opcional)</Label>
                   <Input
@@ -748,14 +749,14 @@ const PassportRewardsManager: React.FC = () => {
                           size="sm"
                           disabled={issuingRewardId === reward.id}
                           onClick={() => handleIssuePendingVouchers(reward)}
-                          title="Emitir cupons para quem já completou 100% da rota e ainda não tem voucher desta recompensa"
+                          title="Entrega vouchers para turistas que já completaram esta rota antes desta recompensa existir (ou antes do estoque ser reabastecido). Turistas novos recebem automaticamente."
                         >
                           {issuingRewardId === reward.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <Ticket className="h-4 w-4 mr-1" />
                           )}
-                          Emitir pendentes
+                          Entregar a quem já concluiu
                         </Button>
                       )}
                       <Button
