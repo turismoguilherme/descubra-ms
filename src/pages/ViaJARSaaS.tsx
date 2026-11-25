@@ -11,6 +11,8 @@ import WhatGuataLabsDoesSection from '@/components/home/WhatGuataLabsDoesSection
 import TravelTechHero from '@/components/home/TravelTechHero';
 import PlatformInActionSection from '@/components/home/PlatformInActionSection';
 import BenefitsSection from '@/components/home/BenefitsSection';
+import GuataMethodologySection from '@/components/home/guata/GuataMethodologySection';
+import GuataVisionSection from '@/components/home/guata/GuataVisionSection';
 
 const VideoSection = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -107,6 +109,9 @@ const ViaJARSaaS = () => {
       {/* Hero Section */}
       <TravelTechHero />
 
+      {/* Método Guatá Labs */}
+      <GuataMethodologySection />
+
       {/* O que a Guatá Labs faz */}
       {isSectionActive('what_we_do') && <WhatGuataLabsDoesSection />}
 
@@ -133,36 +138,34 @@ const ViaJARSaaS = () => {
         </section>
       )}
 
-      {/* CTA: fundo cream + topo arredondado no bloco verde (transição suave) */}
+      <GuataVisionSection />
+
+      {/* CTA final */}
       {isSectionActive('cta_section') && (
-        <div className="bg-guata-cream px-4 sm:px-6 lg:px-8">
-          <section className="rounded-t-[2rem] bg-guata-deep text-guata-cream shadow-[0_-10px_40px_rgba(15,40,25,0.12)] pt-20 pb-24 max-w-7xl mx-auto">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl md:text-4xl font-extrabold font-guata text-guata-cream mb-6">
-              {getContent('viajar_cta_title', 'Pronto para transformar a gestão turística?')}
+        <section className="bg-guata-paper px-4 pb-24 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-4xl border-t border-guata-forest/15 pt-16 text-center">
+            <p className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-guata-forest">Vamos conversar</p>
+            <h2 className="mb-6 font-guata text-3xl font-bold text-guata-deep sm:text-5xl">
+              {getContent('viajar_cta_title', 'Qual é o próximo passo do seu destino?')}
             </h2>
-            <p className="text-lg text-guata-cream/90 mb-10 max-w-2xl mx-auto leading-relaxed">
-              {getContent(
-                'viajar_cta_description',
-                'Junte-se a secretarias de turismo e empresários que confiam na Guatá Labs para decisões estratégicas.'
-              )}
+            <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-guata-bark/75">
+              {getContent('viajar_cta_description', 'Conheça as possibilidades da Guatá Labs em uma apresentação orientada à realidade da sua operação.')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col justify-center gap-4 sm:flex-row">
               <Link to="/contato">
-                <Button size="lg" className="bg-guata-gold hover:bg-guata-gold-light text-guata-deep font-semibold px-8 h-14 text-lg gap-2">
-                  {getContent('viajar_cta_button_primary', 'Solicitar Demonstração')}
+                <Button size="lg" className="h-14 gap-2 bg-guata-forest px-8 text-lg font-semibold text-guata-cream hover:bg-guata-deep">
+                  {getContent('viajar_cta_button_primary', 'Solicitar demonstração')}
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </Link>
               <Link to="/precos">
-                <Button size="lg" variant="outline" className="border-guata-cream/50 text-guata-cream hover:bg-white/15 px-8 h-14 text-lg bg-transparent">
-                  {getContent('viajar_cta_button_secondary', 'Ver Planos')}
+                <Button size="lg" variant="outline" className="h-14 border-guata-forest/25 bg-transparent px-8 text-lg text-guata-deep hover:bg-guata-forest/5">
+                  {getContent('viajar_cta_button_secondary', 'Conhecer soluções')}
                 </Button>
               </Link>
             </div>
-            </div>
-          </section>
-        </div>
+          </div>
+        </section>
       )}
 
       <ViaJARFooter />

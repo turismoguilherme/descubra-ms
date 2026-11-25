@@ -1,249 +1,124 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Play, BarChart3, Brain, TrendingUp, Zap } from 'lucide-react';
-const PlatformInActionSection: React.FC = () => {
+import { ArrowRight, BarChart3, Brain, Check, LayoutDashboard, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const demos = [
+  {
+    title: 'Visão gerencial do destino',
+    description: 'Reúna indicadores e informações da operação em uma leitura compartilhada para secretarias e gestores.',
+    icon: BarChart3,
+    points: ['Visão consolidada', 'Indicadores do destino', 'Rotinas de gestão'],
+  },
+  {
+    title: 'Inteligência para gestores',
+    description: 'Consulte tendências, sazonalidade e estratégias com apoio da inteligência artificial aplicada ao turismo.',
+    icon: Brain,
+    points: ['Consulta contextual', 'Apoio à estratégia', 'Conhecimento aplicado'],
+  },
+  {
+    title: 'Planejamento de demanda',
+    description: 'Use cenários e tendências para preparar equipes, orçamento e ações para os diferentes períodos do destino.',
+    icon: TrendingUp,
+    points: ['Cenários de demanda', 'Planejamento', 'Sazonalidade'],
+  },
+];
+
+export default function PlatformInActionSection() {
   const [activeDemo, setActiveDemo] = useState(0);
-
-  const demoData = [
-    {
-      title: "Dashboard Gerencial em Tempo Real",
-      description: "Visualize fluxos de visitantes, ocupação hoteleira e indicadores de desempenho para secretarias e gestores públicos",
-      icon: BarChart3,
-    },
-    {
-      title: "IA Consultora para Gestores",
-      description: "Consulte a IA sobre tendências de mercado, sazonalidade e estratégias de marketing turístico regional",
-      icon: Brain,
-    },
-    {
-      title: "Previsões de Demanda",
-      description: "Machine learning prevê fluxo turístico, ocupação e receita para planejamento orçamentário e logístico",
-      icon: TrendingUp,
-    }
-  ];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveDemo(prev => (prev + 1) % demoData.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+  const active = demos[activeDemo];
+  const ActiveIcon = active.icon;
 
   return (
-    <section className="py-24 bg-gradient-to-b from-guata-paper via-guata-cream to-guata-paper relative overflow-hidden">
-      {/* Background Particles */}
-      <div className="absolute inset-0">
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: [0, 0.4, 0],
-              y: [0, -100],
-            }}
-            transition={{ 
-              duration: 6 + Math.random() * 4,
-              repeat: Infinity,
-              delay: Math.random() * 5,
-            }}
-            className="absolute w-1 h-1 bg-guata-gold/70 rounded-full"
-            style={{ left: `${Math.random() * 100}%`, top: `${60 + Math.random() * 40}%` }}
-          />
-        ))}
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <section className="relative overflow-hidden bg-guata-deep py-24 text-guata-cream sm:py-28">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-30"
+        style={{ backgroundImage: 'radial-gradient(circle at 85% 30%, hsl(var(--guata-gold) / 0.2), transparent 35%)' }}
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="mb-14 max-w-3xl"
         >
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata mb-4 text-guata-deep">
-            Plataforma em ação
-          </h2>
-          <p className="text-xl text-guata-bark/85 max-w-3xl mx-auto">
-            Veja como gestores públicos e empresários usam a Guatá Labs para
-            tomar decisões estratégicas baseadas em dados
+          <p className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-guata-gold-light">Plataforma em ação</p>
+          <h2 className="font-guata text-4xl font-semibold leading-tight sm:text-5xl">Uma visão compartilhada para decidir melhor.</h2>
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-guata-cream/65">
+            Tecnologia que aproxima informação, estratégia e operação em um mesmo ambiente de trabalho.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Left Side - Dashboard Mockup */}
+        <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-14">
+          <div className="space-y-3" role="tablist" aria-label="Recursos da plataforma">
+            {demos.map((demo, index) => {
+              const Icon = demo.icon;
+              const selected = activeDemo === index;
+              return (
+                <button
+                  key={demo.title}
+                  type="button"
+                  role="tab"
+                  aria-selected={selected}
+                  onClick={() => setActiveDemo(index)}
+                  className={`w-full rounded-2xl border p-5 text-left transition-all sm:p-6 ${selected ? 'border-guata-gold/45 bg-guata-cream/10' : 'border-guata-cream/10 bg-transparent hover:bg-guata-cream/[0.05]'}`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`rounded-xl p-3 ${selected ? 'bg-guata-gold text-guata-deep' : 'bg-guata-cream/10 text-guata-gold-light'}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="mb-2 font-guata text-lg font-semibold">{demo.title}</h3>
+                      <p className="text-sm leading-relaxed text-guata-cream/55">{demo.description}</p>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+            <Link to="/contato" className="group inline-flex items-center gap-2 px-2 pt-5 font-semibold text-guata-gold-light">
+              Agendar demonstração <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="relative"
+            key={active.title}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="overflow-hidden rounded-[1.75rem] border border-guata-cream/15 bg-guata-cream/[0.07] p-3 shadow-2xl sm:p-5"
+            role="tabpanel"
           >
-            <div className="relative p-8 rounded-2xl bg-guata-deep border border-guata-gold/30 shadow-2xl">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-guata-gold/25">
-                <h3 className="text-xl font-bold text-white">Painel do empresário</h3>
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-guata-gold animate-pulse" />
-                  <span className="text-sm text-guata-gold">Ao Vivo</span>
+            <div className="mb-4 flex items-center justify-between px-2 py-2">
+              <div className="flex items-center gap-2 text-sm text-guata-cream/70"><LayoutDashboard className="h-4 w-4 text-guata-gold-light" /> Ambiente de gestão</div>
+              <span className="rounded-full border border-guata-cream/10 px-3 py-1 text-[11px] text-guata-cream/50">Visão demonstrativa</span>
+            </div>
+            <div className="rounded-2xl bg-guata-cream p-6 text-guata-deep sm:p-8">
+              <div className="flex items-start justify-between gap-5 border-b border-guata-forest/10 pb-6">
+                <div>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-guata-forest">Guatá Labs</p>
+                  <h3 className="font-guata text-2xl font-semibold sm:text-3xl">{active.title}</h3>
                 </div>
+                <div className="rounded-xl bg-guata-forest/10 p-3"><ActiveIcon className="h-6 w-6 text-guata-forest" /></div>
               </div>
-
-              <div className="space-y-6">
-                {/* Visitor Flow */}
-                <div className="p-4 rounded-xl bg-white/12 border border-white/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-guata-cream font-semibold tracking-wide">Fluxo Turístico Regional</span>
-                    <TrendingUp className="w-4 h-4 text-guata-gold" />
-                  </div>
-                  <div className="grid grid-cols-7 gap-1">
-                    {[...Array(35)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{
-                          backgroundColor: [
-                            'rgba(6, 214, 160, 0.2)',
-                            'rgba(17, 138, 178, 0.4)',
-                            'rgba(255, 107, 53, 0.3)',
-                            'rgba(6, 214, 160, 0.2)'
-                          ],
-                          scale: [1, 1.1, 1]
-                        }}
-                        transition={{ duration: 3, repeat: Infinity, delay: i * 0.1, ease: "easeInOut" }}
-                        className="aspect-square rounded-sm"
-                      />
-                    ))}
-                  </div>
+              <div className="grid gap-6 pt-6 sm:grid-cols-[1fr_0.85fr]">
+                <div className="flex min-h-44 items-end gap-2 rounded-xl bg-guata-paper p-5" aria-hidden>
+                  {[44, 64, 52, 76, 62, 88, 74, 96].map((height, index) => (
+                    <div key={index} style={{ height: `${height}%` }} className={`flex-1 rounded-t-md ${index > 5 ? 'bg-guata-gold' : 'bg-guata-forest/20'}`} />
+                  ))}
                 </div>
-
-                {/* Occupancy */}
-                <div className="p-4 rounded-xl bg-white/12 border border-white/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-guata-cream font-semibold tracking-wide">Previsão de ocupação hoteleira</span>
-                    <Brain className="w-4 h-4 text-guata-gold" />
-                  </div>
-                  <div className="flex items-end space-x-2 h-16">
-                    {[...Array(12)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        animate={{ height: ['20%', '80%', '40%', '90%', '30%'] }}
-                        transition={{ duration: 4, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" }}
-                        className="flex-1 bg-guata-forest/60 rounded-t-sm"
-                      />
-                    ))}
-                  </div>
+                <div className="space-y-3">
+                  {active.points.map((point) => (
+                    <div key={point} className="flex items-center gap-3 rounded-xl border border-guata-forest/10 p-3 text-sm font-medium">
+                      <span className="rounded-full bg-guata-forest/10 p-1"><Check className="h-3.5 w-3.5 text-guata-forest" /></span>{point}
+                    </div>
+                  ))}
                 </div>
-
-                {/* AI Chat for Managers */}
-                <div className="p-4 rounded-xl bg-white/12 border border-white/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-guata-cream font-semibold tracking-wide">Consultor IA para gestores</span>
-                    <Brain className="w-4 h-4 text-guata-gold" />
-                  </div>
-                  <div className="space-y-2">
-                    <motion.div
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="flex items-start space-x-2"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
-                        <div className="w-2 h-2 rounded-full bg-guata-gold" />
-                      </div>
-                      <div className="text-xs text-guata-cream bg-black/25 rounded-lg px-2 py-1 border border-white/10">
-                        Qual a previsão de receita turística para o trimestre?
-                      </div>
-                    </motion.div>
-                    <motion.div
-                      animate={{ opacity: [0, 1, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-                      className="flex items-start space-x-2 justify-end"
-                    >
-                      <div className="text-xs text-guata-deep bg-guata-cream rounded-lg px-2 py-1 max-w-40 border border-guata-gold/30">
-                        Baseado nos dados históricos e tendências, projeta-se aumento de 18%...
-                      </div>
-                      <Zap className="w-6 h-6 text-guata-gold" />
-                    </motion.div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Data Flow */}
-              <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden">
-                <motion.div
-                  animate={{ x: [-100, 400] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="absolute top-1/4 left-0 w-20 h-0.5 bg-gradient-to-r from-transparent via-guata-gold to-transparent"
-                />
               </div>
             </div>
-
-            <motion.div
-              animate={{ y: [-10, 10, -10] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-6 -right-6 p-4 rounded-xl bg-guata-gold/20 backdrop-blur-sm border border-guata-gold/30"
-            >
-              <BarChart3 className="w-6 h-6 text-guata-gold" />
-            </motion.div>
-          </motion.div>
-
-          {/* Right Side - Feature Cards */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
-            {demoData.map((demo, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                viewport={{ once: true }}
-                className={`p-6 rounded-xl border transition-all duration-300 ${
-                  activeDemo === index 
-                    ? 'border-guata-gold/45 bg-white shadow-md shadow-guata-forest/10' 
-                    : 'border-guata-gold/25 bg-white/95 hover:border-guata-gold/40'
-                }`}
-              >
-                <div className="flex items-start space-x-4">
-                  <div className={`p-3 rounded-xl transition-all duration-300 ${
-                    activeDemo === index ? 'bg-guata-gold/20 scale-110' : 'bg-guata-gold/10'
-                  }`}>
-                    <demo.icon className={`w-6 h-6 transition-colors duration-300 ${
-                      activeDemo === index ? 'text-guata-gold' : 'text-guata-gold/70'
-                    }`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className={`text-lg font-bold font-guata mb-2 transition-colors duration-300 ${
-                      activeDemo === index ? 'text-guata-deep' : 'text-guata-deep/90'
-                    }`}>
-                      {demo.title}
-                    </h3>
-                    <p className="text-guata-bark/80 text-sm leading-relaxed">
-                      {demo.description}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              viewport={{ once: true }}
-              className="pt-6"
-            >
-              <a href="/contato" className="group flex items-center justify-center w-full p-4 rounded-xl border-2 border-guata-forest/30 bg-white text-guata-deep hover:bg-guata-forest hover:text-guata-cream hover:border-guata-forest transition-all duration-300 shadow-sm">
-                <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300" />
-                <span className="font-semibold">Agendar Demonstração</span>
-              </a>
-            </motion.div>
           </motion.div>
         </div>
       </div>
     </section>
   );
-};
-
-export default PlatformInActionSection;
+}
