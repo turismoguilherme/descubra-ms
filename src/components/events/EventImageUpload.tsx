@@ -141,6 +141,12 @@ const EventImageUpload: React.FC<EventImageUploadProps> = ({
       return;
     }
 
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      setError('Entre na sua conta para enviar a imagem do evento.');
+      return;
+    }
+
     setError(null);
     setIsUploading(true);
 
