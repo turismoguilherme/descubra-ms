@@ -9,7 +9,7 @@ import { menuService } from "@/services/admin/menuService";
 
 /** Itens padrão do marketing Viajar (sem /solucoes — página fora do layout atual). */
 const DEFAULT_VIAJAR_NAV_ITEMS = [
-  { name: "Cases", path: "/casos-sucesso" },
+  { name: "Projetos", path: "/projetos" },
   { name: "Preços", path: "/precos" },
   { name: "Sobre", path: "/sobre" },
   { name: "Contato", path: "/contato" },
@@ -35,13 +35,15 @@ const ViaJARNavbar = () => {
         if (menus && menus.length > 0) {
           const activeMenus = menus
             .filter((menu: unknown) => menu.is_active)
-            .map((menu: unknown) => ({
-              name: menu.label,
-              path: menu.path || '/',
-            }))
+            .map((menu: unknown) => {
+              const isLegacyCases = menu.path === '/casos-sucesso' || /^cases?$/i.test((menu.label || '').trim());
+              return isLegacyCases
+                ? { name: 'Projetos', path: '/projetos' }
+                : { name: menu.label, path: menu.path || '/' };
+            })
             .sort((a: unknown, b: unknown) => {
-              const menuA = menus.find((m: unknown) => m.label === a.name);
-              const menuB = menus.find((m: unknown) => m.label === b.name);
+              const menuA = menus.find((m: unknown) => m.label === a.name || (a.path === '/projetos' && m.path === '/casos-sucesso'));
+              const menuB = menus.find((m: unknown) => m.label === b.name || (b.path === '/projetos' && m.path === '/casos-sucesso'));
               return (menuA?.order_index || 0) - (menuB?.order_index || 0);
             });
 
@@ -80,7 +82,7 @@ const ViaJARNavbar = () => {
       <nav className="bg-white/80 backdrop-blur-lg border-b border-border/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <ViaJARLogo size="md" />
+            <ViaJARLogo size="md" tone="dark" />
             <div className="h-9 w-24 bg-muted animate-pulse rounded-lg"></div>
           </div>
         </div>
@@ -206,7 +208,7 @@ const ViaJARNavbar = () => {
                   </Button>
                 </Link>
                 <Link to="/viajar/register">
-                  <Button className="bg-gradient-to-r from-guata-gold to-guata-gold-light hover:from-guata-gold-light hover:to-guata-gold text-guata-deep gap-2 relative group shadow-[0_0_20px_rgba(201,162,76,0.35)] hover:shadow-[0_0_28px_rgba(201,162,76,0.45)]">
+                  <Button className="bg-gradient-to-r from-guata-gold to-guata-gold-light hover:from-guata-gold-light hover:to-guata-gold text-guata-deep gap-2 relative group shadow-[0_0_20px_rgba(38,186,165,0.35)] hover:shadow-[0_0_28px_rgba(38,186,165,0.45)]">
                     <div className="absolute inset-0 bg-gradient-to-r from-guata-gold to-guata-gold-light rounded opacity-0 group-hover:opacity-25 blur-xl transition-opacity duration-300" />
                     Começar Agora
                     <ArrowRight className="h-4 w-4" />

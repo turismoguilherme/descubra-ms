@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Building2, Sparkles } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import GuataPageHero from '@/components/guata/GuataPageHero';
+import GuataBusinessFronts from '@/components/guata/GuataBusinessFronts';
 import { platformContentService } from '@/services/admin/platformContentService';
 
 const DEFAULT_SOBRE_PAGE_LEAD =
@@ -46,34 +48,22 @@ const Sobre = () => {
     <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
 
-      <section className="relative overflow-hidden min-h-[50vh] flex items-center bg-gradient-to-b from-guata-deep via-guata-forest to-slate-900">
-        <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--guata-gold) / 0.55) 1px, transparent 0)`,
-            backgroundSize: '40px 40px',
-          }}
-        />
-        <div className="absolute top-12 left-1/4 w-96 h-96 bg-guata-gold/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-guata-forest/40 rounded-full blur-3xl" />
+      <GuataPageHero
+        icon={Building2}
+        eyebrow="Quem somos"
+        title={<>Sobre a <span className="text-guata-gold">Guatá Labs</span></>}
+        subtitle="Tecnologia, inteligência artificial e inovação para a gestão do turismo."
+        lead={heroLead}
+      />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-guata-gold/35 bg-white/10 text-guata-cream text-sm font-semibold mb-6 shadow-sm backdrop-blur">
-              <Building2 className="h-4 w-4 text-guata-gold" />
-              <span>Quem somos</span>
-            </div>
-
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-cream mb-4">
-              Sobre a Guatá Labs
-            </h1>
-            <p className="text-lg font-medium text-guata-cream/90 mb-3">
-              Tecnologia e inovação para a gestão inteligente do turismo
-            </p>
-            <p className="text-base md:text-lg text-guata-cream/75 max-w-3xl mx-auto leading-relaxed">
-              {heroLead}
-            </p>
+      <section className="bg-guata-cream py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-guata-forest">O que fazemos</p>
+            <h2 className="mt-2 font-guata text-3xl font-bold text-guata-deep md:text-4xl">Produto e serviço, lado a lado</h2>
+            <p className="mt-3 text-guata-bark/80">Empresas e gestores públicos podem assinar nossos painéis ou contratar nosso time para consultoria, inovação e capacitação.</p>
           </div>
+          <GuataBusinessFronts />
         </div>
       </section>
 

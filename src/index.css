@@ -111,13 +111,13 @@ body {
     --radius: 0.75rem;
     
     /* Guatá Labs Brand Colors (paleta da logo: verde floresta, dourado, bege papel) */
-    --guata-forest: 140 42% 22%;     /* #1F4D2C */
-    --guata-deep: 140 47% 15%;        /* #143820 */
-    --guata-gold: 42 53% 54%;         /* #C9A24C */
-    --guata-gold-light: 42 60% 64%;
-    --guata-paper: 40 41% 91%;        /* #F2EBDD */
-    --guata-cream: 45 60% 95%;        /* #FAF6EC */
-    --guata-bark: 30 30% 25%;
+    --guata-forest: 196 62% 26%;
+    --guata-deep: 218 55% 12%;
+    --guata-gold: 172 66% 44%;
+    --guata-gold-light: 170 70% 60%;
+    --guata-paper: 210 33% 95%;
+    --guata-cream: 210 40% 98%;
+    --guata-bark: 217 25% 25%;
     
     /* Aliases legados Guatá Labs → remapeados para nova paleta Guatá Labs */
     --viajar-slate: var(--guata-deep);

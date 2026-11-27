@@ -1,5 +1,15 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import GuataPageHero from '@/components/guata/GuataPageHero';
+
+const CONTACT_OBJECTIVES = [
+  { value: 'painel', label: 'Assinar um painel' },
+  { value: 'consultoria', label: 'Contratar consultoria' },
+  { value: 'inovacao', label: 'Projeto de inovação' },
+  { value: 'instrutoria', label: 'Instrutoria e capacitação' },
+  { value: 'outro', label: 'Outro assunto' },
+];
 import { Link } from 'react-router-dom';
 import GlowCard from '@/components/home/GlowCard';
 import { Button } from '@/components/ui/button';
@@ -41,12 +51,15 @@ const Contato = () => {
   }, []);
 
   const getContent = (key: string, fallback: string) => content[key] || fallback;
+  const [searchParams] = useSearchParams();
+  const initialObjective = CONTACT_OBJECTIVES.some((o) => o.value === searchParams.get('objetivo')) ? searchParams.get('objetivo') : '';
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     organization: '',
     role: '',
+    objective: initialObjective,
     message: '',
     requestData: false, 
     dataReportType: 'both' as 'explanatory' | 'raw_data' | 'both',
@@ -72,6 +85,9 @@ const Contato = () => {
         notesLines.push(`Tipo: ${formData.role === 'empresario' ? 'Empresário do setor turístico' : formData.role === 'secretaria' ? 'Secretaria de Turismo / Prefeitura' : 'Outro'}`);
       }
       
+      const objectiveLabel = CONTACT_OBJECTIVES.find((o) => o.value === formData.objective)?.label;
+      if (objectiveLabel) notesLines.push(`Objetivo: ${objectiveLabel}`);
+
       if (formData.requestData) {
         notesLines.push('');
         notesLines.push('🚨 SOLICITAÇÃO DE RELATÓRIO DE DADOS 🚨');
@@ -105,6 +121,7 @@ const Contato = () => {
         custom_fields: {
           origin: 'viajartur',
           role: formData.role || null,
+          objective: formData.objective || null,
           form_type: 'contact',
           requestData: formData.requestData || false,
           dataReportType: formData.requestData ? formData.dataReportType : null,
@@ -203,32 +220,12 @@ const Contato = () => {
     <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
       
-      <section className="relative overflow-hidden min-h-[48vh] flex items-center bg-gradient-to-b from-guata-deep via-guata-forest to-slate-900">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--guata-gold) / 0.55) 1px, transparent 0)`,
-            backgroundSize: '40px 40px',
-          }}
-        />
-        <div className="absolute top-12 left-1/4 w-96 h-96 bg-guata-gold/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-guata-forest/40 rounded-full blur-3xl" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-guata-gold/35 text-guata-cream text-sm font-semibold mb-6 shadow-sm backdrop-blur">
-              <MessageSquare className="h-4 w-4 text-guata-gold" />
-              <span>Fale conosco</span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-cream mb-4">
-              {getContent('viajar_contact_hero_title', 'Entre em contato')}
-            </h1>
-            <p className="text-xl text-guata-cream/75">
-              {getContent('viajar_contact_hero_subtitle', 'Estamos prontos para ajudar você a transformar o turismo na sua região')}
-            </p>
-          </div>
-        </div>
-      </section>
+      <GuataPageHero
+        icon={MessageSquare}
+        eyebrow="Fale com a Guatá Labs"
+        title={getContent('viajar_contact_hero_title', 'Entre em contato')}
+        subtitle={getContent('viajar_contact_hero_subtitle', 'Estamos prontos para ajudar você a transformar o turismo na sua região')}
+      />
 
       <section className="py-20 bg-guata-paper">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -403,6 +400,24 @@ const Contato = () => {
                     <option value="empresario">Empresário do setor turístico</option>
                     <option value="secretaria">Secretaria de Turismo / Prefeitura</option>
                     <option value="outro">Outro</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="objective" className="block text-sm font-medium text-guata-deep mb-2">
+                    O que você procura?
+                  </label>
+                  <select
+                    id="objective"
+                    name="objective"
+                    value={formData.objective}
+                    onChange={handleChange}
+                    className="w-full h-12 px-3 bg-guata-paper border border-guata-gold/30 rounded-md text-guata-deep"
+                  >
+                    <option value="">Selecione uma opção</option>
+                    {CONTACT_OBJECTIVES.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
 

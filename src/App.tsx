@@ -237,6 +237,7 @@ function AppRoutes() {
                                 <Route path="/" element={<ViaJARSaaS />} />
                                 <Route path="/viajar" element={<ViaJARSaaS />} />
                                 <Route path="/solucoes" element={<Solucoes />} />
+                                <Route path="/projetos" element={<CasosSucesso />} />
                                 <Route path="/casos-sucesso" element={<CasosSucesso />} />
                                 <Route path="/precos" element={<Precos />} />
                                 <Route path="/sobre" element={<Sobre />} />

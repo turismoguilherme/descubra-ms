@@ -1,45 +1,30 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { useGuataLabsContent } from '@/hooks/useGuataLabsContent';
+import GuataLogoMark from '@/components/guata/GuataLogoMark';
 
 interface ViaJARLogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   variant?: 'full' | 'icon';
+  /** "light" para fundos escuros, "dark" para fundos claros. */
+  tone?: 'light' | 'dark';
 }
 
-const ViaJARLogo: React.FC<ViaJARLogoProps> = ({
-  className,
-  size = 'md',
-  variant = 'full',
-}) => {
-  const { navbarLogoSrc } = useGuataLabsContent();
-  const src = navbarLogoSrc();
-
-  const sizeClasses = {
-    sm: 'h-8',
-    md: 'h-10',
-    lg: 'h-12',
-  };
-
-  const imgClass = cn(
-    sizeClasses[size],
-    'w-auto object-contain rounded-md bg-white p-1 ring-1 ring-guata-gold/30 shadow-sm'
-  );
-
-  if (variant === 'icon') {
-    return (
-      <div className={cn('flex items-center', className)}>
-        <img src={src} alt="Guatá Labs" className={imgClass} />
-      </div>
-    );
-  }
-
-  return (
-    <div className={cn('flex items-center gap-2', className)}>
-      <img src={src} alt="Guatá Labs" className={imgClass} />
-    </div>
-  );
+const SIZES = {
+  sm: { mark: 'h-8 w-8', text: 'text-base' },
+  md: { mark: 'h-10 w-10', text: 'text-lg' },
+  lg: { mark: 'h-12 w-12', text: 'text-xl' },
 };
+
+const ViaJARLogo: React.FC<ViaJARLogoProps> = ({ className, size = 'md', variant = 'full', tone = 'light' }) => (
+  <div className={cn('flex items-center gap-2.5', className)} aria-label="Guatá Labs">
+    <GuataLogoMark className={SIZES[size].mark} />
+    {variant === 'full' && (
+      <span className={cn('font-semibold leading-none tracking-tight', SIZES[size].text, tone === 'light' ? 'text-guata-cream' : 'text-guata-deep')}>
+        Guatá<span className="text-guata-gold"> Labs</span>
+      </span>
+    )}
+  </div>
+);
 
 export default ViaJARLogo;

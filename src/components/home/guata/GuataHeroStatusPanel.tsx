@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { BarChart3, BrainCircuit, MapPinned, Route, Sparkles } from 'lucide-react';
-import { useGuataLabsContent } from '@/hooks/useGuataLabsContent';
+import GuataLogoMark from '@/components/guata/GuataLogoMark';
 
 const layers = [
   { icon: MapPinned, label: 'Inteligência territorial', detail: 'O destino lido em conjunto' },
@@ -9,8 +9,6 @@ const layers = [
 ];
 
 export default function GuataHeroStatusPanel() {
-  const { heroMascotUrl } = useGuataLabsContent();
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 28 }}
@@ -22,9 +20,7 @@ export default function GuataHeroStatusPanel() {
       <div className="relative overflow-hidden rounded-[2rem] border border-guata-cream/15 bg-guata-cream/[0.07] p-3 shadow-2xl backdrop-blur-md sm:p-5">
         <div className="flex items-center justify-between border-b border-guata-cream/10 px-2 pb-4 pt-1">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-guata-cream p-1.5">
-              <img src={heroMascotUrl} alt="" className="h-full w-full object-contain" />
-            </div>
+            <GuataLogoMark className="h-11 w-11" />
             <div>
               <p className="font-guata text-sm font-semibold text-guata-cream">Ecossistema Guatá</p>
               <p className="text-xs text-guata-cream/60">Tecnologia conectada ao território</p>

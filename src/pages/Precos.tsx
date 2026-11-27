@@ -6,6 +6,8 @@ import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
 import { supabase } from '@/integrations/supabase/client';
 import type { PlanTier } from '@/services/subscriptionService';
+import GuataPageHero from '@/components/guata/GuataPageHero';
+import GuataBusinessFronts from '@/components/guata/GuataBusinessFronts';
 import GlowCard from '@/components/home/GlowCard';
 
 const Precos = () => {
@@ -49,7 +51,7 @@ const Precos = () => {
       ],
       cta: "Assinar Agora",
       highlighted: false,
-      gradient: "from-cyan-500 to-cyan-600"
+      gradient: "from-guata-gold to-guata-forest"
     },
     {
       name: "Governo",
@@ -91,32 +93,18 @@ const Precos = () => {
     <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
       
-      <section className="relative overflow-hidden min-h-[52vh] flex items-center bg-gradient-to-br from-guata-cream via-guata-paper to-guata-cream">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.2]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 15% 30%, hsl(var(--guata-gold) / 0.14), transparent 42%),
-              radial-gradient(circle at 85% 20%, hsl(var(--guata-forest) / 0.07), transparent 38%)`,
-          }}
-        />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
-          <div className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-guata-gold/35 text-guata-forest text-sm font-semibold mb-6 shadow-sm">
-              <Sparkles className="h-4 w-4 text-guata-gold" />
-              <span>Planos para cada necessidade</span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-deep mb-4">
-              Escolha o plano ideal
-            </h1>
-            <p className="text-xl text-guata-bark/85 max-w-2xl mx-auto">
-              Soluções completas para empresários do setor turístico e gestores públicos
-            </p>
-          </div>
-        </div>
-      </section>
+      <GuataPageHero
+        icon={Sparkles}
+        eyebrow="Planos e serviços"
+        title={<>Painéis por assinatura e <span className="text-guata-gold">serviços sob medida</span></>}
+        subtitle="Assine um painel da Guatá Labs ou contrate nosso time para consultoria, inovação e capacitação."
+      />
 
-      <section className="py-20 bg-guata-paper">
+      <div className="bg-guata-paper pt-16 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-guata-forest">1. Assinatura</p>
+        <h2 className="mt-2 font-guata text-3xl font-bold text-guata-deep">Painéis para empresas e gestores públicos</h2>
+      </div>
+      <section className="pb-20 pt-12 bg-guata-paper">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {plans.map((plan, index) => (
@@ -198,6 +186,17 @@ const Precos = () => {
               </GlowCard>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="bg-guata-cream py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-guata-forest">2. Serviços</p>
+            <h2 className="mt-2 font-guata text-3xl font-bold text-guata-deep">Consultoria, inovação e instrutoria</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-guata-bark/80">Valores definidos conforme o escopo. Escolha a frente e envie seu pedido de proposta.</p>
+          </div>
+          <GuataBusinessFronts />
         </div>
       </section>
 

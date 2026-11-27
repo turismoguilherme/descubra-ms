@@ -91,7 +91,7 @@ const ViaJARFooter: React.FC = () => {
       </div>
 
       {/* Top border with glow */}
-      <div className="border-t border-guata-gold/25 shadow-[0_-2px_15px_rgba(201,162,76,0.12)]" />
+      <div className="border-t border-guata-gold/25 shadow-[0_-2px_15px_rgba(38,186,165,0.12)]" />
 
       {/* Main Footer Content */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 z-10">
@@ -203,12 +203,12 @@ const ViaJARFooter: React.FC = () => {
               </li>
               <li>
                 <Link 
-                  to="/casos-sucesso" 
+                  to="/projetos" 
                   onClick={handleLinkClick} 
                   className="text-guata-cream/75 hover:text-guata-gold text-sm transition-colors duration-300 flex items-center gap-2 justify-center lg:justify-start group"
                 >
                   <div className="w-1.5 h-1.5 rounded-full bg-guata-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  Cases
+                  Projetos
                 </Link>
               </li>
               <li>

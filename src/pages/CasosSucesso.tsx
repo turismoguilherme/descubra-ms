@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, ArrowRight, CheckCircle2, Bot, Sparkles, Award } from 'lucide-react';
 import ViaJARNavbar from '@/components/layout/ViaJARNavbar';
 import ViaJARFooter from '@/components/layout/ViaJARFooter';
+import GuataPageHero from '@/components/guata/GuataPageHero';
 import { platformContentService } from '@/services/admin/platformContentService';
 
 const DEFAULT_CASES_PAGE_LEAD =
@@ -113,33 +114,25 @@ const CasosSucesso = () => {
     <div className="min-h-screen bg-guata-cream">
       <ViaJARNavbar />
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 min-h-[320px] bg-gradient-to-b from-guata-deep via-guata-forest to-slate-900">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--guata-gold) / 0.55) 1px, transparent 0)`,
-            backgroundSize: '40px 40px',
-          }}
-        />
-        <div className="absolute top-12 left-1/4 w-96 h-96 bg-guata-gold/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-guata-forest/40 rounded-full blur-3xl" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-guata-gold/35 text-guata-cream text-sm font-semibold mb-6 shadow-sm backdrop-blur">
-              <Award className="h-4 w-4 text-guata-gold" />
-              <span>Casos de sucesso</span>
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold font-guata text-guata-cream mb-4">
-              Cases
-            </h1>
-            <p className="text-lg font-medium text-guata-cream/90 mb-3">
-              O que desenvolvemos com a Guatá Labs
-            </p>
-            <p className="text-base md:text-lg text-guata-cream/75 max-w-3xl mx-auto leading-relaxed">
-              {pageLead}
-            </p>
+      <GuataPageHero
+        icon={Award}
+        eyebrow="Projetos Guatá Labs"
+        title={<>Projetos que <span className="text-guata-gold">já estão em operação</span></>}
+        subtitle="A Guatá Labs é a empresa. Estes são produtos que ela criou e mantém."
+        lead={pageLead}
+      />
+
+      <section className="border-b border-guata-forest/10 bg-guata-cream py-14">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
+          <div className="rounded-2xl border border-guata-forest/10 bg-card p-7">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-guata-forest">A empresa</p>
+            <h2 className="mt-2 font-guata text-2xl font-bold text-guata-deep">Guatá Labs</h2>
+            <p className="mt-3 text-sm leading-relaxed text-guata-bark/80">Desenvolve tecnologia e IA para o turismo, vende painéis por assinatura e presta consultoria, projetos de inovação e capacitação.</p>
+          </div>
+          <div className="rounded-2xl border border-guata-gold/40 bg-guata-deep p-7 text-guata-cream">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-guata-gold">Os projetos</p>
+            <h2 className="mt-2 font-guata text-2xl font-bold">Descubra MS, Koda e outros</h2>
+            <p className="mt-3 text-sm leading-relaxed text-guata-cream/75">São soluções reais, criadas pela Guatá Labs, que mostram na prática o que podemos construir para o seu destino ou negócio.</p>
           </div>
         </div>
       </section>
@@ -181,7 +174,7 @@ const CasosSucesso = () => {
                       {/* Badge */}
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-sm font-medium mb-4 w-fit">
                         <IconComponent className="h-4 w-4" />
-                        <span>Plataforma Desenvolvida</span>
+                        <span>Projeto Guatá Labs</span>
                       </div>
 
                       {/* Título e Subtítulo */}
@@ -221,7 +214,7 @@ const CasosSucesso = () => {
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--guata-gold) / 0.4) 1px, transparent 0)`, backgroundSize: '40px 40px' }} />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
           <h2 className="text-2xl md:text-3xl font-extrabold font-guata text-guata-cream mb-6">
-            Quer ser nosso próximo case?
+            Quer ser o nosso próximo projeto?
           </h2>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/contato">
